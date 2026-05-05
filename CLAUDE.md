@@ -3,7 +3,7 @@
 > **Amaç:** Bu dosya, Hoteluter projesinde çalışan herhangi bir Claude (yeni sohbet, yeni session) için **kurucu dokümandır**. İlk okunacak dosyadır. Projenin tarihi, mimarisi, çalışan kuralları ve aktif görevler buradadır.
 
 **Son güncelleme:** 05.05.2026
-**Mevcut sürüm:** v1.0 geçişi (Vite + Firebase + Netlify) — Görev 4 tamamlandı, Görev 5'e geçiliyor.
+**Mevcut sürüm:** v1.0 geçişi (Vite + Firebase + Netlify) — Görev 5 tamamlandı, Görev 6'ya geçiliyor.
 **Tek-dosya MVP final:** v0.7 (`hoteluter.html`, ~6500 satır, backup olarak saklı)
 
 ---
@@ -134,7 +134,7 @@ hoteluter/
 | Faz | Görevler | Durum |
 |---|---|---|
 | **1. Hazırlık** | 1. Firebase projesi · 2. Local environment | ✅ Tamam |
-| **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals · 7. Pages | 🔄 Görev 3-4 tamam, 5'te |
+| **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals · 7. Pages | 🔄 Görev 3-5 tamam, 6'da |
 | **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | ⏳ |
 | **4. Deploy** | 11. GitHub + Netlify · 12. Domain | ⏳ |
 
@@ -142,13 +142,19 @@ hoteluter/
 
 ## 🚀 Şu An Nerede
 
-**Görev 4 tamamlandı:** Tüm lib & helpers modülleri hazır:
-- `lib/firebase.js`, `lib/db.js` (Firestore adapter), `lib/auth.js`, `lib/kur.js`, `lib/helpers.js`, `lib/constants.js`, `lib/permissions.js`, `lib/migrations.js`
-- `helpers/segmentler.js`, `helpers/tahsilat.js`, `helpers/gider.js`, `helpers/transfer.js`, `helpers/exchange-utils.js`
-- App.jsx test paneline çevrildi: 6 bölümde tüm modüller doğrulanıyor (Firebase, Kur, Helpers, Constants, Migration, DB Adapter)
+**Görev 5 tamamlandı:** `src/components/` altında 6 reusable component hazır:
+- `Icon.jsx` — lucide-react wrapper, kebab-case `name` PascalCase'e çevrilip dinamik component lookup. v0.7 API'siyle uyumlu (name/size/stroke/strokeWidth). Bilinmeyen isimde sessiz fallback.
+- `Modal.jsx` — backdrop + içerik, size sm/md/lg, footer slot, Esc tuşu kapatır.
+- `ConfirmModal.jsx` — Modal üzerine kurulu onay diyaloğu, danger varyantı varsayılan kırmızı.
+- `Toast.jsx` + `ToastProvider` + `useToast()` — success/error/info, 3 sn auto-dismiss, üst üste çağrılırsa son mesajı gösterir.
+- `Sidebar.jsx` — `ALL_MODULES`'tan dinamik link, `hideFromSidebar`/`superadminOnly` filtresi, `canSeeModule(key)` injection point (Görev 9 auth'a hazır), mobile drawer modu.
+- `ListPageShell.jsx` — kart başlığı (icon+title) + arama + "Yeni" butonu + tablo wrapper. Misafirler/Odalar/Kullanıcılar sayfaları için tekrar önleyici iskele.
+- `App.jsx` — health-check ekranı: 6 component'i de gösteren interaktif test paneli (modal/onay/toast butonları, ikon grid, mock misafir tablosu, sidebar drawer testi).
 
-**Sıradaki — Görev 5: Reusable Components**
-- `Sidebar.jsx`, `Modal.jsx`, `ConfirmModal.jsx`, `Icon.jsx` (lucide-react wrapper), `Toast.jsx` + ToastProvider, `ListPageShell.jsx`
+`npm run build` yeşil, 1584 modül transform ediliyor, hata yok.
+
+**Sıradaki — Görev 6: Modals**
+- `ReservationFormModal.jsx`, `SplitModal.jsx`, `GiderModal.jsx`, hesap/transfer/tahsilat modalları, vd.
 
 ---
 

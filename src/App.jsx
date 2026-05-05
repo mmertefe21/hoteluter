@@ -1,240 +1,268 @@
-import React, { useState, useEffect } from 'react';
-import { auth, db as firestore } from './lib/firebase.js';
-import { db } from './lib/db.js';
-import { ensureKurlarLoaded, getActiveKurlar, fetchKurlar, cevirKur } from './lib/kur.js';
-import { fmtMoney, todayISO, addDays, diffDays } from './lib/helpers.js';
-import { runMigrations } from './lib/migrations.js';
-import { PARA_BIRIMI_OPTS, DURUM_OPTS, HESAP_TIP_OPTS } from './lib/constants.js';
+import { useState } from 'react';
+import Sidebar from './components/Sidebar.jsx';
+import Modal from './components/Modal.jsx';
+import ConfirmModal from './components/ConfirmModal.jsx';
+import Icon from './components/Icon.jsx';
+import { ToastProvider, useToast } from './components/Toast.jsx';
+import ListPageShell from './components/ListPageShell.jsx';
 import { ALL_MODULES } from './lib/permissions.js';
 
 /**
- * Hoteluter — Görev 4 Test Sayfası
+ * Hoteluter — Görev 5 Health-Check
  *
- * Tüm lib/ ve helpers/ modüllerinin import edilebildiğini ve çalıştığını
- * doğrulayan health-check ekranı.
- *
- * Sonraki görevde bu dosya gerçek App.jsx'e (router + AuthProvider) dönüşür.
+ * Tüm reusable component'lerin (Sidebar, Modal, ConfirmModal, Icon, Toast,
+ * ListPageShell) render edilebildiğini ve etkileşimlerinin çalıştığını doğrular.
+ * Sıradaki görevde gerçek router + AuthProvider gelir.
  */
-const App = () => {
-  const [firebaseStatus, setFirebaseStatus] = useState('Kontrol ediliyor...');
-  const [kurStatus, setKurStatus] = useState('Yükleniyor...');
-  const [kurlar, setKurlar] = useState(null);
-  const [migrationResult, setMigrationResult] = useState(null);
-  const [migrationRunning, setMigrationRunning] = useState(false);
-  const [collections, setCollections] = useState({});
 
-  useEffect(() => {
-    if (auth && firestore) setFirebaseStatus('✓ Firebase bağlandı');
-    else setFirebaseStatus('✗ Firebase bağlanamadı (.env kontrolü yap)');
-  }, []);
+const MOCK_GUESTS = [
+  { id: 'g1', ad: 'Ayşe', soyad: 'Yılmaz', telefon: '+90 532 111 22 33', email: 'ayse@example.com', uyruk: 'TR' },
+  { id: 'g2', ad: 'John',  soyad: 'Doe',    telefon: '+1 555 0100',       email: 'john@example.com', uyruk: 'US' },
+  { id: 'g3', ad: 'Mehmet',soyad: 'Demir',  telefon: '+90 533 444 55 66', email: 'mehmet@example.com', uyruk: 'TR' },
+  { id: 'g4', ad: 'Greta', soyad: 'Müller', telefon: '+49 170 5550100',   email: 'greta@example.com', uyruk: 'DE' },
+];
 
-  useEffect(() => {
-    ensureKurlarLoaded();
-    setTimeout(async () => {
-      let k = getActiveKurlar();
-      if (!k) k = await fetchKurlar();
-      if (k) {
-        setKurlar(k);
-        setKurStatus(`✓ Kurlar hazır (${k.date || 'manuel'})`);
-      } else {
-        setKurStatus('⚠ Kur yüklenemedi (offline?)');
-      }
-    }, 500);
-  }, []);
+const ICON_SAMPLES = [
+  'hotel', 'layout-dashboard', 'calendar-days', 'users', 'door-open',
+  'wallet', 'receipt', 'bar-chart-3', 'settings', 'log-out',
+  'plus', 'search', 'check-circle', 'alert-circle', 'info',
+];
 
-  const runMigration = async () => {
-    setMigrationRunning(true);
-    try {
-      const result = await runMigrations();
-      setMigrationResult(result);
-    } catch (e) {
-      setMigrationResult({ error: e.message });
-    } finally {
-      setMigrationRunning(false);
-    }
-  };
+const App = () => (
+  <ToastProvider>
+    <HealthCheck />
+  </ToastProvider>
+);
 
-  const checkCollections = async () => {
-    const colls = ['kanallar', 'giderKategorileri', 'hesaplar', 'odalar', 'rezervasyonlar', 'misafirler'];
-    const res = {};
-    for (const c of colls) {
-      try {
-        const list = await db.list(c);
-        res[c] = list.length;
-      } catch (e) {
-        res[c] = 'hata';
-      }
-    }
-    setCollections(res);
-  };
+const HealthCheck = () => {
+  const [activeModule, setActiveModule] = useState('dashboard');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const { show } = useToast();
+
+  const filteredGuests = MOCK_GUESTS.filter((g) => {
+    if (!search) return true;
+    const hay = `${g.ad} ${g.soyad} ${g.telefon} ${g.email} ${g.uyruk}`.toLowerCase();
+    return hay.includes(search.toLowerCase());
+  });
+
+  const activeLabel = ALL_MODULES.find((m) => m.key === activeModule)?.ad ?? 'Hoteluter';
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f7f4ec',
-      fontFamily: "'DM Sans', system-ui, sans-serif",
-      color: '#2c4a3a',
-      padding: '40px 20px'
-    }}>
-      <div style={{
-        maxWidth: 720,
-        margin: '0 auto',
-        background: '#fefcf6',
-        border: '1px solid #d4c8a8',
-        borderRadius: 12,
-        padding: 32,
-        boxShadow: '0 4px 12px rgba(44,74,58,.08)'
-      }}>
-        <h1 style={{
-          fontFamily: "'Fraunces', Georgia, serif",
-          fontSize: 28,
-          fontWeight: 500,
-          color: '#a87842',
-          margin: '0 0 4px 0'
-        }}>Hoteluter</h1>
-        <p style={{ fontSize: 13, color: '#5a6b5e', margin: '0 0 24px 0' }}>
-          Görev 4 — Lib & Helpers test paneli
-        </p>
-
-        <Section title="1. Firebase">
-          <Row label="Bağlantı" value={firebaseStatus} ok={firebaseStatus.startsWith('✓')} />
-        </Section>
-
-        <Section title="2. Kur Servisi">
-          <Row label="Frankfurter API" value={kurStatus} ok={kurStatus.startsWith('✓')} />
-          {kurlar && (
-            <div style={{ marginTop: 8, fontSize: 12, color: '#7a8a7e' }}>
-              EUR: 1 ·
-              USD: {kurlar.rates.USD?.toFixed(4)} ·
-              TRY: {kurlar.rates.TRY?.toFixed(4)} ·
-              GBP: {kurlar.rates.GBP?.toFixed(4)}
-            </div>
-          )}
-          {kurlar && (
-            <div style={{ marginTop: 4, fontSize: 12, color: '#7a8a7e' }}>
-              cevirKur(100, 'USD', 'EUR') = {cevirKur(100, 'USD', 'EUR', kurlar)?.toFixed(2) || '—'} EUR
-            </div>
-          )}
-        </Section>
-
-        <Section title="3. Helpers">
-          <Row label="todayISO()" value={todayISO()} />
-          <Row label="addDays(today, 7)" value={addDays(todayISO(), 7)} />
-          <Row label="diffDays(today, +30)" value={`${diffDays(todayISO(), addDays(todayISO(), 30))} gün`} />
-          <Row label="fmtMoney(1234.56, 'EUR')" value={fmtMoney(1234.56, 'EUR')} />
-          <Row label="fmtMoney(1234.56, 'TRY')" value={fmtMoney(1234.56, 'TRY')} />
-        </Section>
-
-        <Section title="4. Constants">
-          <Row label="Para Birimleri" value={`${PARA_BIRIMI_OPTS.length} adet (${PARA_BIRIMI_OPTS.map(p => p.symbol).join(' ')})`} />
-          <Row label="Hesap Tipleri" value={`${HESAP_TIP_OPTS.length} adet`} />
-          <Row label="Rez Durumları" value={`${DURUM_OPTS.length} adet`} />
-          <Row label="Modüller" value={`${ALL_MODULES.length} adet`} />
-        </Section>
-
-        <Section title="5. Migration (Firestore Seed)">
-          <p style={{ fontSize: 13, color: '#5a6b5e', margin: '0 0 12px 0' }}>
-            ⚠ Sadece bir kez çalıştır. Default 5 kanal + 8 gider kategorisi + 3 hesap eklenir.
-            Demo veri YOK.
-          </p>
+    <div className="h-screen flex flex-col" style={{ background: 'var(--bone)' }}>
+      <header
+        className="h-14 flex items-center justify-between px-4 md:px-6 flex-shrink-0 z-20"
+        style={{ background: 'var(--bone-light)', borderBottom: '1px solid var(--line)' }}
+      >
+        <div className="flex items-center gap-3">
           <button
-            onClick={runMigration}
-            disabled={migrationRunning}
-            style={{
-              padding: '10px 18px',
-              borderRadius: 8,
-              background: migrationRunning ? '#d4c8a8' : '#1f3a2e',
-              color: 'white',
-              border: 'none',
-              cursor: migrationRunning ? 'wait' : 'pointer',
-              fontSize: 14,
-              fontWeight: 500
-            }}>
-            {migrationRunning ? 'Çalışıyor...' : 'Migration Çalıştır'}
+            type="button"
+            className="md:hidden p-2 rounded-md hover:bg-[var(--bone-warm)]"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Menüyü aç"
+          >
+            <Icon name="menu" size={20} />
           </button>
-          {migrationResult && (
-            <pre style={{
-              marginTop: 12,
-              background: '#f0e8d0',
-              padding: 12,
-              borderRadius: 8,
-              fontSize: 12,
-              color: '#2c4a3a',
-              overflow: 'auto'
-            }}>
-              {JSON.stringify(migrationResult, null, 2)}
-            </pre>
-          )}
-        </Section>
+          <div className="font-display text-lg font-medium" style={{ color: 'var(--forest)' }}>
+            {activeLabel}
+          </div>
+          <span className="htl-badge htl-badge-info">Görev 5 · Health-Check</span>
+        </div>
+        <div className="hidden md:flex items-center gap-2 text-xs" style={{ color: 'var(--ink-faint)' }}>
+          <span>v1.0 · components</span>
+        </div>
+      </header>
 
-        <Section title="6. DB Adapter (Firestore)">
-          <button
-            onClick={checkCollections}
-            style={{
-              padding: '10px 18px',
-              borderRadius: 8,
-              background: '#a87842',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: 500
-            }}>
-            Koleksiyonları Kontrol Et
-          </button>
-          {Object.keys(collections).length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              {Object.entries(collections).map(([k, v]) => (
-                <Row key={k} label={k} value={`${v} kayıt`} />
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar
+          activeModule={activeModule}
+          onSelect={setActiveModule}
+          otelAd="Hoteluter Test"
+          userRol="superadmin"
+          drawerOpen={drawerOpen}
+          onCloseDrawer={() => setDrawerOpen(false)}
+        />
+
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+          <Section title="Modal & Onay">
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="htl-btn htl-btn-primary" onClick={() => setModalOpen(true)}>
+                <Icon name="square-pen" size={16} stroke="white" />
+                <span>Modal Aç</span>
+              </button>
+              <button type="button" className="htl-btn htl-btn-danger" onClick={() => setConfirmOpen(true)}>
+                <Icon name="trash-2" size={16} stroke="white" />
+                <span>Onay İste</span>
+              </button>
+            </div>
+          </Section>
+
+          <Section title="Toast Bildirimleri">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="htl-btn"
+                style={{ background: 'var(--success)', color: 'white' }}
+                onClick={() => show('Kayıt başarıyla güncellendi.', 'success')}
+              >
+                <Icon name="check-circle" size={16} stroke="white" />
+                <span>Success</span>
+              </button>
+              <button
+                type="button"
+                className="htl-btn htl-btn-danger"
+                onClick={() => show('Bağlantı hatası — tekrar deneyin.', 'error')}
+              >
+                <Icon name="alert-circle" size={16} stroke="white" />
+                <span>Error</span>
+              </button>
+              <button
+                type="button"
+                className="htl-btn"
+                style={{ background: 'var(--info)', color: 'white' }}
+                onClick={() => show('Yeni rezervasyon eklendi.', 'info')}
+              >
+                <Icon name="info" size={16} stroke="white" />
+                <span>Info</span>
+              </button>
+            </div>
+          </Section>
+
+          <Section title="Icon Örnekleri">
+            <div className="flex flex-wrap gap-3">
+              {ICON_SAMPLES.map((n) => (
+                <div
+                  key={n}
+                  className="flex flex-col items-center gap-1 px-3 py-2 rounded-md"
+                  style={{ background: 'var(--bone-light)', border: '1px solid var(--line-soft)', minWidth: 96 }}
+                >
+                  <span style={{ color: 'var(--forest)' }}>
+                    <Icon name={n} size={22} />
+                  </span>
+                  <span className="text-[11px]" style={{ color: 'var(--ink-soft)' }}>{n}</span>
+                </div>
               ))}
             </div>
-          )}
-        </Section>
+          </Section>
 
-        <div style={{
-          marginTop: 24,
-          paddingTop: 16,
-          borderTop: '1px solid #e8e0cd',
-          fontSize: 12,
-          color: '#7a8a7e',
-          textAlign: 'center'
-        }}>
-          Görev 4: Lib & Helpers · Sıradaki: Görev 5 (Components)
-        </div>
+          <Section title="ListPageShell (mock misafir tablosu)">
+            <ListPageShell
+              title="Misafirler"
+              icon="users"
+              search={search}
+              setSearch={setSearch}
+              searchPlaceholder="Misafir ara..."
+              onAdd={() => show('Yeni misafir formu (mock).', 'info')}
+              addLabel="Yeni Misafir"
+              canAdd
+            >
+              {filteredGuests.length === 0 ? (
+                <div className="htl-empty">Eşleşen kayıt yok.</div>
+              ) : (
+                <table className="htl-table">
+                  <thead>
+                    <tr>
+                      <th>Ad Soyad</th>
+                      <th>Telefon</th>
+                      <th>E-posta</th>
+                      <th>Uyruk</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredGuests.map((g) => (
+                      <tr key={g.id}>
+                        <td className="font-medium">{g.ad} {g.soyad}</td>
+                        <td>{g.telefon}</td>
+                        <td>{g.email}</td>
+                        <td>
+                          <span className="htl-badge htl-badge-neutral">{g.uyruk}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </ListPageShell>
+          </Section>
+
+          <Section title="Sidebar Durumu">
+            <div className="text-sm" style={{ color: 'var(--ink-soft)' }}>
+              Aktif modül: <code style={{ background: 'var(--bone-warm)', padding: '2px 6px', borderRadius: 4 }}>{activeModule}</code>
+              <span className="mx-2">·</span>
+              <button
+                type="button"
+                className="htl-btn htl-btn-ghost md:hidden"
+                onClick={() => setDrawerOpen(true)}
+              >
+                <Icon name="menu" size={14} />
+                <span>Mobile Drawer'ı Aç</span>
+              </button>
+              <span className="hidden md:inline">Mobile drawer testi için ekranı &lt; 768px'e küçült.</span>
+            </div>
+          </Section>
+        </main>
       </div>
+
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Test Modal"
+        size="md"
+        footer={
+          <>
+            <button type="button" className="htl-btn htl-btn-ghost" onClick={() => setModalOpen(false)}>
+              Kapat
+            </button>
+            <button
+              type="button"
+              className="htl-btn htl-btn-primary"
+              onClick={() => {
+                setModalOpen(false);
+                show('Modal kaydedildi.', 'success');
+              }}
+            >
+              <Icon name="check" size={16} stroke="white" />
+              <span>Kaydet</span>
+            </button>
+          </>
+        }
+      >
+        <p style={{ color: 'var(--ink-soft)' }}>
+          Modal.jsx — size <code>md</code>, footer ile. Esc tuşu veya backdrop tıklaması kapatır.
+        </p>
+        <div className="mt-4">
+          <label className="htl-label">Örnek input</label>
+          <input className="htl-input" placeholder="Form alanı..." />
+        </div>
+      </Modal>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Kaydı sil"
+        msg="Bu işlem geri alınamaz. Devam etmek istediğine emin misin?"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          show('Kayıt silindi.', 'success');
+        }}
+        confirmLabel="Evet, sil"
+        danger
+      />
     </div>
   );
 };
 
 const Section = ({ title, children }) => (
-  <div style={{ marginBottom: 24 }}>
-    <h3 style={{
-      fontFamily: "'Fraunces', serif",
-      fontSize: 16,
-      fontWeight: 500,
-      color: '#1f3a2e',
-      margin: '0 0 12px 0'
-    }}>{title}</h3>
-    {children}
-  </div>
-);
-
-const Row = ({ label, value, ok = null }) => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: '6px 12px',
-    background: '#f0e8d0',
-    borderRadius: 6,
-    fontSize: 13,
-    marginBottom: 4
-  }}>
-    <span style={{ color: '#5a6b5e' }}>{label}</span>
-    <span style={{
-      fontFamily: 'monospace',
-      color: ok === false ? '#a64545' : ok === true ? '#4a7c59' : '#1a1a1a'
-    }}>{value}</span>
-  </div>
+  <section className="htl-card">
+    <div className="htl-card-header">
+      <h3 className="font-display text-lg font-medium" style={{ color: 'var(--forest)' }}>
+        {title}
+      </h3>
+    </div>
+    <div className="htl-card-body">{children}</div>
+  </section>
 );
 
 export default App;
