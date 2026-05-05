@@ -3,7 +3,7 @@
 > **Amaç:** Bu dosya, Hoteluter projesinde çalışan herhangi bir Claude (yeni sohbet, yeni session) için **kurucu dokümandır**. İlk okunacak dosyadır. Projenin tarihi, mimarisi, çalışan kuralları ve aktif görevler buradadır.
 
 **Son güncelleme:** 05.05.2026
-**Mevcut sürüm:** v1.0 geçişi (Vite + Firebase + Netlify) — Görev 6A tamamlandı, Görev 6B'ye geçiliyor.
+**Mevcut sürüm:** v1.0 geçişi (Vite + Firebase + Netlify) — Görev 6B + 7 tamamlandı, sistem ayağa kalktı. Sıradaki: Görev 8 (Şema + sıfır seed).
 **Tek-dosya MVP final:** v0.7 (`hoteluter.html`, ~6500 satır, backup olarak saklı)
 
 ---
@@ -134,7 +134,7 @@ hoteluter/
 | Faz | Görevler | Durum |
 |---|---|---|
 | **1. Hazırlık** | 1. Firebase projesi · 2. Local environment | ✅ Tamam |
-| **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals (6A mali ✓ · 6B rezervasyon ⏳) · 7. Pages | 🔄 6A tamam, 6B'de |
+| **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals (6A mali · 6B rezervasyon) · 7. Pages | ✅ Tamam |
 | **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | ⏳ |
 | **4. Deploy** | 11. GitHub + Netlify · 12. Domain | ⏳ |
 
@@ -142,21 +142,30 @@ hoteluter/
 
 ## 🚀 Şu An Nerede
 
-**Görev 6A tamamlandı:** `src/modals/` altında 5 mali modal hazır:
-- `TahsilatModal.jsx` — rezervasyona bağlı **veya** bağımsız tahsilat. PB seçince hesap dropdown otomatik filtrelenir. Farklı PB ise kur paneli + ana PB önizlemesi. `addTahsilatWithHareket` / `updateTahsilatWithHareket` (atomik writeBatch).
-- `GiderModal.jsx` — kategori kart-style butonlar (renkli, lucide ikonlu), tahsilat ile simetrik kur paneli, sonraki bakiye önizlemesi. `addGiderWithHareket` / `updateGiderWithHareket`.
-- `TransferModal.jsx` — `normal` (aynı PB) + `doviz` (farklı PB) tab'ları. PB değişince tab otomatik geçer; kullanıcının "farklı PB ama normal tab" seçmesi engelli. Canlı kur referansı + kullanılan kur + sapma uyarısı (>%5).
-- `HesapFormModal.jsx` — hesap CRUD. Tip seçilince renk default'u o tipin rengi. Düzenlemede hareketler varsa **PB kilitli** (bakiye bozulmasın diye yeni hesap aç + eskisini pasif yap önerisi).
-- `HesapDetayModal.jsx` — `size=lg`. Üst kart (tip rengi + bakiye + ana PB karşılığı). Filtreler: tip + tarih aralığı. Manuel hareket mini-form (`addManuelHareket`). Running balance kolonu. `canDelete` prop ile satır-bazlı silme (tahsilat/gider helper, transfer için her iki tarafı birden batch-delete).
+**Görev 6B + 7 tamamlandı:** Sistem production-ready bir UI'ya çevrildi. Health-check kalktı, gerçek shell + 10 sayfa + 11 modal aktif.
 
-**App.jsx** Firestore real-time subscribe (`useCollection`) ile çalışan tam test paneline çevrildi: hesap kartları, son 5 hareket, son tahsilat/gider düzenleme butonları, eksik seed varsa migration prompt'u.
+**Yeni modaller (Görev 6B, `src/modals/`):**
+- `ReservationFormModal.jsx` — en büyük modal: misafir/oda/tarih/kişi/pansiyon/kanal/durum + 3 fiyat modu (gece/toplam/detay-her-gece-ayrı) + ödeme bölümü (toplam/ödenen/kalan + tahsilat geçmişi tablosu + "Yeni Ödeme Al" → TahsilatModal'ı rezervasyon ID prefill ile açar). Çakışma kontrolü segment-aware. Yeni rezde rezervasyonKodu otomatik (HTL-YYYYAA-NNN).
+- `SplitModal.jsx` — bölünmemiş rez için yeni böl (split tarihi + yeni oda + önizleme + çakışma uyarısı), bölünmüş rez için bölmeyi geri al. Geriye uyum: ilk segment + son çıkış senkron.
+- `MisafirFormModal.jsx`, `OdaTipFormModal.jsx`, `OdaFormModal.jsx`, `KullaniciFormModal.jsx` — basit CRUD.
 
-**Helper API standardı (kritik):** Eski sync helper'lar artık async + throw eder. Modal `save()` pattern: `try { await ...; show('ok'); onSaved?.(); onClose?.(); } catch (e) { show(e.message, 'error'); }`. UI'daki bilinen kontroller (PB-hesap eşleşmesi, kur yokluğu, kategori boşluğu) helper throw'una düşmeden önce kullanıcıya gösterilir.
+**Sayfalar (Görev 7, `src/pages/`):**
+- `LoginScreen.jsx` — placeholder mock auth ile (Görev 9'da Firebase Auth bağlanır).
+- `DashboardPage.jsx` — 4 KPI + Bu Ayın İstatistikleri (6 satır SabeeApp tarzı, son satır vurgulu Toplam Ciro) + Bugün Gelenler/Çıkanlar/Otelde 3 tablo.
+- `CalendarPage.jsx` — Gantt 7/15/30 gün, gece-bazlı bar (çıkış günü boş), oda tipi filtresi, drag-to-create (boş hücre tutup sürükle), edit mode'da drag-to-move (segment-aware, çakışma kontrolü, onay modali), edit mode'da bar üzerinde makas/böl butonu (>60px) → SplitModal. Sürükleme tooltip'i (kaç gece + tarih + oda).
+- `ReservationListPage.jsx` — durum/tip/arama filtreleri + tablo.
+- `GuestsPage.jsx`, `RoomsPage.jsx` (Odalar + Oda Tipleri 2 sekme), `AccountingPage.jsx` (4 sekme + KPI + 5 modal entegrasyonu), `ReportsPage.jsx` (Tarih Aralığı + Yıllık Ciro custom SVG bar), `SettingsPage.jsx` (6 sekme: Otel/Kur/Kanallar/Kategoriler/Yedek/Kullanıcılar), `UsersPage.jsx` (embedded prop ile Settings içinde de gösterilir).
 
-`npm run build` yeşil, 1614 modül transform ediliyor.
+**Mock auth (`lib/auth-mock.jsx`):** `useAuth` API yüzeyi gerçek `auth.js` ile aynı (user/can/login/logout/refreshUser/changePassword). Hardcoded superadmin (Mert Efe). Görev 9'da tek değişiklik: import path'lerini `auth-mock.jsx` → `auth.jsx` swap.
 
-**Sıradaki — Görev 6B: Rezervasyon Modalleri**
-- `ReservationFormModal.jsx`, `SplitModal.jsx`, misafir form, oda form vb.
+**Boot sırası (App.jsx):** AuthProvider → ToastProvider → user kontrolü → LoginScreen veya AppShell. AppShell mount'ında otomatik `runMigrations()` (flag pattern sayesinde idempotent) ve `ensureKurlarLoaded()`.
+
+**Modül key → sayfa eşlemesi (`PAGE_MAP`):** dashboard/takvim/rezervasyon/misafirler/odalar/onMuhasebe/giderler (→AccountingPage)/raporlar/ayarlar/kullanicilar.
+
+`npm run build` yeşil, 1632 modül transform ediliyor.
+
+**Sıradaki — Görev 8: Firestore Şema + sıfır seed**
+- Şema dokümantasyonu, sıfır demo veri kuralı sağlanması, ilk migration olgunlaştırma.
 
 ---
 
