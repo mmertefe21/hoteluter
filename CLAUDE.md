@@ -3,8 +3,8 @@
 > **Amaç:** Bu dosya, Hoteluter projesinde çalışan herhangi bir Claude (yeni sohbet, yeni session) için **kurucu dokümandır**. İlk okunacak dosyadır. Projenin tarihi, mimarisi, çalışan kuralları ve aktif görevler buradadır.
 
 **Son güncelleme:** 05.05.2026
-**Mevcut sürüm:** v1.0 geçişi (Vite + Firebase + Netlify) — Görev 6B + 7 tamamlandı, sistem ayağa kalktı. Sıradaki: Görev 8 (Şema + sıfır seed).
-**Tek-dosya MVP final:** v0.7 (`hoteluter.html`, ~6500 satır, backup olarak saklı)
+**Mevcut sürüm:** **v1.0-alpha** — Faz 2 tamamen tamam, sistem çalışır halde, **sahada test aşamasında**. Mock auth ile çalışıyor (`lib/auth-mock.jsx`). Kalan: Görev 9 (gerçek Auth) + Görev 10 (Security Rules) + Görev 11 (Netlify deploy) + Görev 12 (Domain).
+**Tek-dosya MVP final:** v0.7 (`docs/backup/hoteluter-v0.7-final.html`, ~6500 satır, referans için saklı)
 
 ---
 
@@ -135,37 +135,36 @@ hoteluter/
 |---|---|---|
 | **1. Hazırlık** | 1. Firebase projesi · 2. Local environment | ✅ Tamam |
 | **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals (6A mali · 6B rezervasyon) · 7. Pages | ✅ Tamam |
-| **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | ⏳ |
+| **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | 🔄 8 örtük tamam (migrations.js + sıfır demo); 9-10 kaldı |
 | **4. Deploy** | 11. GitHub + Netlify · 12. Domain | ⏳ |
 
 ---
 
 ## 🚀 Şu An Nerede
 
-**Görev 6B + 7 tamamlandı:** Sistem production-ready bir UI'ya çevrildi. Health-check kalktı, gerçek shell + 10 sayfa + 11 modal aktif.
+**Görev 6B + 7 birleştirilmiş tamamlandı (commit `f40aa5d`):** 19 dosya / **+3926 satır**. Sistem production-ready bir UI'ya çevrildi — health-check kalktı, gerçek shell + 10 sayfa + 11 modal aktif. `npm run build` yeşil, **1632 modül**.
 
-**Yeni modaller (Görev 6B, `src/modals/`):**
-- `ReservationFormModal.jsx` — en büyük modal: misafir/oda/tarih/kişi/pansiyon/kanal/durum + 3 fiyat modu (gece/toplam/detay-her-gece-ayrı) + ödeme bölümü (toplam/ödenen/kalan + tahsilat geçmişi tablosu + "Yeni Ödeme Al" → TahsilatModal'ı rezervasyon ID prefill ile açar). Çakışma kontrolü segment-aware. Yeni rezde rezervasyonKodu otomatik (HTL-YYYYAA-NNN).
-- `SplitModal.jsx` — bölünmemiş rez için yeni böl (split tarihi + yeni oda + önizleme + çakışma uyarısı), bölünmüş rez için bölmeyi geri al. Geriye uyum: ilk segment + son çıkış senkron.
-- `MisafirFormModal.jsx`, `OdaTipFormModal.jsx`, `OdaFormModal.jsx`, `KullaniciFormModal.jsx` — basit CRUD.
+**Sistem çalışır halde, mock auth ile (`lib/auth-mock.jsx`).** Migration otomatik boot'ta çalışıyor (idempotent flag pattern). Kullanıcı sahada test edecek; sonra Görev 9'a (gerçek Firebase Auth) geçilecek.
 
-**Sayfalar (Görev 7, `src/pages/`):**
-- `LoginScreen.jsx` — placeholder mock auth ile (Görev 9'da Firebase Auth bağlanır).
-- `DashboardPage.jsx` — 4 KPI + Bu Ayın İstatistikleri (6 satır SabeeApp tarzı, son satır vurgulu Toplam Ciro) + Bugün Gelenler/Çıkanlar/Otelde 3 tablo.
-- `CalendarPage.jsx` — Gantt 7/15/30 gün, gece-bazlı bar (çıkış günü boş), oda tipi filtresi, drag-to-create (boş hücre tutup sürükle), edit mode'da drag-to-move (segment-aware, çakışma kontrolü, onay modali), edit mode'da bar üzerinde makas/böl butonu (>60px) → SplitModal. Sürükleme tooltip'i (kaç gece + tarih + oda).
-- `ReservationListPage.jsx` — durum/tip/arama filtreleri + tablo.
-- `GuestsPage.jsx`, `RoomsPage.jsx` (Odalar + Oda Tipleri 2 sekme), `AccountingPage.jsx` (4 sekme + KPI + 5 modal entegrasyonu), `ReportsPage.jsx` (Tarih Aralığı + Yıllık Ciro custom SVG bar), `SettingsPage.jsx` (6 sekme: Otel/Kur/Kanallar/Kategoriler/Yedek/Kullanıcılar), `UsersPage.jsx` (embedded prop ile Settings içinde de gösterilir).
+**Modal envanteri (`src/modals/`):**
+- Mali (Görev 6A): TahsilatModal, GiderModal, TransferModal, HesapFormModal, HesapDetayModal
+- Rezervasyon (Görev 6B): ReservationFormModal (yan paneli + entegre TahsilatModal), SplitModal
+- CRUD (Görev 6B): MisafirFormModal, OdaTipFormModal, OdaFormModal, KullaniciFormModal
 
-**Mock auth (`lib/auth-mock.jsx`):** `useAuth` API yüzeyi gerçek `auth.js` ile aynı (user/can/login/logout/refreshUser/changePassword). Hardcoded superadmin (Mert Efe). Görev 9'da tek değişiklik: import path'lerini `auth-mock.jsx` → `auth.jsx` swap.
+**Sayfa envanteri (`src/pages/`):**
+LoginScreen · DashboardPage · CalendarPage · ReservationListPage · GuestsPage · RoomsPage · AccountingPage · ReportsPage · SettingsPage · UsersPage
 
-**Boot sırası (App.jsx):** AuthProvider → ToastProvider → user kontrolü → LoginScreen veya AppShell. AppShell mount'ında otomatik `runMigrations()` (flag pattern sayesinde idempotent) ve `ensureKurlarLoaded()`.
+**Mock auth swap stratejisi:** `useAuth` API yüzeyi gerçek `lib/auth.js` ile birebir aynı. Görev 9'da tek değişiklik: 9 dosyadaki `'auth-mock.jsx'` → `'auth.js'` import path swap (App.jsx + 8 sayfa). `auth-mock.jsx` o aşamada silinir.
 
-**Modül key → sayfa eşlemesi (`PAGE_MAP`):** dashboard/takvim/rezervasyon/misafirler/odalar/onMuhasebe/giderler (→AccountingPage)/raporlar/ayarlar/kullanicilar.
+**Boot sırası (App.jsx):** AuthProvider → ToastProvider → user kontrolü → LoginScreen veya AppShell. AppShell mount'ında otomatik `runMigrations()` ve `ensureKurlarLoaded()`.
 
-`npm run build` yeşil, 1632 modül transform ediliyor.
+**Sıradaki — Mert sahada test ediyor.** Bug raporları + "şu da olsun" istekleri sonrası:
+- Görev 9: Firebase Auth bağlama (auth.js zaten hazır, sadece swap + ilk superadmin user dokümanı)
+- Görev 10: Firestore Security Rules (rol/yetki bazlı kuralar)
+- Görev 11: Netlify deploy (netlify.toml + GitHub continuous deploy)
+- Görev 12: hoteluter.com domain (GoDaddy → Netlify nameserver)
 
-**Sıradaki — Görev 8: Firestore Şema + sıfır seed**
-- Şema dokümantasyonu, sıfır demo veri kuralı sağlanması, ilk migration olgunlaştırma.
+Detaylı v1.0-alpha dokümanı: `docs/CLAUDE_HOTELUTER_v1.0-alpha.md`
 
 ---
 
@@ -191,6 +190,6 @@ hoteluter/
 
 **Yeni Claude session başlarken:**
 1. Bu dosyayı (`CLAUDE.md`) oku
-2. Geçiş planına bak (`docs/HOTELUTER_GECIS_PLANI.md`) — hangi görevdeyiz?
-3. En son sürüm dokümanına bak (`docs/CLAUDE_HOTELUTER_v0.7.md` şu anda) — son ne oldu?
-4. Mert'le konuşmaya başla
+2. **`docs/CLAUDE_HOTELUTER_v1.0-alpha.md`** oku — şu anki sistemin tam fotoğrafı, kullanım akışı, bilinen sınırlamalar
+3. Geçiş planına bak (`docs/HOTELUTER_GECIS_PLANI.md`) — kalan görevler için
+4. Mert'le konuşmaya başla — hangi konuda yardım istediğini öğren (bug raporu, yeni feature, Görev 9-12 ilerleme)
