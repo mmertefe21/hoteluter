@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar.jsx';
 import Modal from './components/Modal.jsx';
 import ConfirmModal from './components/ConfirmModal.jsx';
@@ -6,12 +6,23 @@ import Icon from './components/Icon.jsx';
 import { ToastProvider, useToast } from './components/Toast.jsx';
 import ListPageShell from './components/ListPageShell.jsx';
 import { ALL_MODULES } from './lib/permissions.js';
+import { db, useCollection, useDoc } from './lib/db.js';
+import { fmtMoney, fmtDateTR } from './lib/helpers.js';
+import { HAREKET_TIP_INFO } from './lib/constants.js';
+import { runMigrations } from './lib/migrations.js';
+import { ensureKurlarLoaded } from './lib/kur.js';
+import TahsilatModal from './modals/TahsilatModal.jsx';
+import GiderModal from './modals/GiderModal.jsx';
+import TransferModal from './modals/TransferModal.jsx';
+import HesapFormModal from './modals/HesapFormModal.jsx';
+import HesapDetayModal from './modals/HesapDetayModal.jsx';
 
 /**
- * Hoteluter — Görev 5 Health-Check
+ * Hoteluter — Health-Check (Görev 5 + 6A)
  *
- * Tüm reusable component'lerin (Sidebar, Modal, ConfirmModal, Icon, Toast,
- * ListPageShell) render edilebildiğini ve etkileşimlerinin çalıştığını doğrular.
+ * Görev 5: Reusable components (Sidebar, Modal, ConfirmModal, Icon, Toast, ListPageShell)
+ * Görev 6A: Mali modaller (Tahsilat, Gider, Transfer, HesapForm, HesapDetay)
+ *
  * Sıradaki görevde gerçek router + AuthProvider gelir.
  */
 
@@ -41,6 +52,44 @@ const HealthCheck = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [search, setSearch] = useState('');
   const { show } = useToast();
+
+  // Mali modal testleri için Firestore subscriptions
+  const otel = useDoc('otel', 'main');
+  const ana = otel?.anaParaBirimi || 'EUR';
+  const hesaplar = useCollection('hesaplar');
+  const hesapHareketleri = useCollection('hesapHareketleri');
+  const giderKategorileri = useCollection('giderKategorileri');
+  const tahsilatlar = useCollection('tahsilatlar');
+  const giderler = useCollection('giderler');
+
+  // Modal state
+  const [tahsilatOpen, setTahsilatOpen] = useState(false);
+  const [editingTahsilat, setEditingTahsilat] = useState(null);
+  const [giderOpen, setGiderOpen] = useState(false);
+  const [editingGider, setEditingGider] = useState(null);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [hesapFormOpen, setHesapFormOpen] = useState(false);
+  const [editingHesap, setEditingHesap] = useState(null);
+  const [hesapDetay, setHesapDetay] = useState(null);
+  const [migrating, setMigrating] = useState(false);
+
+  useEffect(() => {
+    ensureKurlarLoaded();
+  }, []);
+
+  const eksikSeed = hesaplar.length === 0 || giderKategorileri.length === 0;
+
+  const runSeed = async () => {
+    setMigrating(true);
+    try {
+      const r = await runMigrations();
+      show(`Migration tamam: ${JSON.stringify(r)}`, 'success');
+    } catch (e) {
+      show('Migration hatası: ' + e.message, 'error');
+    } finally {
+      setMigrating(false);
+    }
+  };
 
   const filteredGuests = MOCK_GUESTS.filter((g) => {
     if (!search) return true;
@@ -202,6 +251,239 @@ const HealthCheck = () => {
               <span className="hidden md:inline">Mobile drawer testi için ekranı &lt; 768px'e küçült.</span>
             </div>
           </Section>
+
+          <Section title="Mali Modaller (Görev 6A)">
+            <div className="space-y-3 text-sm">
+              <div className="flex flex-wrap gap-3 text-xs" style={{ color: 'var(--ink-soft)' }}>
+                <span>Ana PB: <strong style={{ color: 'var(--forest)' }}>{ana}</strong></span>
+                <span>·</span>
+                <span>Hesap: <strong>{hesaplar.length}</strong></span>
+                <span>·</span>
+                <span>Kategori: <strong>{giderKategorileri.length}</strong></span>
+                <span>·</span>
+                <span>Hareket: <strong>{hesapHareketleri.length}</strong></span>
+                <span>·</span>
+                <span>Tahsilat: <strong>{tahsilatlar.length}</strong></span>
+                <span>·</span>
+                <span>Gider: <strong>{giderler.length}</strong></span>
+              </div>
+
+              {eksikSeed && (
+                <div
+                  className="px-3 py-3 rounded-md flex items-start gap-3"
+                  style={{ background: 'var(--warn-soft)', color: 'var(--warn)' }}
+                >
+                  <Icon name="alert-triangle" size={18} />
+                  <div className="flex-1 text-xs">
+                    <strong>Hesap veya kategori yok.</strong> Mali modalleri test etmek için önce migration çalıştır
+                    (3 default hesap + 8 gider kategorisi yazılır).
+                  </div>
+                  <button
+                    type="button"
+                    className="htl-btn htl-btn-primary"
+                    onClick={runSeed}
+                    disabled={migrating}
+                  >
+                    <Icon name="database" size={14} stroke="white" />
+                    <span>{migrating ? 'Çalışıyor...' : 'Migration Çalıştır'}</span>
+                  </button>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="htl-btn htl-btn-primary"
+                  onClick={() => { setEditingTahsilat(null); setTahsilatOpen(true); }}
+                  disabled={hesaplar.length === 0}
+                >
+                  <Icon name="hand-coins" size={14} stroke="white" />
+                  <span>Yeni Tahsilat</span>
+                </button>
+                <button
+                  type="button"
+                  className="htl-btn htl-btn-primary"
+                  onClick={() => { setEditingGider(null); setGiderOpen(true); }}
+                  disabled={hesaplar.length === 0 || giderKategorileri.length === 0}
+                >
+                  <Icon name="receipt" size={14} stroke="white" />
+                  <span>Yeni Gider</span>
+                </button>
+                <button
+                  type="button"
+                  className="htl-btn htl-btn-primary"
+                  onClick={() => setTransferOpen(true)}
+                  disabled={hesaplar.length < 2}
+                >
+                  <Icon name="arrow-left-right" size={14} stroke="white" />
+                  <span>Transfer</span>
+                </button>
+                <button
+                  type="button"
+                  className="htl-btn htl-btn-accent"
+                  onClick={() => { setEditingHesap(null); setHesapFormOpen(true); }}
+                >
+                  <Icon name="plus" size={14} stroke="white" />
+                  <span>Yeni Hesap</span>
+                </button>
+              </div>
+
+              {hesaplar.length > 0 && (
+                <div>
+                  <div className="text-[11px] uppercase tracking-wider mb-2" style={{ color: 'var(--ink-soft)' }}>
+                    Hesaplar — tıkla detay
+                  </div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {hesaplar.map((h) => {
+                      const pb = h.paraBirimi || ana;
+                      const bakiye = hesapHareketleri
+                        .filter((x) => x.hesapId === h.id)
+                        .reduce((s, x) => s + Number(x.tutar || 0), 0);
+                      return (
+                        <div
+                          key={h.id}
+                          className="rounded-md p-3 cursor-pointer hover:shadow-sm transition"
+                          style={{
+                            background: 'var(--bone-light)',
+                            border: '1px solid var(--line-soft)',
+                          }}
+                          onClick={() => setHesapDetay(h)}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm truncate" style={{ color: 'var(--forest)' }}>
+                                {h.ad}
+                                {h.aktif === false && (
+                                  <span className="htl-badge htl-badge-danger ml-2" style={{ fontSize: 9 }}>
+                                    Pasif
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px]" style={{ color: 'var(--ink-faint)' }}>
+                                {h.tip} · {pb}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div
+                                className="font-display text-base font-medium"
+                                style={{ color: bakiye >= 0 ? 'var(--forest)' : 'var(--danger)' }}
+                              >
+                                {fmtMoney(bakiye, pb)}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="p-1 rounded hover:bg-[var(--bone-warm)]"
+                              style={{ color: 'var(--ink-soft)' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingHesap(h);
+                                setHesapFormOpen(true);
+                              }}
+                              title="Düzenle"
+                            >
+                              <Icon name="square-pen" size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {hesapHareketleri.length > 0 && (
+                <div>
+                  <div className="text-[11px] uppercase tracking-wider mb-2" style={{ color: 'var(--ink-soft)' }}>
+                    Son 5 Hareket
+                  </div>
+                  <div className="rounded-md overflow-hidden" style={{ border: '1px solid var(--line-soft)' }}>
+                    <table className="htl-table" style={{ fontSize: 12 }}>
+                      <thead>
+                        <tr>
+                          <th>Tarih</th>
+                          <th>Tip</th>
+                          <th>Açıklama</th>
+                          <th className="text-right">Tutar</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...hesapHareketleri]
+                          .sort((a, b) => `${b.tarih}`.localeCompare(`${a.tarih}`))
+                          .slice(0, 5)
+                          .map((h) => {
+                            const ti = HAREKET_TIP_INFO(h.tip);
+                            const isPos = Number(h.tutar) >= 0;
+                            const hesap = hesaplar.find((x) => x.id === h.hesapId);
+                            const pb = hesap?.paraBirimi || ana;
+                            return (
+                              <tr key={h.id}>
+                                <td>{fmtDateTR(h.tarih)}</td>
+                                <td>
+                                  <span className={`htl-badge ${isPos ? 'htl-badge-success' : 'htl-badge-danger'}`}>
+                                    {ti.l}
+                                  </span>
+                                </td>
+                                <td className="truncate" style={{ maxWidth: 320 }}>{h.aciklama || '-'}</td>
+                                <td
+                                  className="text-right font-medium"
+                                  style={{ color: isPos ? 'var(--success)' : 'var(--danger)' }}
+                                >
+                                  {isPos ? '+' : ''}
+                                  {fmtMoney(h.tutar, pb)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {tahsilatlar.length > 0 && (
+                <details>
+                  <summary className="cursor-pointer text-xs" style={{ color: 'var(--ink-soft)' }}>
+                    Son tahsilatlar ({tahsilatlar.length}) — düzenleme testi
+                  </summary>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {[...tahsilatlar].slice(-5).map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className="htl-btn htl-btn-ghost text-xs"
+                        onClick={() => { setEditingTahsilat(t); setTahsilatOpen(true); }}
+                      >
+                        <Icon name="square-pen" size={12} />
+                        <span>{fmtMoney(t.tutar, t.paraBirimi || ana)} · {fmtDateTR(t.tarih)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              )}
+
+              {giderler.length > 0 && (
+                <details>
+                  <summary className="cursor-pointer text-xs" style={{ color: 'var(--ink-soft)' }}>
+                    Son giderler ({giderler.length}) — düzenleme testi
+                  </summary>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {[...giderler].slice(-5).map((g) => (
+                      <button
+                        key={g.id}
+                        type="button"
+                        className="htl-btn htl-btn-ghost text-xs"
+                        onClick={() => { setEditingGider(g); setGiderOpen(true); }}
+                      >
+                        <Icon name="square-pen" size={12} />
+                        <span>{fmtMoney(g.tutar, g.paraBirimi || ana)} · {fmtDateTR(g.tarih)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </div>
+          </Section>
         </main>
       </div>
 
@@ -249,6 +531,56 @@ const HealthCheck = () => {
         }}
         confirmLabel="Evet, sil"
         danger
+      />
+
+      <TahsilatModal
+        open={tahsilatOpen}
+        onClose={() => { setTahsilatOpen(false); setEditingTahsilat(null); }}
+        target={editingTahsilat}
+        hesaplar={hesaplar}
+        hesapHareketleri={hesapHareketleri}
+        tahsilatlar={tahsilatlar}
+        ana={ana}
+        userId="health-check"
+      />
+
+      <GiderModal
+        open={giderOpen}
+        onClose={() => { setGiderOpen(false); setEditingGider(null); }}
+        target={editingGider}
+        hesaplar={hesaplar}
+        hesapHareketleri={hesapHareketleri}
+        kategoriler={giderKategorileri}
+        ana={ana}
+        userId="health-check"
+      />
+
+      <TransferModal
+        open={transferOpen}
+        onClose={() => setTransferOpen(false)}
+        hesaplar={hesaplar}
+        hesapHareketleri={hesapHareketleri}
+        ana={ana}
+        userId="health-check"
+      />
+
+      <HesapFormModal
+        open={hesapFormOpen}
+        onClose={() => { setHesapFormOpen(false); setEditingHesap(null); }}
+        target={editingHesap}
+        hesapHareketleri={hesapHareketleri}
+        ana={ana}
+      />
+
+      <HesapDetayModal
+        open={!!hesapDetay}
+        onClose={() => setHesapDetay(null)}
+        hesap={hesapDetay}
+        hesaplar={hesaplar}
+        hesapHareketleri={hesapHareketleri}
+        ana={ana}
+        userId="health-check"
+        canDelete
       />
     </div>
   );

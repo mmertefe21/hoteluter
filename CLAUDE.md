@@ -3,7 +3,7 @@
 > **Amaç:** Bu dosya, Hoteluter projesinde çalışan herhangi bir Claude (yeni sohbet, yeni session) için **kurucu dokümandır**. İlk okunacak dosyadır. Projenin tarihi, mimarisi, çalışan kuralları ve aktif görevler buradadır.
 
 **Son güncelleme:** 05.05.2026
-**Mevcut sürüm:** v1.0 geçişi (Vite + Firebase + Netlify) — Görev 5 tamamlandı, Görev 6'ya geçiliyor.
+**Mevcut sürüm:** v1.0 geçişi (Vite + Firebase + Netlify) — Görev 6A tamamlandı, Görev 6B'ye geçiliyor.
 **Tek-dosya MVP final:** v0.7 (`hoteluter.html`, ~6500 satır, backup olarak saklı)
 
 ---
@@ -134,7 +134,7 @@ hoteluter/
 | Faz | Görevler | Durum |
 |---|---|---|
 | **1. Hazırlık** | 1. Firebase projesi · 2. Local environment | ✅ Tamam |
-| **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals · 7. Pages | 🔄 Görev 3-5 tamam, 6'da |
+| **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals (6A mali ✓ · 6B rezervasyon ⏳) · 7. Pages | 🔄 6A tamam, 6B'de |
 | **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | ⏳ |
 | **4. Deploy** | 11. GitHub + Netlify · 12. Domain | ⏳ |
 
@@ -142,19 +142,21 @@ hoteluter/
 
 ## 🚀 Şu An Nerede
 
-**Görev 5 tamamlandı:** `src/components/` altında 6 reusable component hazır:
-- `Icon.jsx` — lucide-react wrapper, kebab-case `name` PascalCase'e çevrilip dinamik component lookup. v0.7 API'siyle uyumlu (name/size/stroke/strokeWidth). Bilinmeyen isimde sessiz fallback.
-- `Modal.jsx` — backdrop + içerik, size sm/md/lg, footer slot, Esc tuşu kapatır.
-- `ConfirmModal.jsx` — Modal üzerine kurulu onay diyaloğu, danger varyantı varsayılan kırmızı.
-- `Toast.jsx` + `ToastProvider` + `useToast()` — success/error/info, 3 sn auto-dismiss, üst üste çağrılırsa son mesajı gösterir.
-- `Sidebar.jsx` — `ALL_MODULES`'tan dinamik link, `hideFromSidebar`/`superadminOnly` filtresi, `canSeeModule(key)` injection point (Görev 9 auth'a hazır), mobile drawer modu.
-- `ListPageShell.jsx` — kart başlığı (icon+title) + arama + "Yeni" butonu + tablo wrapper. Misafirler/Odalar/Kullanıcılar sayfaları için tekrar önleyici iskele.
-- `App.jsx` — health-check ekranı: 6 component'i de gösteren interaktif test paneli (modal/onay/toast butonları, ikon grid, mock misafir tablosu, sidebar drawer testi).
+**Görev 6A tamamlandı:** `src/modals/` altında 5 mali modal hazır:
+- `TahsilatModal.jsx` — rezervasyona bağlı **veya** bağımsız tahsilat. PB seçince hesap dropdown otomatik filtrelenir. Farklı PB ise kur paneli + ana PB önizlemesi. `addTahsilatWithHareket` / `updateTahsilatWithHareket` (atomik writeBatch).
+- `GiderModal.jsx` — kategori kart-style butonlar (renkli, lucide ikonlu), tahsilat ile simetrik kur paneli, sonraki bakiye önizlemesi. `addGiderWithHareket` / `updateGiderWithHareket`.
+- `TransferModal.jsx` — `normal` (aynı PB) + `doviz` (farklı PB) tab'ları. PB değişince tab otomatik geçer; kullanıcının "farklı PB ama normal tab" seçmesi engelli. Canlı kur referansı + kullanılan kur + sapma uyarısı (>%5).
+- `HesapFormModal.jsx` — hesap CRUD. Tip seçilince renk default'u o tipin rengi. Düzenlemede hareketler varsa **PB kilitli** (bakiye bozulmasın diye yeni hesap aç + eskisini pasif yap önerisi).
+- `HesapDetayModal.jsx` — `size=lg`. Üst kart (tip rengi + bakiye + ana PB karşılığı). Filtreler: tip + tarih aralığı. Manuel hareket mini-form (`addManuelHareket`). Running balance kolonu. `canDelete` prop ile satır-bazlı silme (tahsilat/gider helper, transfer için her iki tarafı birden batch-delete).
 
-`npm run build` yeşil, 1584 modül transform ediliyor, hata yok.
+**App.jsx** Firestore real-time subscribe (`useCollection`) ile çalışan tam test paneline çevrildi: hesap kartları, son 5 hareket, son tahsilat/gider düzenleme butonları, eksik seed varsa migration prompt'u.
 
-**Sıradaki — Görev 6: Modals**
-- `ReservationFormModal.jsx`, `SplitModal.jsx`, `GiderModal.jsx`, hesap/transfer/tahsilat modalları, vd.
+**Helper API standardı (kritik):** Eski sync helper'lar artık async + throw eder. Modal `save()` pattern: `try { await ...; show('ok'); onSaved?.(); onClose?.(); } catch (e) { show(e.message, 'error'); }`. UI'daki bilinen kontroller (PB-hesap eşleşmesi, kur yokluğu, kategori boşluğu) helper throw'una düşmeden önce kullanıcıya gösterilir.
+
+`npm run build` yeşil, 1614 modül transform ediliyor.
+
+**Sıradaki — Görev 6B: Rezervasyon Modalleri**
+- `ReservationFormModal.jsx`, `SplitModal.jsx`, misafir form, oda form vb.
 
 ---
 
