@@ -27,15 +27,39 @@ service cloud.firestore {
       return isAuth() && userDoc().aktif == true;
     }
 
-    // ===== users — sadece superadmin yazabilir =====
+    // ===== users — get/list/create/update/delete ayrımı =====
+    // createUserWithProfile akışında setDoc, yeni user'ın session'ında çalışır
+    // (createUserWithEmailAndPassword YAN ETKİSİ: oturum yeni user'a geçer).
+    // Bu yüzden self-create izni gerekli, ama rol manipülasyonu engelli.
     match /users/{userId} {
-      // Herkes (auth) kendi profilini okur, superadmin tüm profilleri okur
-      allow read: if isAuth() && (request.auth.uid == userId || isSuperadmin());
-      // Sadece superadmin yeni user yaratır/siler
-      allow create, delete: if isSuperadmin();
-      // Update: superadmin her şeyi, normal user sadece kendi profilinin
-      // belirli alanlarını (örn. son giriş bilgisi vs.) — şimdilik sadece superadmin
-      allow update: if isSuperadmin();
+      // GET: kendi profilini okur, superadmin tüm profilleri okur
+      allow get: if isAuth() && (request.auth.uid == userId || isSuperadmin());
+
+      // LIST: sadece superadmin tüm kullanıcıları listeler (UsersPage için)
+      allow list: if isSuperadmin();
+
+      // CREATE: Kullanıcı kendi profilini yaratabilir (createUserWithProfile flow için)
+      //         ANCAK: rol sadece 'admin' veya 'kullanici' olabilir, 'superadmin' yasak
+      //         (kendine superadmin atayıp yetki yükseltmeyi engelle)
+      //         Veya: superadmin herhangi birinin profilini yaratabilir
+      allow create: if isAuth() && (
+        (request.auth.uid == userId
+         && request.resource.data.rol in ['admin', 'kullanici']
+         && request.resource.data.aktif == true)
+        || isSuperadmin()
+      );
+
+      // UPDATE: Kullanıcı kendi profilini güncelleyebilir AMA rol ve aktif değişemez
+      //         Superadmin her şeyi değiştirebilir
+      allow update: if isAuth() && (
+        (request.auth.uid == userId
+         && request.resource.data.rol == resource.data.rol
+         && request.resource.data.aktif == resource.data.aktif)
+        || isSuperadmin()
+      );
+
+      // DELETE: sadece superadmin
+      allow delete: if isSuperadmin();
     }
 
     // ===== otel — singleton, sadece superadmin yazabilir =====

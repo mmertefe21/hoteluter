@@ -86,29 +86,27 @@ isActiveUser()  → isAuth() && userDoc().aktif == true
 
 ### Koleksiyon Kuralları
 
-| Path | Read | Write |
-|---|---|---|
-| `users/{userId}` | auth ∧ (uid==userId ∨ superadmin) | superadmin only (create/update/delete) |
-| `otel/{docId}` | aktif user | superadmin only |
-| `_meta/{docId}` | aktif user | aktif user (migration flagleri client-side) |
-| `rezervasyonlar/{docId}` | aktif user | aktif user |
-| `misafirler/{docId}` | aktif user | aktif user |
-| `odalar/{docId}` | aktif user | aktif user |
-| `odaTipleri/{docId}` | aktif user | aktif user |
-| `hesaplar/{docId}` | aktif user | aktif user |
-| `hesapHareketleri/{docId}` | aktif user | aktif user |
-| `tahsilatlar/{docId}` | aktif user | aktif user |
-| `giderler/{docId}` | aktif user | aktif user |
-| `giderKategorileri/{docId}` | aktif user | aktif user |
-| `kanallar/{docId}` | aktif user | aktif user |
-| `{document=**}` (catch-all) | **deny** | **deny** |
+| Path | get | list | create | update | delete |
+|---|---|---|---|---|---|
+| `users/{userId}` | auth ∧ (uid==userId ∨ superadmin) | superadmin | self (rol ∈ {admin,kullanici} ∧ aktif=true) ∨ superadmin | self (rol+aktif sabit) ∨ superadmin | superadmin |
+| `otel/{docId}` | aktif user | aktif user | superadmin | superadmin | superadmin |
+| `_meta/{docId}` | aktif user | aktif user | aktif user | aktif user | aktif user |
+| Operasyonel (10 koll.) | aktif user | aktif user | aktif user | aktif user | aktif user |
+| `{document=**}` (catch-all) | **deny** | **deny** | **deny** | **deny** | **deny** |
+
+> Operasyonel = `rezervasyonlar`, `misafirler`, `odalar`, `odaTipleri`, `hesaplar`, `hesapHareketleri`, `tahsilatlar`, `giderler`, `giderKategorileri`, `kanallar`
 
 ### Tasarım Tercihleri
 
 - **Operasyonel veri herkese açık (otel ekibi içinde):** Rezervasyon, misafir, oda yönetimi, ön muhasebe → tüm aktif kullanıcı r/w. Modül bazlı incelikli yetki (örn. resepsiyonist gider giremez) client-side `can()` kontrolüyle yapılıyor şu an. Sunucu-tarafı incelikli rol filtresi sonraki iterasyona bırakıldı.
-- **Konfig & kullanıcı yönetimi kilitli:** `users` ve `otel` koleksiyonları sadece superadmin yazabilir.
+- **`users` get/list ayrımı:** Tek doc okuma kendi profili veya superadmin için açık (`get`). Toplu listeleme sadece superadmin (`list`) — UsersPage üst-seviye listeyi yalnızca superadmin görür.
+- **`users` self-create + privilege escalation guard:** `createUserWithProfile` akışında `setDoc` yeni user'ın oturumunda çalıştığı için (Firebase'in yan etkisi), kendi profilini yaratma izni şart. Ancak `rol` `'admin'` veya `'kullanici'` ile sınırlı, `aktif: true` zorunlu — yeni user kendine superadmin atayamaz, deaktif yaratamaz.
+- **`users` update guard:** Kullanıcı kendi profilinin diğer alanlarını (`kullaniciAdi`, `adSoyad`, `modulYetkileri`) güncelleyebilir; `rol` ve `aktif` değişmemeli (değişirse rules reddeder). Superadmin her şeyi değiştirebilir.
+- **Konfig kilitli:** `otel` sadece superadmin yazar.
 - **Default deny:** Yeni eklenen herhangi bir koleksiyon kural yazılmadan kullanılamaz (güvenli-by-default).
-- **`pasif: true` ile tek-tıkla erişim kesme:** `aktif != true` olan user'ın hiçbir koleksiyona erişimi yok.
+- **`aktif: false` ile tek-tıkla erişim kesme:** `aktif != true` olan user'ın hiçbir koleksiyona erişimi yok (`isActiveUser()` reddeder).
+
+> ⚠ Bilinen takas: Update kuralı `modulYetkileri`'ni serbest bırakıyor — kullanıcı kendi `modulYetkileri`'ni teorik olarak değiştirebilir. Şu an etkisi yok çünkü server-side operasyonel kurallar `modulYetkileri`'ne bakmıyor (sadece `isActiveUser`). Server-side incelikli yetkiye geçildiğinde bu update kuralı da rol/aktif/modulYetkileri üçünü birden sabitlemeli.
 
 ### Yardımcı Dosyalar
 

@@ -154,6 +154,8 @@ hoteluter/
 
 **Görev 10 tamamlandı + publish edildi (06.05.2026):** `firestore.rules` Firebase Console'da publish edildi, lokal test başarılı (PERMISSION_DENIED yok, migration çalışıyor). Default deny + role-based kurallar aktif.
 
+**Görev 10 bug fix (06.05.2026):** `users` bloğu yeniden yazıldı — get/list/create/update/delete ayrımı + self-create izni. Sebep: `createUserWithProfile` akışında `setDoc` yeni user'ın oturumunda çalışıyor (Firebase'in `createUserWithEmailAndPassword` yan etkisi), eski `users.create: if isSuperadmin()` reddediyordu → Auth user yaratılıyor ama Firestore profil yazılmıyor. Yeni kural: kullanıcı kendi profilini yaratabilir (rol ∈ {admin, kullanici} + aktif=true zorunlu — privilege escalation guard); update'te rol/aktif sabit. Mert publish edip test edecek.
+
 **Görev 9 tamamlandı (06.05.2026):** Mock auth kaldırıldı, gerçek Firebase Auth aktif. 10 dosyada import path swap, `auth-mock.jsx` silindi, `auth.js` → `auth.jsx` rename. KullaniciFormModal `createUserWithProfile` ile bağlandı.
 
 **İlk superadmin (manuel):**
