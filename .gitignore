@@ -29,3 +29,7 @@ Thumbs.db
 # Backup
 *.backup
 *.bak
+
+# Tooling lokal state
+.claude/
+.netlify/

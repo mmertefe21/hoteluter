@@ -2,7 +2,7 @@
 
 > Otel Yönetim Sistemi (PMS) — React + Vite + Firebase + Tailwind
 
-**Sürüm:** v1.0-alpha — sahada test öncesi
+**Sürüm:** v1.0-rc — Auth + Security Rules aktif, Netlify deploy aşamasında
 **Domain:** hoteluter.com (Görev 12'de bağlanacak)
 
 ---
@@ -24,7 +24,7 @@ npm run dev
 Tarayıcı `http://localhost:5173` (port doluysa 5174 vs.) adresini açar.
 
 İlk açılışta:
-- **Login:** mock auth aktif (Görev 9'a kadar) — herhangi bir email/şifre ile giriş yapabilirsin
+- **Login:** Firebase Auth (Email/Password). İlk superadmin Firebase Console'dan manuel oluşturuldu.
 - **Migration otomatik:** 5 kanal + 8 gider kategorisi + 3 hesap (EUR cinsinden) Firestore'a yazılır
 - **Demo veri yok** — kendi otel datanı sıfırdan kuruyorsun
 
@@ -34,7 +34,7 @@ Tarayıcı `http://localhost:5173` (port doluysa 5174 vs.) adresini açar.
 
 İlk kez kullanırken bu sırayı izle:
 
-1. **Login** — herhangi bir email/şifre (mock)
+1. **Login** — Firebase Auth ile gerçek email/şifre
 2. **Migration otomatik çalışır** (görünmez, idempotent)
 3. **Ayarlar > Otel Bilgileri** → otel adı, ana para birimi (EUR varsayılan)
 4. **Odalar > Oda Tipleri** → en az 1 tip ekle (ad + kapasite + fiyat + renk)
@@ -82,10 +82,10 @@ Detaylı dosya listesi: `docs/CLAUDE_HOTELUTER_v1.0-alpha.md`
 ## 🛠️ Tech Stack
 
 - **Frontend:** React 18 · Vite 5 · Tailwind 3
-- **Backend:** Firebase Firestore (NoSQL) · Firebase Auth (Görev 9'da bağlanacak)
+- **Backend:** Firebase Firestore (NoSQL) · Firebase Auth (Email/Password) · Firestore Security Rules
 - **Icons:** lucide-react
 - **Kur servisi:** Frankfurter API (ECB)
-- **Deploy:** Netlify (Görev 11'de)
+- **Deploy:** Netlify (continuous deployment via GitHub)
 
 ---
 
@@ -115,11 +115,53 @@ Editorial boutique hotel estetiği:
 
 ---
 
+## 🚀 Deploy
+
+**Production URL:** _(Netlify deploy sonrası buraya gerçek URL yazılacak)_
+**Domain (planlı):** https://hoteluter.com
+
+### Continuous Deployment
+
+GitHub repo'ya `main` branch'e push → Netlify otomatik build alır:
+
+```bash
+git push origin main
+# → Netlify "Deploys" sekmesinde build başlar (~2 dk)
+# → Başarılı build sonrası canlı URL anında güncellenir
+```
+
+Build config: `netlify.toml` (proje kökünde) — build command, publish dir, SPA redirect, security headers, cache policy.
+
+### Environment Variables (Netlify'da)
+
+`.env` dosyası git'e commit **edilmez** (`.gitignore`'da). Netlify deploy için aynı değerler **Netlify dashboard'da ayrıca tanımlanmalı**:
+
+`Site settings → Environment variables → Add variable`
+
+```
+VITE_FIREBASE_API_KEY
+VITE_FIREBASE_AUTH_DOMAIN
+VITE_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET
+VITE_FIREBASE_MESSAGING_SENDER_ID
+VITE_FIREBASE_APP_ID
+```
+
+Lokal `.env` ile aynı değerler. Vite build sırasında `VITE_*` prefix'li env vars bundle'a embed olur.
+
+### Firebase Authorized Domains
+
+Netlify URL'i (örn. `cosmic-hamster-1234.netlify.app` ve sonradan `hoteluter.com`) **Firebase Console > Authentication > Settings > Authorized domains**'e eklenmeli — aksi halde production'da login çalışmaz (`auth/unauthorized-domain`).
+
+---
+
 ## 📦 Versiyon Geçmişi
 
 - **v0.1 → v0.7** — Tek HTML dosyalı MVP iterasyonları (lokal localStorage). Final: `docs/backup/hoteluter-v0.7-final.html` (~6500 satır)
-- **v1.0-alpha** — Modüler React + Vite + Firebase, mock auth, sahada test öncesi (BU)
-- **v1.0** — Gerçek Auth + Security Rules + Netlify deploy (planlı)
+- **v1.0-alpha** — Modüler React + Vite + Firebase, mock auth, sahada test öncesi
+- **v1.0-beta** — Gerçek Firebase Auth bağlandı (mock kalktı)
+- **v1.0-rc** — Firestore Security Rules eklendi + Netlify deploy hazırlığı (BU)
+- **v1.0** — Production deploy + hoteluter.com domain (planlı)
 
 ---
 
@@ -127,9 +169,9 @@ Editorial boutique hotel estetiği:
 
 | Faz | Görev | Durum |
 |---|---|---|
-| 3. Firestore | 9. Firebase Auth bağlama | ⏳ |
-| 3. Firestore | 10. Firestore Security Rules | ⏳ |
-| 4. Deploy | 11. GitHub + Netlify deploy | ⏳ |
+| 3. Firestore | 9. Firebase Auth bağlama | ✅ |
+| 3. Firestore | 10. Firestore Security Rules | ✅ |
+| 4. Deploy | 11. GitHub + Netlify deploy | 🔄 hazırlık tamam |
 | 4. Deploy | 12. hoteluter.com domain | ⏳ |
 
 Detaylı: `docs/HOTELUTER_GECIS_PLANI.md`
@@ -139,7 +181,7 @@ Detaylı: `docs/HOTELUTER_GECIS_PLANI.md`
 ## 📚 Yeni Claude Session Başlarken
 
 1. **`CLAUDE.md`** — proje kuruluş dokümanı
-2. **`docs/CLAUDE_HOTELUTER_v1.0-alpha.md`** — şu anki sistemin tam fotoğrafı
+2. **`docs/CLAUDE_HOTELUTER_v1.0-rc.md`** — şu anki sistemin tam fotoğrafı
 3. **`docs/HOTELUTER_GECIS_PLANI.md`** — kalan görevler
 
 Bu üç dosya yeterli context verir.

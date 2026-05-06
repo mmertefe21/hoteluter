@@ -74,7 +74,7 @@ hoteluter/
 ├── vite.config.js
 ├── tailwind.config.js
 ├── postcss.config.js
-├── netlify.toml            # (Görev 11'de eklenecek)
+├── netlify.toml            # ✅ Görev 11 (build config + headers + redirect)
 ├── firestore.rules         # ✅ Görev 10
 ├── firestore.indexes.json  # ✅ Görev 10 (composite index yok)
 ├── firebase.json           # ✅ Görev 10 (deploy config)
@@ -138,23 +138,21 @@ hoteluter/
 |---|---|---|
 | **1. Hazırlık** | 1. Firebase projesi · 2. Local environment | ✅ Tamam |
 | **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals (6A mali · 6B rezervasyon) · 7. Pages | ✅ Tamam |
-| **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | ✅ Tamam (10 publish bekleniyor) |
-| **4. Deploy** | 11. GitHub + Netlify · 12. Domain | ⏳ |
+| **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | ✅ Tamam (publish + lokal test ok) |
+| **4. Deploy** | 11. GitHub + Netlify · 12. Domain | 🔄 11 hazırlık tamam, Mert deploy edecek; 12 ⏳ |
 
 ---
 
 ## 🚀 Şu An Nerede
 
-**Görev 10 tamamlandı (06.05.2026):** `firestore.rules` yazıldı — default deny + role-based. Helper'lar: `isAuth()`, `userDoc()`, `isSuperadmin()`, `isActiveUser()`. Kapsam:
-- `users/{uid}`: kendi profilini okur, superadmin tüm profilleri yönetir
-- `otel/{docId}`: aktif kullanıcı okur, superadmin yazar
-- `_meta/{docId}`: aktif kullanıcı r/w (migration flagleri client-side)
-- Operasyonel koleksiyonlar (10): aktif kullanıcı r/w
-- Default deny: eşleşmeyen tüm path'ler kapalı
+**Görev 11 hazırlığı tamam (06.05.2026):** Netlify deploy konfigürasyonu hazır.
+- `netlify.toml`: build command (`npm run build`), publish dir (`dist`), Node 20, SPA redirect (`/* → /index.html`), security headers (X-Frame-Options/CSP/Referrer-Policy), cache policy (assets immutable, HTML revalidate)
+- `.gitignore`: `.claude/` + `.netlify/` lokal tooling state'leri eklendi
+- `README.md`: Deploy bölümü (env vars, Firebase Authorized Domains uyarısı)
 
-Yardımcı dosyalar oluşturuldu: `firebase.json` (deploy config), `firestore.indexes.json` (boş), `.firebaserc` (project: hoteluter).
+**Mert deploy edecek:** GitHub repo zaten var (`mmertefe21/hoteluter`). Netlify dashboard'a "Import from GitHub" → site settings env vars (`VITE_FIREBASE_*` 6 anahtar) → ilk deploy. Sonra Firebase Console > Authentication > Authorized domains'e Netlify URL eklenmeli (yoksa `auth/unauthorized-domain`).
 
-**⚠️ Publish bekleniyor:** Kurallar henüz Firebase Console'a deploy edilmedi — Mert manuel publish edecek. Publish'ten önce sistem mevcut açık kurallarla çalışmaya devam ediyor; sonrasında ilk açılışta `onAuthStateChanged` profilini çekemezse `PERMISSION_DENIED` ihtimali olabilir (rollback talimatları aşağıda).
+**Görev 10 tamamlandı + publish edildi (06.05.2026):** `firestore.rules` Firebase Console'da publish edildi, lokal test başarılı (PERMISSION_DENIED yok, migration çalışıyor). Default deny + role-based kurallar aktif.
 
 **Görev 9 tamamlandı (06.05.2026):** Mock auth kaldırıldı, gerçek Firebase Auth aktif. 10 dosyada import path swap, `auth-mock.jsx` silindi, `auth.js` → `auth.jsx` rename. KullaniciFormModal `createUserWithProfile` ile bağlandı.
 
@@ -176,10 +174,9 @@ LoginScreen · DashboardPage · CalendarPage · ReservationListPage · GuestsPag
 **Boot sırası (App.jsx):** AuthProvider (Firebase Auth) → ToastProvider → onAuthStateChanged → user yoksa LoginScreen, varsa AppShell. AppShell mount'ında otomatik `runMigrations()` ve `ensureKurlarLoaded()`. Profil pasifse (`aktif: false`) otomatik logout.
 
 **Sıradaki:**
-- **Görev 10 publish:** Mert Firebase Console > Firestore > Rules sekmesinden `firestore.rules` içeriğini yapıştırıp Publish edecek
-- **Görev 11:** Netlify deploy (netlify.toml + GitHub continuous deploy + env vars)
-- **Görev 12:** hoteluter.com domain (GoDaddy → Netlify nameserver)
-- Sonra: canlıda sahada test
+- **Görev 11 deploy (Mert):** Netlify dashboard'a "Import from GitHub" → env vars → ilk deploy → Firebase Authorized Domains'e Netlify URL ekle
+- **Görev 12:** hoteluter.com domain (GoDaddy → Netlify nameserver + Let's Encrypt SSL)
+- **Sonra:** Frankfurter CORS testi (Görev 11+12 sonrası ayrı adım) + canlıda sahada test
 
 Detaylı v1.0-rc dokümanı: `docs/CLAUDE_HOTELUTER_v1.0-rc.md`
 
