@@ -1,0 +1,75 @@
+rules_version = '2';
+
+// Hoteluter Firestore Security Rules
+// Görev 10: Default deny + role-based + helper functions
+//
+// Strateji:
+//   - users: kendi profilini okur, superadmin tüm profilleri yönetir
+//   - otel: tüm aktif kullanıcı okur, sadece superadmin yazar (singleton config)
+//   - _meta: aktif kullanıcı r/w (migration flagleri client-side; Cloud Function ile sonra)
+//   - Operasyonel veri (rezervasyon/misafir/...): tüm aktif kullanıcı r/w (otel ekibi ortak çalışır)
+//   - Default: allow false (eşleşmeyen koleksiyon yok)
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== Helper functions =====
+    function isAuth() {
+      return request.auth != null;
+    }
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function isSuperadmin() {
+      return isAuth() && userDoc().rol == 'superadmin' && userDoc().aktif == true;
+    }
+    function isActiveUser() {
+      return isAuth() && userDoc().aktif == true;
+    }
+
+    // ===== users — sadece superadmin yazabilir =====
+    match /users/{userId} {
+      // Herkes (auth) kendi profilini okur, superadmin tüm profilleri okur
+      allow read: if isAuth() && (request.auth.uid == userId || isSuperadmin());
+      // Sadece superadmin yeni user yaratır/siler
+      allow create, delete: if isSuperadmin();
+      // Update: superadmin her şeyi, normal user sadece kendi profilinin
+      // belirli alanlarını (örn. son giriş bilgisi vs.) — şimdilik sadece superadmin
+      allow update: if isSuperadmin();
+    }
+
+    // ===== otel — singleton, sadece superadmin yazabilir =====
+    match /otel/{docId} {
+      allow read: if isActiveUser();
+      allow write: if isSuperadmin();
+    }
+
+    // ===== _meta — migration flagleri, korumalı =====
+    match /_meta/{docId} {
+      allow read: if isActiveUser();
+      // Migration flagleri client tarafından yazılır (boot'ta runMigrations).
+      // Şimdilik authenticated user'a izin ver; ilerideki Cloud Function ile
+      // server-side'a taşınabilir.
+      allow write: if isActiveUser();
+    }
+
+    // ===== Operasyonel veri — tüm aktif kullanıcılar read/write =====
+    // Otel ekibi hep birlikte çalışır (otel içi). Rol bazlı incelikli
+    // kontrol Görev 10+ olarak eklenebilir.
+    match /rezervasyonlar/{docId}    { allow read, write: if isActiveUser(); }
+    match /misafirler/{docId}        { allow read, write: if isActiveUser(); }
+    match /odalar/{docId}            { allow read, write: if isActiveUser(); }
+    match /odaTipleri/{docId}        { allow read, write: if isActiveUser(); }
+    match /hesaplar/{docId}          { allow read, write: if isActiveUser(); }
+    match /hesapHareketleri/{docId}  { allow read, write: if isActiveUser(); }
+    match /tahsilatlar/{docId}       { allow read, write: if isActiveUser(); }
+    match /giderler/{docId}          { allow read, write: if isActiveUser(); }
+    match /giderKategorileri/{docId} { allow read, write: if isActiveUser(); }
+    match /kanallar/{docId}          { allow read, write: if isActiveUser(); }
+
+    // ===== Default deny — hiçbir koleksiyon eşleşmezse engelle =====
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -3,7 +3,7 @@
 > **Amaç:** Bu dosya, Hoteluter projesinde çalışan herhangi bir Claude (yeni sohbet, yeni session) için **kurucu dokümandır**. İlk okunacak dosyadır. Projenin tarihi, mimarisi, çalışan kuralları ve aktif görevler buradadır.
 
 **Son güncelleme:** 06.05.2026
-**Mevcut sürüm:** **v1.0-beta** — Görev 9 tamam: gerçek Firebase Auth aktif, mock kalktı. **Security Rules hâlâ açık** — production'a gitmeden Görev 10 zorunlu. Sahada test atlandı (canlıda test stratejisi). Kalan: Görev 10 (Security Rules) + Görev 11 (Netlify deploy) + Görev 12 (Domain).
+**Mevcut sürüm:** **v1.0-rc** (release candidate) — Görev 9 + 10 tamam: gerçek Firebase Auth aktif, Security Rules yazıldı (default deny + role-based). Kuralların Firebase Console'a publish edilmesi Mert tarafından yapılacak. Kalan: Görev 11 (Netlify deploy) + Görev 12 (Domain).
 **Tek-dosya MVP final:** v0.7 (`docs/backup/hoteluter-v0.7-final.html`, ~6500 satır, referans için saklı)
 
 ---
@@ -75,7 +75,10 @@ hoteluter/
 ├── tailwind.config.js
 ├── postcss.config.js
 ├── netlify.toml            # (Görev 11'de eklenecek)
-├── firestore.rules         # (Görev 10'da eklenecek)
+├── firestore.rules         # ✅ Görev 10
+├── firestore.indexes.json  # ✅ Görev 10 (composite index yok)
+├── firebase.json           # ✅ Görev 10 (deploy config)
+├── .firebaserc             # ✅ Görev 10 (project: hoteluter)
 ├── .env                    # (gitignore'da)
 └── .env.example
 ```
@@ -135,23 +138,32 @@ hoteluter/
 |---|---|---|
 | **1. Hazırlık** | 1. Firebase projesi · 2. Local environment | ✅ Tamam |
 | **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals (6A mali · 6B rezervasyon) · 7. Pages | ✅ Tamam |
-| **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | 🔄 8 + 9 tamam; 10 kaldı |
+| **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | ✅ Tamam (10 publish bekleniyor) |
 | **4. Deploy** | 11. GitHub + Netlify · 12. Domain | ⏳ |
 
 ---
 
 ## 🚀 Şu An Nerede
 
-**Görev 9 tamamlandı (06.05.2026):** Mock auth kaldırıldı, gerçek Firebase Auth aktif. `lib/auth-mock.jsx` silindi; `lib/auth.js` → `lib/auth.jsx`'e taşındı (JSX içerdiği için uzantı düzeltildi). 10 dosyada import path swap (App.jsx + 8 sayfa + KullaniciFormModal). LoginScreen mock banner'ı + default değerleri temizlendi. KullaniciFormModal `createUserWithProfile` ile bağlandı: yeni user = Firebase Auth + Firestore profil birlikte; düzenleme = sadece profil update, email/şifre disabled. Yeni-user modunda oturum-değişimi uyarı banner'ı eklendi. `npm run build` yeşil, 1632 modül, 7.5s.
+**Görev 10 tamamlandı (06.05.2026):** `firestore.rules` yazıldı — default deny + role-based. Helper'lar: `isAuth()`, `userDoc()`, `isSuperadmin()`, `isActiveUser()`. Kapsam:
+- `users/{uid}`: kendi profilini okur, superadmin tüm profilleri yönetir
+- `otel/{docId}`: aktif kullanıcı okur, superadmin yazar
+- `_meta/{docId}`: aktif kullanıcı r/w (migration flagleri client-side)
+- Operasyonel koleksiyonlar (10): aktif kullanıcı r/w
+- Default deny: eşleşmeyen tüm path'ler kapalı
 
-**İlk superadmin manuel oluşturuldu (Mert):**
-- Firebase Auth user: `mmertefe9@gmail.com`
-- Firestore `users/{uid}` profili: kullaniciAdi=admin, adSoyad=Mert Efe, rol=superadmin, aktif=true
+Yardımcı dosyalar oluşturuldu: `firebase.json` (deploy config), `firestore.indexes.json` (boş), `.firebaserc` (project: hoteluter).
+
+**⚠️ Publish bekleniyor:** Kurallar henüz Firebase Console'a deploy edilmedi — Mert manuel publish edecek. Publish'ten önce sistem mevcut açık kurallarla çalışmaya devam ediyor; sonrasında ilk açılışta `onAuthStateChanged` profilini çekemezse `PERMISSION_DENIED` ihtimali olabilir (rollback talimatları aşağıda).
+
+**Görev 9 tamamlandı (06.05.2026):** Mock auth kaldırıldı, gerçek Firebase Auth aktif. 10 dosyada import path swap, `auth-mock.jsx` silindi, `auth.js` → `auth.jsx` rename. KullaniciFormModal `createUserWithProfile` ile bağlandı.
+
+**İlk superadmin (manuel):**
+- Firebase Auth: `mmertefe9@gmail.com`
+- Firestore `users/{uid}`: kullaniciAdi=admin, adSoyad=Mert Efe, rol=superadmin, aktif=true
 - Auth UID = doc ID eşleşmesi sağlandı
 
-**Strateji değişikliği:** Sahada test (alpha) atlandı. Önce Görev 10 (Security Rules) + Görev 11 (Netlify) + Görev 12 (Domain) → sonra canlıda test. Sebep: mock auth + open Firestore rules ile production'a çıkmak güvenlik açığı.
-
-**⚠️ Kritik açık:** Firestore Security Rules hâlâ default `allow read, write` modunda. Görev 10 öncesi Netlify deploy edilmemeli.
+**Strateji:** Sahada test (alpha) atlandı. Görev 10 publish + Görev 11 (Netlify) + Görev 12 (Domain) → sonra canlıda test.
 
 **Modal envanteri (`src/modals/`):**
 - Mali (Görev 6A): TahsilatModal, GiderModal, TransferModal, HesapFormModal, HesapDetayModal
@@ -164,12 +176,12 @@ LoginScreen · DashboardPage · CalendarPage · ReservationListPage · GuestsPag
 **Boot sırası (App.jsx):** AuthProvider (Firebase Auth) → ToastProvider → onAuthStateChanged → user yoksa LoginScreen, varsa AppShell. AppShell mount'ında otomatik `runMigrations()` ve `ensureKurlarLoaded()`. Profil pasifse (`aktif: false`) otomatik logout.
 
 **Sıradaki:**
-- **Görev 10 (HEMEN):** Firestore Security Rules (rol/yetki bazlı kurallar) — `firestore.rules` dosyası + Firebase Console publish
-- Görev 11: Netlify deploy (netlify.toml + GitHub continuous deploy + env vars)
-- Görev 12: hoteluter.com domain (GoDaddy → Netlify nameserver)
+- **Görev 10 publish:** Mert Firebase Console > Firestore > Rules sekmesinden `firestore.rules` içeriğini yapıştırıp Publish edecek
+- **Görev 11:** Netlify deploy (netlify.toml + GitHub continuous deploy + env vars)
+- **Görev 12:** hoteluter.com domain (GoDaddy → Netlify nameserver)
 - Sonra: canlıda sahada test
 
-Detaylı v1.0-beta dokümanı: `docs/CLAUDE_HOTELUTER_v1.0-beta.md`
+Detaylı v1.0-rc dokümanı: `docs/CLAUDE_HOTELUTER_v1.0-rc.md`
 
 ---
 
@@ -195,6 +207,6 @@ Detaylı v1.0-beta dokümanı: `docs/CLAUDE_HOTELUTER_v1.0-beta.md`
 
 **Yeni Claude session başlarken:**
 1. Bu dosyayı (`CLAUDE.md`) oku
-2. **`docs/CLAUDE_HOTELUTER_v1.0-beta.md`** oku — şu anki sistemin tam fotoğrafı (gerçek Auth aktif), kullanım akışı, bilinen sınırlamalar
+2. **`docs/CLAUDE_HOTELUTER_v1.0-rc.md`** oku — şu anki sistemin tam fotoğrafı (Auth + Rules aktif), kullanım akışı, bilinen sınırlamalar
 3. Geçiş planına bak (`docs/HOTELUTER_GECIS_PLANI.md`) — kalan görevler için
-4. Mert'le konuşmaya başla — hangi konuda yardım istediğini öğren (Görev 10-12 ilerleme, bug raporu, yeni feature)
+4. Mert'le konuşmaya başla — hangi konuda yardım istediğini öğren (Görev 11-12 ilerleme, bug raporu, yeni feature)
