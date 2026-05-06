@@ -3,7 +3,7 @@
  *
  * Görev 6B + 7: Sistem ayağa kalktı.
  *
- * - AuthProvider (mock — Görev 9'da Firebase Auth ile değişecek)
+ * - AuthProvider (Firebase Auth — Görev 9'da bağlandı)
  * - ToastProvider
  * - Login durumunda LoginScreen, login sonrası app shell
  * - App shell: header + sidebar + main (activeModule'e göre sayfa)
@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import Sidebar from './components/Sidebar.jsx';
 import Icon from './components/Icon.jsx';
 import { ToastProvider, useToast } from './components/Toast.jsx';
-import { AuthProvider, useAuth } from './lib/auth-mock.jsx';
+import { AuthProvider, useAuth } from './lib/auth.jsx';
 import { useDoc } from './lib/db.js';
 import { runMigrations } from './lib/migrations.js';
 import { ensureKurlarLoaded } from './lib/kur.js';

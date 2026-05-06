@@ -1,16 +1,17 @@
 /**
- * LoginScreen — placeholder (Görev 9'da Firebase Auth bağlanacak).
+ * LoginScreen — Firebase Auth ile email/şifre girişi.
  *
- * Şimdilik mock: herhangi bir email/şifre ile login geçer (auth-mock.js).
+ * useAuth().login(email, sifre) → success/error döner.
+ * Hata mesajları auth.js içinde Türkçeye çevrilmiş halde gelir.
  */
 import { useState } from 'react';
 import Icon from '../components/Icon.jsx';
-import { useAuth } from '../lib/auth-mock.jsx';
+import { useAuth } from '../lib/auth.jsx';
 
 const LoginScreen = () => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('admin@hoteluter.com');
-  const [sifre, setSifre] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [sifre, setSifre] = useState('');
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -90,15 +91,10 @@ const LoginScreen = () => {
           )}
 
           <button type="submit" disabled={loading || !email || !sifre}
-            className="htl-btn htl-btn-primary w-full justify-center mb-6" style={{ padding: '12px 18px' }}>
+            className="htl-btn htl-btn-primary w-full justify-center mb-2" style={{ padding: '12px 18px' }}>
             {loading ? <Icon name="loader-2" size={18} className="animate-spin" /> : <Icon name="log-in" size={18} />}
             <span>Giriş Yap</span>
           </button>
-
-          <div className="px-3 py-2 rounded-md text-xs" style={{ background: 'var(--brass-soft)', color: 'var(--forest)' }}>
-            <Icon name="info" size={12} className="inline mr-1" />
-            Mock auth aktif (Görev 9'da Firebase Auth ile değişecek). Herhangi bir email/şifre ile giriş yapabilirsin.
-          </div>
         </form>
       </div>
     </div>

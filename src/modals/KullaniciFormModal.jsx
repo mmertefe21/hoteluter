@@ -1,9 +1,13 @@
 /**
- * KullaniciFormModal — kullanıcı ekle/düzenle (UI placeholder).
+ * KullaniciFormModal — kullanıcı ekle/düzenle.
  *
- * Görev 9'da Firebase Auth ile entegre olacak. Şimdilik:
- *   - Yeni kullanıcı: sadece UI form, gerçek auth yaratımı yok (db'ye yazıyor).
- *   - Düzenleme: profil alanlarını günceller.
+ * - Yeni kullanıcı: createUserWithProfile (Firebase Auth user + Firestore profil birlikte).
+ *   ⚠ Yan etki: createUserWithEmailAndPassword çağırıldığında mevcut oturum yeni
+ *   user'a geçer; mevcut admin tekrar login olmak zorunda kalır.
+ *   Production'da Cloud Functions ile düzeltilecek.
+ * - Düzenleme: sadece Firestore profil update. Email/şifre değişimi kapalı
+ *   (admin SDK gerektirir; ileri sürümde Cloud Function veya kullanıcının kendi
+ *   şifre değiştirme akışıyla halledilecek).
  *
  * Yetkiler matrix'i ALL_MODULES'tan dinamik üretilir.
  */
@@ -12,6 +16,7 @@ import Modal from '../components/Modal.jsx';
 import Icon from '../components/Icon.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { db } from '../lib/db.js';
+import { createUserWithProfile } from '../lib/auth.jsx';
 import { ALL_MODULES, AKSIYON_LABELS, ROLE_LABELS, getAllActions } from '../lib/permissions.js';
 
 const DEFAULT = {
@@ -61,17 +66,29 @@ const KullaniciFormModal = ({ open, onClose, onSaved, target = null }) => {
     setSaving(true);
     try {
       if (target) {
-        await db.update('users', target.id, form);
+        // Düzenleme: sadece profil alanları (email değiştirilmez)
+        const { email: _ignoredEmail, ...patch } = form;
+        await db.update('users', target.id, patch);
         show('Kullanıcı güncellendi.');
       } else {
-        // TODO: Görev 9'da createUserWithProfile (Firebase Auth + Firestore)
-        await db.add('users', { ...form, olusturmaTarihi: new Date().toISOString() });
-        show('Kullanıcı eklendi (UI-only — auth bağlanması Görev 9).', 'info');
+        // Yeni: Firebase Auth user + Firestore profil birlikte.
+        const { email, aktif, ...profile } = form;
+        await createUserWithProfile({
+          email: email.trim(),
+          password: sifre,
+          profile: { ...profile, aktif: aktif !== false },
+        });
+        show('Kullanıcı oluşturuldu. Mevcut oturum yeni kullanıcıya geçti — tekrar giriş yapın.', 'info');
       }
       onSaved?.();
       onClose?.();
     } catch (e) {
-      show('Hata: ' + e.message, 'error');
+      const code = e?.code || '';
+      let msg = e.message;
+      if (code === 'auth/email-already-in-use') msg = 'Bu e-posta zaten kayıtlı.';
+      else if (code === 'auth/invalid-email') msg = 'Geçersiz e-posta formatı.';
+      else if (code === 'auth/weak-password') msg = 'Şifre en az 6 karakter olmalı.';
+      show('Hata: ' + msg, 'error');
     } finally {
       setSaving(false);
     }
@@ -87,10 +104,27 @@ const KullaniciFormModal = ({ open, onClose, onSaved, target = null }) => {
         </button>
       </>}
     >
+      {!target && (
+        <div className="mb-4 px-3 py-2 rounded-md text-xs flex items-start gap-2"
+          style={{ background: 'var(--warn-soft, #fef6e7)', color: 'var(--ink, #2a2a2a)', border: '1px solid var(--warn, #d4a04a)' }}>
+          <Icon name="alert-triangle" size={14} stroke="var(--warn, #d4a04a)" className="mt-0.5 flex-shrink-0" />
+          <span>
+            Yeni kullanıcı oluşturulduğunda mevcut oturumunuz kapanacak ve yeni kullanıcıya geçilecek.
+            Tekrar giriş yapmanız gerekebilir. (Bu Firebase'in client-side davranışı; production'da
+            Cloud Functions ile düzeltilecek.)
+          </span>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 gap-4">
         <div><label className="htl-label">Kullanıcı Adı *</label><input className="htl-input" value={form.kullaniciAdi || ''} onChange={(e) => setForm({ ...form, kullaniciAdi: e.target.value })} /></div>
         <div><label className="htl-label">Ad Soyad *</label><input className="htl-input" value={form.adSoyad || ''} onChange={(e) => setForm({ ...form, adSoyad: e.target.value })} /></div>
-        <div><label className="htl-label">E-posta *</label><input type="email" className="htl-input" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+        <div>
+          <label className="htl-label">E-posta * {target && <span className="text-xs" style={{ color: 'var(--ink-faint)' }}>(değiştirilemez)</span>}</label>
+          <input type="email" className="htl-input" value={form.email || ''}
+            disabled={!!target}
+            onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        </div>
         {!target && (
           <div><label className="htl-label">Şifre * (en az 6)</label><input type="password" className="htl-input" value={sifre} onChange={(e) => setSifre(e.target.value)} /></div>
         )}

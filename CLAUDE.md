@@ -2,8 +2,8 @@
 
 > **Amaç:** Bu dosya, Hoteluter projesinde çalışan herhangi bir Claude (yeni sohbet, yeni session) için **kurucu dokümandır**. İlk okunacak dosyadır. Projenin tarihi, mimarisi, çalışan kuralları ve aktif görevler buradadır.
 
-**Son güncelleme:** 05.05.2026
-**Mevcut sürüm:** **v1.0-alpha** — Faz 2 tamamen tamam, sistem çalışır halde, **sahada test aşamasında**. Mock auth ile çalışıyor (`lib/auth-mock.jsx`). Kalan: Görev 9 (gerçek Auth) + Görev 10 (Security Rules) + Görev 11 (Netlify deploy) + Görev 12 (Domain).
+**Son güncelleme:** 06.05.2026
+**Mevcut sürüm:** **v1.0-beta** — Görev 9 tamam: gerçek Firebase Auth aktif, mock kalktı. **Security Rules hâlâ açık** — production'a gitmeden Görev 10 zorunlu. Sahada test atlandı (canlıda test stratejisi). Kalan: Görev 10 (Security Rules) + Görev 11 (Netlify deploy) + Görev 12 (Domain).
 **Tek-dosya MVP final:** v0.7 (`docs/backup/hoteluter-v0.7-final.html`, ~6500 satır, referans için saklı)
 
 ---
@@ -135,16 +135,23 @@ hoteluter/
 |---|---|---|
 | **1. Hazırlık** | 1. Firebase projesi · 2. Local environment | ✅ Tamam |
 | **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals (6A mali · 6B rezervasyon) · 7. Pages | ✅ Tamam |
-| **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | 🔄 8 örtük tamam (migrations.js + sıfır demo); 9-10 kaldı |
+| **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | 🔄 8 + 9 tamam; 10 kaldı |
 | **4. Deploy** | 11. GitHub + Netlify · 12. Domain | ⏳ |
 
 ---
 
 ## 🚀 Şu An Nerede
 
-**Görev 6B + 7 birleştirilmiş tamamlandı (commit `f40aa5d`):** 19 dosya / **+3926 satır**. Sistem production-ready bir UI'ya çevrildi — health-check kalktı, gerçek shell + 10 sayfa + 11 modal aktif. `npm run build` yeşil, **1632 modül**.
+**Görev 9 tamamlandı (06.05.2026):** Mock auth kaldırıldı, gerçek Firebase Auth aktif. `lib/auth-mock.jsx` silindi; `lib/auth.js` → `lib/auth.jsx`'e taşındı (JSX içerdiği için uzantı düzeltildi). 10 dosyada import path swap (App.jsx + 8 sayfa + KullaniciFormModal). LoginScreen mock banner'ı + default değerleri temizlendi. KullaniciFormModal `createUserWithProfile` ile bağlandı: yeni user = Firebase Auth + Firestore profil birlikte; düzenleme = sadece profil update, email/şifre disabled. Yeni-user modunda oturum-değişimi uyarı banner'ı eklendi. `npm run build` yeşil, 1632 modül, 7.5s.
 
-**Sistem çalışır halde, mock auth ile (`lib/auth-mock.jsx`).** Migration otomatik boot'ta çalışıyor (idempotent flag pattern). Kullanıcı sahada test edecek; sonra Görev 9'a (gerçek Firebase Auth) geçilecek.
+**İlk superadmin manuel oluşturuldu (Mert):**
+- Firebase Auth user: `mmertefe9@gmail.com`
+- Firestore `users/{uid}` profili: kullaniciAdi=admin, adSoyad=Mert Efe, rol=superadmin, aktif=true
+- Auth UID = doc ID eşleşmesi sağlandı
+
+**Strateji değişikliği:** Sahada test (alpha) atlandı. Önce Görev 10 (Security Rules) + Görev 11 (Netlify) + Görev 12 (Domain) → sonra canlıda test. Sebep: mock auth + open Firestore rules ile production'a çıkmak güvenlik açığı.
+
+**⚠️ Kritik açık:** Firestore Security Rules hâlâ default `allow read, write` modunda. Görev 10 öncesi Netlify deploy edilmemeli.
 
 **Modal envanteri (`src/modals/`):**
 - Mali (Görev 6A): TahsilatModal, GiderModal, TransferModal, HesapFormModal, HesapDetayModal
@@ -154,17 +161,15 @@ hoteluter/
 **Sayfa envanteri (`src/pages/`):**
 LoginScreen · DashboardPage · CalendarPage · ReservationListPage · GuestsPage · RoomsPage · AccountingPage · ReportsPage · SettingsPage · UsersPage
 
-**Mock auth swap stratejisi:** `useAuth` API yüzeyi gerçek `lib/auth.js` ile birebir aynı. Görev 9'da tek değişiklik: 9 dosyadaki `'auth-mock.jsx'` → `'auth.js'` import path swap (App.jsx + 8 sayfa). `auth-mock.jsx` o aşamada silinir.
+**Boot sırası (App.jsx):** AuthProvider (Firebase Auth) → ToastProvider → onAuthStateChanged → user yoksa LoginScreen, varsa AppShell. AppShell mount'ında otomatik `runMigrations()` ve `ensureKurlarLoaded()`. Profil pasifse (`aktif: false`) otomatik logout.
 
-**Boot sırası (App.jsx):** AuthProvider → ToastProvider → user kontrolü → LoginScreen veya AppShell. AppShell mount'ında otomatik `runMigrations()` ve `ensureKurlarLoaded()`.
-
-**Sıradaki — Mert sahada test ediyor.** Bug raporları + "şu da olsun" istekleri sonrası:
-- Görev 9: Firebase Auth bağlama (auth.js zaten hazır, sadece swap + ilk superadmin user dokümanı)
-- Görev 10: Firestore Security Rules (rol/yetki bazlı kuralar)
-- Görev 11: Netlify deploy (netlify.toml + GitHub continuous deploy)
+**Sıradaki:**
+- **Görev 10 (HEMEN):** Firestore Security Rules (rol/yetki bazlı kurallar) — `firestore.rules` dosyası + Firebase Console publish
+- Görev 11: Netlify deploy (netlify.toml + GitHub continuous deploy + env vars)
 - Görev 12: hoteluter.com domain (GoDaddy → Netlify nameserver)
+- Sonra: canlıda sahada test
 
-Detaylı v1.0-alpha dokümanı: `docs/CLAUDE_HOTELUTER_v1.0-alpha.md`
+Detaylı v1.0-beta dokümanı: `docs/CLAUDE_HOTELUTER_v1.0-beta.md`
 
 ---
 
@@ -190,6 +195,6 @@ Detaylı v1.0-alpha dokümanı: `docs/CLAUDE_HOTELUTER_v1.0-alpha.md`
 
 **Yeni Claude session başlarken:**
 1. Bu dosyayı (`CLAUDE.md`) oku
-2. **`docs/CLAUDE_HOTELUTER_v1.0-alpha.md`** oku — şu anki sistemin tam fotoğrafı, kullanım akışı, bilinen sınırlamalar
+2. **`docs/CLAUDE_HOTELUTER_v1.0-beta.md`** oku — şu anki sistemin tam fotoğrafı (gerçek Auth aktif), kullanım akışı, bilinen sınırlamalar
 3. Geçiş planına bak (`docs/HOTELUTER_GECIS_PLANI.md`) — kalan görevler için
-4. Mert'le konuşmaya başla — hangi konuda yardım istediğini öğren (bug raporu, yeni feature, Görev 9-12 ilerleme)
+4. Mert'le konuşmaya başla — hangi konuda yardım istediğini öğren (Görev 10-12 ilerleme, bug raporu, yeni feature)

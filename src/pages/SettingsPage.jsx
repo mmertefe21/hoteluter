@@ -19,7 +19,7 @@ import { PARA_BIRIMI_OPTS } from '../lib/constants.js';
 import {
   getActiveKurlar, fetchKurlar, getManuelKurlar, setManuelKurlar, clearManuelKurlar,
 } from '../lib/kur.js';
-import { useAuth } from '../lib/auth-mock.jsx';
+import { useAuth } from '../lib/auth.jsx';
 
 const SettingsPage = () => {
   const { user } = useAuth();

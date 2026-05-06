@@ -11,7 +11,7 @@ import OdaTipFormModal from '../modals/OdaTipFormModal.jsx';
 import { db, useCollection } from '../lib/db.js';
 import { useDoc } from '../lib/db.js';
 import { fmtMoney } from '../lib/helpers.js';
-import { useAuth } from '../lib/auth-mock.jsx';
+import { useAuth } from '../lib/auth.jsx';
 
 const ODA_DURUM_BADGE = {
   musait: 'htl-badge-success',

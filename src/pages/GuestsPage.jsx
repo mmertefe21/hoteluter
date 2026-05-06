@@ -8,7 +8,7 @@ import Icon from '../components/Icon.jsx';
 import { useToast } from '../components/Toast.jsx';
 import MisafirFormModal from '../modals/MisafirFormModal.jsx';
 import { db, useCollection } from '../lib/db.js';
-import { useAuth } from '../lib/auth-mock.jsx';
+import { useAuth } from '../lib/auth.jsx';
 
 const GuestsPage = () => {
   const { can } = useAuth();

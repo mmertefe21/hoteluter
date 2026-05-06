@@ -10,7 +10,7 @@ import ReservationFormModal from '../modals/ReservationFormModal.jsx';
 import { db, useCollection, useDoc } from '../lib/db.js';
 import { fmtMoney, fmtDateTR } from '../lib/helpers.js';
 import { DURUM_OPTS, DURUM_INFO } from '../lib/constants.js';
-import { useAuth } from '../lib/auth-mock.jsx';
+import { useAuth } from '../lib/auth.jsx';
 
 const ReservationListPage = () => {
   const { can, user } = useAuth();

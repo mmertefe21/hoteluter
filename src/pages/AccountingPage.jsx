@@ -24,7 +24,7 @@ import {
 } from '../helpers/exchange-utils.js';
 import { deleteTahsilatWithHareket } from '../helpers/tahsilat.js';
 import { deleteGiderWithHareket } from '../helpers/gider.js';
-import { useAuth } from '../lib/auth-mock.jsx';
+import { useAuth } from '../lib/auth.jsx';
 
 const AccountingPage = () => {
   const { can, user } = useAuth();

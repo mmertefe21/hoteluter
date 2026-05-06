@@ -12,7 +12,7 @@ import KullaniciFormModal from '../modals/KullaniciFormModal.jsx';
 import { db, useCollection } from '../lib/db.js';
 import { ROLE_LABELS } from '../lib/permissions.js';
 import { fmtDateTR } from '../lib/helpers.js';
-import { useAuth } from '../lib/auth-mock.jsx';
+import { useAuth } from '../lib/auth.jsx';
 
 const UsersPage = ({ embedded = false }) => {
   const { user } = useAuth();

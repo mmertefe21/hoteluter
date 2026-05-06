@@ -21,7 +21,7 @@ import SplitModal from '../modals/SplitModal.jsx';
 import { db, useCollection, useDoc } from '../lib/db.js';
 import { addDays, todayISO, fmtDateTR, fmtDateShort, isWeekend } from '../lib/helpers.js';
 import { getOdaSegmentleri, checkOverlap } from '../helpers/segmentler.js';
-import { useAuth } from '../lib/auth-mock.jsx';
+import { useAuth } from '../lib/auth.jsx';
 
 const CalendarPage = () => {
   const { can, user } = useAuth();
