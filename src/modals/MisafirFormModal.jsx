@@ -1,5 +1,10 @@
 /**
  * MisafirFormModal — misafir ekle/düzenle.
+ *
+ * onSaved(newId?: string) — yeni kayıtta Firestore doc id, düzenlemede target.id geçer.
+ *   Geriye uyumlu: parametresiz çağıran tüketiciler etkilenmez.
+ * prefill — modal açılırken form'u önceden doldur ({ ad?, soyad?, ... }).
+ *   Yeni kayıt akışında ReservationFormModal combobox'ından çağrıldığında kullanılır.
  */
 import { useEffect, useState } from 'react';
 import Modal from '../components/Modal.jsx';
@@ -13,28 +18,34 @@ const DEFAULT = {
   dogumTarihi: '',
 };
 
-const MisafirFormModal = ({ open, onClose, onSaved, target = null }) => {
+const MisafirFormModal = ({ open, onClose, onSaved, target = null, prefill = null }) => {
   const { show } = useToast();
   const [form, setForm] = useState(DEFAULT);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setForm(target ? { ...DEFAULT, ...target } : DEFAULT);
-  }, [open, target?.id]);
+    if (target) {
+      setForm({ ...DEFAULT, ...target });
+    } else {
+      setForm({ ...DEFAULT, ...(prefill || {}) });
+    }
+  }, [open, target?.id, prefill?.ad, prefill?.soyad]);
 
   const save = async () => {
     if (!form.ad?.trim() || !form.soyad?.trim()) return show('Ad ve soyad zorunludur.', 'error');
     setSaving(true);
     try {
+      let savedId = target?.id;
       if (target) {
         await db.update('misafirler', target.id, form);
         show('Misafir güncellendi.');
       } else {
-        await db.add('misafirler', { ...form, olusturmaTarihi: new Date().toISOString() });
+        const result = await db.add('misafirler', { ...form, olusturmaTarihi: new Date().toISOString() });
+        savedId = result.id;
         show('Misafir eklendi.');
       }
-      onSaved?.();
+      onSaved?.(savedId);
       onClose?.();
     } catch (e) {
       show('Hata: ' + e.message, 'error');

@@ -20,6 +20,7 @@ import { DURUM_OPTS, PANSIYON_OPTS, ODEME_OPTS, HESAP_TIP_INFO } from '../lib/co
 import { checkOverlap } from '../helpers/segmentler.js';
 import { deleteTahsilatWithHareket } from '../helpers/tahsilat.js';
 import TahsilatModal from './TahsilatModal.jsx';
+import MisafirFormModal from './MisafirFormModal.jsx';
 
 const DEFAULT = {
   odaId: '', odaTipiId: '', anaMisafirId: '',
@@ -56,6 +57,11 @@ const ReservationFormModal = ({
   const [tahsilatOpen, setTahsilatOpen] = useState(false);
   const [confirmTahDel, setConfirmTahDel] = useState(null);
 
+  // Misafir combobox state'i
+  const [misafirArama, setMisafirArama] = useState('');
+  const [misafirDropdownAcik, setMisafirDropdownAcik] = useState(false);
+  const [yeniMisafirModal, setYeniMisafirModal] = useState({ acik: false, prefillAd: '', prefillSoyad: '' });
+
   useEffect(() => {
     if (!open) return;
     if (rezervasyon) {
@@ -90,6 +96,54 @@ const ReservationFormModal = ({
     if (!form.girisTarihi || geceSayisi <= 0) return [];
     return Array.from({ length: geceSayisi }, (_, i) => addDays(form.girisTarihi, i));
   }, [form.girisTarihi, geceSayisi]);
+
+  // Misafir combobox computed değerler
+  const seciliMisafir = useMemo(
+    () => misafirler.find((m) => m.id === form.anaMisafirId) || null,
+    [form.anaMisafirId, misafirler]
+  );
+
+  const filteredMisafirler = useMemo(() => {
+    const q = misafirArama.toLowerCase().trim();
+    if (!q) {
+      // Boş arama: en son eklenen 10 misafir
+      return [...misafirler]
+        .sort((a, b) => (b.olusturmaTarihi || '').localeCompare(a.olusturmaTarihi || ''))
+        .slice(0, 10);
+    }
+    return misafirler
+      .filter((m) =>
+        `${m.ad || ''} ${m.soyad || ''}`.toLowerCase().includes(q)
+        || (m.telefon || '').includes(q)
+        || (m.tcKimlik || '').includes(q)
+      )
+      .slice(0, 10);
+  }, [misafirArama, misafirler]);
+
+  const handleSelectMisafir = (id) => {
+    setForm((f) => ({ ...f, anaMisafirId: id }));
+    setMisafirArama('');
+    setMisafirDropdownAcik(false);
+  };
+
+  const handleClearMisafir = () => {
+    setForm((f) => ({ ...f, anaMisafirId: '' }));
+    setMisafirArama('');
+    setMisafirDropdownAcik(false);
+  };
+
+  const handleYeniMisafirInline = () => {
+    const parts = misafirArama.trim().split(/\s+/);
+    const ad = parts[0] || '';
+    const soyad = parts.slice(1).join(' ');
+    setYeniMisafirModal({ acik: true, prefillAd: ad, prefillSoyad: soyad });
+    setMisafirDropdownAcik(false);
+  };
+
+  const handleDetayliEkle = () => {
+    setYeniMisafirModal({ acik: true, prefillAd: '', prefillSoyad: '' });
+    setMisafirDropdownAcik(false);
+  };
 
   // Oda seçilince oda tipi otomatik gelsin + varsayılan fiyat
   useEffect(() => {
@@ -232,13 +286,81 @@ const ReservationFormModal = ({
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="htl-label">Ana Misafir *</label>
-            <select className="htl-input" value={form.anaMisafirId || ''} onChange={(e) => setForm({ ...form, anaMisafirId: e.target.value })}>
-              <option value="">— Seçiniz —</option>
-              {misafirler.map((m) => <option key={m.id} value={m.id}>{m.ad} {m.soyad}{m.telefon ? ` · ${m.telefon}` : ''}</option>)}
-            </select>
-            {misafirler.length === 0 && (
-              <div className="text-xs mt-1" style={{ color: 'var(--danger)' }}>Önce Misafirler sayfasından misafir ekleyin.</div>
-            )}
+            <div className="relative">
+              <div className="flex gap-2">
+                {seciliMisafir ? (
+                  <div className="htl-input flex-1 flex items-center justify-between"
+                    style={{ background: 'var(--bone-warm)' }}>
+                    <span className="truncate">
+                      <span className="font-medium">{seciliMisafir.ad} {seciliMisafir.soyad}</span>
+                      {seciliMisafir.telefon && (
+                        <span style={{ color: 'var(--ink-soft)' }}> · {seciliMisafir.telefon}</span>
+                      )}
+                    </span>
+                    <button type="button" onClick={handleClearMisafir}
+                      className="ml-2 p-1 -m-1 rounded hover:bg-[var(--bone-light)] flex-shrink-0"
+                      title="Seçimi temizle">
+                      <Icon name="x" size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    className="htl-input flex-1"
+                    type="text"
+                    placeholder="Yaz veya seç..."
+                    value={misafirArama}
+                    onChange={(e) => { setMisafirArama(e.target.value); setMisafirDropdownAcik(true); }}
+                    onFocus={() => setMisafirDropdownAcik(true)}
+                    onBlur={() => setTimeout(() => setMisafirDropdownAcik(false), 200)}
+                    onKeyDown={(e) => { if (e.key === 'Escape') setMisafirDropdownAcik(false); }}
+                  />
+                )}
+                <button
+                  type="button"
+                  className="htl-btn htl-btn-ghost flex-shrink-0"
+                  title="Detaylı misafir ekle (telefon, TC, adres ile)"
+                  onClick={handleDetayliEkle}
+                >
+                  <Icon name="user-plus" size={16} />
+                  <span className="hidden sm:inline">Detaylı</span>
+                </button>
+              </div>
+
+              {misafirDropdownAcik && !seciliMisafir && (
+                <div className="absolute left-0 right-0 mt-1 rounded-lg shadow-lg overflow-hidden"
+                  style={{ background: 'var(--bone-light)', border: '1px solid var(--line)', top: '100%', zIndex: 20, maxHeight: '15rem', overflowY: 'auto' }}>
+                  {filteredMisafirler.length === 0 && !misafirArama.trim() && (
+                    <div className="px-3 py-2 text-sm" style={{ color: 'var(--ink-faint)' }}>
+                      Henüz misafir yok. Yazıp yeni ekleyin.
+                    </div>
+                  )}
+                  {filteredMisafirler.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => handleSelectMisafir(m.id)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--bone-warm)] block"
+                    >
+                      <span className="font-medium">{m.ad} {m.soyad}</span>
+                      {m.telefon && <span style={{ color: 'var(--ink-soft)' }}> · {m.telefon}</span>}
+                    </button>
+                  ))}
+                  {misafirArama.trim() && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={handleYeniMisafirInline}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--bone-warm)] flex items-center gap-2"
+                      style={{ borderTop: filteredMisafirler.length > 0 ? '1px solid var(--line-soft)' : 'none', color: 'var(--brass)' }}
+                    >
+                      <Icon name="plus-circle" size={14} stroke="var(--brass)" />
+                      <span>Yeni misafir: <strong>"{misafirArama.trim()}"</strong> oluştur</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <label className="htl-label">Oda *</label>
@@ -488,6 +610,19 @@ const ReservationFormModal = ({
           userId={userId}
         />
       )}
+
+      <MisafirFormModal
+        open={yeniMisafirModal.acik}
+        onClose={() => setYeniMisafirModal({ acik: false, prefillAd: '', prefillSoyad: '' })}
+        onSaved={(newId) => {
+          if (newId) {
+            setForm((f) => ({ ...f, anaMisafirId: newId }));
+            setMisafirArama('');
+          }
+        }}
+        target={null}
+        prefill={{ ad: yeniMisafirModal.prefillAd, soyad: yeniMisafirModal.prefillSoyad }}
+      />
     </>
   );
 };
