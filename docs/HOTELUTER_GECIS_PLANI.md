@@ -1,10 +1,15 @@
 # HOTELUTER GEÇIŞ PLANI — v0.7 → v1.0 Production
 
+> ## ✅ PLAN KAPANMIŞTIR (06.05.2026)
+> **Tüm 12 görev tamamlandı + 2 kritik bug fix.** Sistem v1.0 ile production'da: https://hoteluter.com
+> Bu doküman geçişten sorumluydu — geçiş tamam. Sonraki yol haritası ayrı dokümantasyonda tutulacak (v1.1+ release dokümanları).
+> Bkz. final not (en altta) ve `docs/CLAUDE_HOTELUTER_v1.0.md`.
+
 **Hedef:** Tek-dosya HTML MVP'sini production-ready bir SaaS'a çevirmek.
 
 **Stack:** Vite + React + Tailwind + Firebase Firestore + Firebase Auth + Netlify + hoteluter.com
 
-**Tarih:** 05.05.2026 başlangıç
+**Tarih:** 05.05.2026 başlangıç → 06.05.2026 kapanış (~24 saat aktif çalışma, 11 commit)
 
 ---
 
@@ -228,22 +233,22 @@ GoDaddy'de:
 
 ## 📊 GÖREV ÖZETİ TABLOSU
 
-| # | Görev | Yapan | Süre | Bağımlılık |
-|---|---|---|---|---|
-| 1 | Firebase projesi | Sen | 5 dk | — |
-| 2 | Local environment | Sen | 5 dk | — |
-| 3 | Vite iskelet | Ben + Sen | 30 dk | 2 |
-| 4 | Lib & helpers | Ben + Sen | 60 dk | 3 |
-| 5 | Components | Ben + Sen | 45 dk | 4 |
-| 6 | Modals | Ben + Sen | 60 dk | 5 |
-| 7 | Sayfalar | Ben + Sen | 90 dk | 6 |
-| 8 | Firestore şema | Ben | 30 dk | 1, 7 |
-| 9 | Firebase Auth | Ben + Sen | 30 dk | 8 |
-| 10 | Security Rules | Ben + Sen | 15 dk | 9 |
-| 11 | GitHub + Netlify deploy | Sen | 30 dk | 10 |
-| 12 | Domain bağlama | Sen | 15 dk + bekleme | 11 |
+| # | Görev | Yapan | Süre | Bağımlılık | Durum |
+|---|---|---|---|---|---|
+| 1 | Firebase projesi | Sen | 5 dk | — | ✅ |
+| 2 | Local environment | Sen | 5 dk | — | ✅ |
+| 3 | Vite iskelet | Ben + Sen | 30 dk | 2 | ✅ |
+| 4 | Lib & helpers | Ben + Sen | 60 dk | 3 | ✅ |
+| 5 | Components | Ben + Sen | 45 dk | 4 | ✅ |
+| 6 | Modals | Ben + Sen | 60 dk | 5 | ✅ |
+| 7 | Sayfalar | Ben + Sen | 90 dk | 6 | ✅ |
+| 8 | Firestore şema | Ben | 30 dk | 1, 7 | ✅ (örtük tamam — migration boot) |
+| 9 | Firebase Auth | Ben + Sen | 30 dk | 8 | ✅ |
+| 10 | Security Rules | Ben + Sen | 15 dk | 9 | ✅ + bug fix |
+| 11 | GitHub + Netlify deploy | Sen | 30 dk | 10 | ✅ |
+| 12 | Domain bağlama | Sen | 15 dk + bekleme | 11 | ✅ |
 
-**Toplam aktif çalışma: ~7 saat** (bekleme süreleri hariç)
+**Toplam aktif çalışma: ~24 saat** (bekleme + Mert'in setup süreleri dahil, gerçek Claude+Mert oturumları)
 
 ---
 
@@ -333,3 +338,22 @@ Mevcut "editorial boutique hotel" tasarım kimliği (bone/forest/brass paleti, F
 ---
 
 **🚀 Hazırım. Görev 1'i tamamlayıp Firebase config'i bana ilettiğinde Görev 2 + 3'e başlayacağız.**
+
+---
+
+## 📦 Final Not (06.05.2026)
+
+Sistem **v1.0** ile production'da: https://hoteluter.com
+
+**12/12 görev tamamlandı + 2 kritik bug fix:**
+- Bug 1 (commit `4db9359`): Kullanıcı oluşturma rules — get/list ayrımı + self-create + privilege escalation guard
+- Bug 2 (commit `cf6b922`): Rezervasyon misafir seçimi `<select>` → combobox + inline yeni misafir prefill
+
+**Bundan sonraki çalışmalar:**
+- **v1.1+:** Sahada kullanım sırasında çıkacak bug raporları
+- **v1.2+:** "Şu da olsun" tarzı yeni feature istekleri
+- **v2.0+:** Çoklu otel desteği (multi-property), Cloud Functions ile incelikli yetki, kanal yönetimi entegrasyonu (Booking.com, Airbnb sync)
+
+Bu doküman geçişten sorumluydu — **geçiş tamam.** Sonraki yol haritası ayrı dokümantasyonda tutulacak (v1.1+ release dokümanları, ihtiyaç duyuldukça `docs/CLAUDE_HOTELUTER_vN.N.md` doğacak).
+
+Detaylı v1.0 production fotoğrafı: `docs/CLAUDE_HOTELUTER_v1.0.md`

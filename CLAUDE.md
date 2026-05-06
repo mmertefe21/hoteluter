@@ -3,7 +3,7 @@
 > **Amaç:** Bu dosya, Hoteluter projesinde çalışan herhangi bir Claude (yeni sohbet, yeni session) için **kurucu dokümandır**. İlk okunacak dosyadır. Projenin tarihi, mimarisi, çalışan kuralları ve aktif görevler buradadır.
 
 **Son güncelleme:** 06.05.2026
-**Mevcut sürüm:** **v1.0-rc** (release candidate) — Görev 9 + 10 tamam: gerçek Firebase Auth aktif, Security Rules yazıldı (default deny + role-based). Kuralların Firebase Console'a publish edilmesi Mert tarafından yapılacak. Kalan: Görev 11 (Netlify deploy) + Görev 12 (Domain).
+**Mevcut sürüm:** **v1.0** (production) 🚀 — Sistem canlıda: https://hoteluter.com. Tüm 12 görev + 2 bug fix tamamlandı. Firebase Auth + Firestore Security Rules + Netlify continuous deployment + custom domain + Let's Encrypt SSL aktif.
 **Tek-dosya MVP final:** v0.7 (`docs/backup/hoteluter-v0.7-final.html`, ~6500 satır, referans için saklı)
 
 ---
@@ -12,7 +12,7 @@
 
 **Hoteluter** — Türkiye'deki butik/şehir otelleri için tasarlanmış SaaS PMS (Property Management System).
 
-**Domain:** hoteluter.com (Netlify'a Görev 12'de bağlanacak)
+**Domain:** https://hoteluter.com (canlı, Netlify + Let's Encrypt SSL)
 
 **Hedef kullanıcı:** Mert (kurucu, Mer Yazılım ve Teknoloji Limited Şirketi). Mevcut SaaS portföyü: Firmasyon (HR/POS/muhasebe), Rezlinka (rezervasyon platformu), Tezgah (tekstil), Tasty Locals (oda servisi).
 
@@ -139,48 +139,76 @@ hoteluter/
 | **1. Hazırlık** | 1. Firebase projesi · 2. Local environment | ✅ Tamam |
 | **2. Modülerleştirme** | 3. Vite iskelet · 4. Lib/helpers · 5. Components · 6. Modals (6A mali · 6B rezervasyon) · 7. Pages | ✅ Tamam |
 | **3. Firestore** | 8. Şema + sıfır seed · 9. Auth · 10. Security Rules | ✅ Tamam (publish + lokal test ok) |
-| **4. Deploy** | 11. GitHub + Netlify · 12. Domain | 🔄 11 hazırlık tamam, Mert deploy edecek; 12 ⏳ |
+| **4. Deploy** | 11. GitHub + Netlify · 12. Domain | ✅ Tamam (12/12 görev) |
 
 ---
 
 ## 🚀 Şu An Nerede
 
-**Görev 11 hazırlığı tamam (06.05.2026):** Netlify deploy konfigürasyonu hazır.
-- `netlify.toml`: build command (`npm run build`), publish dir (`dist`), Node 20, SPA redirect (`/* → /index.html`), security headers (X-Frame-Options/CSP/Referrer-Policy), cache policy (assets immutable, HTML revalidate)
-- `.gitignore`: `.claude/` + `.netlify/` lokal tooling state'leri eklendi
-- `README.md`: Deploy bölümü (env vars, Firebase Authorized Domains uyarısı)
+**v1.0 PRODUCTION RELEASE (06.05.2026):** 🎉 Tüm 12 görev + 2 kritik bug fix tamamlandı, sistem canlıda.
 
-**Mert deploy edecek:** GitHub repo zaten var (`mmertefe21/hoteluter`). Netlify dashboard'a "Import from GitHub" → site settings env vars (`VITE_FIREBASE_*` 6 anahtar) → ilk deploy. Sonra Firebase Console > Authentication > Authorized domains'e Netlify URL eklenmeli (yoksa `auth/unauthorized-domain`).
+**Production:**
+- **URL:** https://hoteluter.com (custom domain) · https://hoteluter.netlify.app (Netlify default, hâlâ aktif)
+- **Hosting:** Netlify (continuous deployment via GitHub `mmertefe21/hoteluter`)
+- **Domain:** GoDaddy → Netlify nameservers (`dns1-4.p07.nsone.net`)
+- **SSL:** Let's Encrypt (otomatik yenileme)
 
-**Görev 10 tamamlandı + publish edildi (06.05.2026):** `firestore.rules` Firebase Console'da publish edildi, lokal test başarılı (PERMISSION_DENIED yok, migration çalışıyor). Default deny + role-based kurallar aktif.
+**Auth:**
+- Firebase Authentication (Email/Password)
+- İlk superadmin: `mmertefe9@gmail.com` (manuel oluşturuldu, Auth UID = Firestore doc ID)
+- Authorized domains: `localhost`, `hoteluter.firebaseapp.com`, `hoteluter.netlify.app`, `hoteluter.com`, `www.hoteluter.com`
 
-**Görev 10 bug fix (06.05.2026):** `users` bloğu yeniden yazıldı — get/list/create/update/delete ayrımı + self-create izni. Sebep: `createUserWithProfile` akışında `setDoc` yeni user'ın oturumunda çalışıyor (Firebase'in `createUserWithEmailAndPassword` yan etkisi), eski `users.create: if isSuperadmin()` reddediyordu → Auth user yaratılıyor ama Firestore profil yazılmıyor. Yeni kural: kullanıcı kendi profilini yaratabilir (rol ∈ {admin, kullanici} + aktif=true zorunlu — privilege escalation guard); update'te rol/aktif sabit. Mert publish edip test edecek.
+**Database:**
+- Firestore + Security Rules (default deny + role-based + privilege escalation guard)
+- `users/{userId}` get/list/create/update/delete ayrımı (Görev 10 bug fix sonrası)
+- 12 koleksiyon (users, otel, _meta + 10 operasyonel)
+- Migration boot otomatik: 5 kanal + 8 gider kategorisi + 3 hesap
 
-**Görev 9 tamamlandı (06.05.2026):** Mock auth kaldırıldı, gerçek Firebase Auth aktif. 10 dosyada import path swap, `auth-mock.jsx` silindi, `auth.js` → `auth.jsx` rename. KullaniciFormModal `createUserWithProfile` ile bağlandı.
+**Bundle:** ~1.55 MB (gzip 328 KB), 1632 modül, build ~5-8 sn
 
-**İlk superadmin (manuel):**
-- Firebase Auth: `mmertefe9@gmail.com`
-- Firestore `users/{uid}`: kullaniciAdi=admin, adSoyad=Mert Efe, rol=superadmin, aktif=true
-- Auth UID = doc ID eşleşmesi sağlandı
+**Commit timeline (toplam 11 commit, ~24 saatlik aktif çalışma):**
+- 05.05.2026 20:55 → 21:55 — Faz 1+2: Görev 1-7 (5 commit)
+- 06.05.2026 14:14 → 17:04 — Faz 3+4: Görev 9-11 + 2 bug fix (6 commit)
 
-**Strateji:** Sahada test (alpha) atlandı. Görev 10 publish + Görev 11 (Netlify) + Görev 12 (Domain) → sonra canlıda test.
+**v1.0 release commit:** Bu sohbet sonunda eklenecek (release dokümantasyonu).
 
-**Modal envanteri (`src/modals/`):**
-- Mali (Görev 6A): TahsilatModal, GiderModal, TransferModal, HesapFormModal, HesapDetayModal
-- Rezervasyon (Görev 6B): ReservationFormModal (yan paneli + entegre TahsilatModal), SplitModal
-- CRUD (Görev 6B): MisafirFormModal, OdaTipFormModal, OdaFormModal, KullaniciFormModal
+### Sıradaki — v1.1+ Yol Haritası
 
-**Sayfa envanteri (`src/pages/`):**
+Sahada kullanım dönemi başlıyor. Yeni Claude session'lar şu konularda yardım edebilir:
+
+- **Bug raporları (sahada kullanım):** Mert canlı sistemde sorun bulduğunda raporlayacak; bu dokümanlardaki "Bilinen Sınırlamalar" tablosunu önce kontrol et
+- **"Şu da olsun" feature istekleri:** v1.1, v1.2 sürümleri için yeni feature'lar (her sürüm için ayrı `docs/CLAUDE_HOTELUTER_vN.N.md` doğmalı)
+- **Frankfurter API CORS fix:** Lokal'de çalışıyor; production'da CORS sorunu çıkarsa kur servisi alternatifine geçilmeli (`exchangerate.host` veya TCMB EVDS proxy via Cloud Function)
+- **Cloud Functions ile incelikli yetki:** Server-side rol/modül kontrolü (şu an client-side `can()` ile filtreli, server-side tüm aktif user r/w)
+- **Kullanıcı oluşturma oturum-değişimi:** Cloud Functions admin SDK ile düzeltilebilir (mevcut çözüm: uyarı banner)
+- **Mobile drag-to-move:** Touch event desteği (CalendarPage)
+- **Yedekleme import flow:** Şu an sadece export var
+- **Code splitting:** Bundle 1.55MB → initial yükleme optimize
+
+### Bilinen Sınırlamalar (özet — detay v1.0 dokümanında)
+
+- Frankfurter API CORS riski (production'da test edilecek)
+- Yeni user yaratırken oturum-değişimi (Firebase client-side davranışı)
+- Modül bazlı incelikli yetki sadece client-side
+- Mobile drag-to-move yok
+- Yedekleme import yok (sadece export)
+- Bundle code splitting yok
+- Multi-property desteği yok (tek otel varsayımı)
+- Update kuralı `modulYetkileri`'ni serbest bırakıyor (bilinen takas)
+- Combobox klavye navigasyonu yok (sadece mouse)
+
+### Modal envanteri (`src/modals/`)
+- Mali: TahsilatModal, GiderModal, TransferModal, HesapFormModal, HesapDetayModal
+- Rezervasyon: ReservationFormModal (combobox + entegre TahsilatModal + nested MisafirFormModal), SplitModal
+- CRUD: MisafirFormModal (prefill prop ile), OdaTipFormModal, OdaFormModal, KullaniciFormModal
+
+### Sayfa envanteri (`src/pages/`)
 LoginScreen · DashboardPage · CalendarPage · ReservationListPage · GuestsPage · RoomsPage · AccountingPage · ReportsPage · SettingsPage · UsersPage
 
-**Boot sırası (App.jsx):** AuthProvider (Firebase Auth) → ToastProvider → onAuthStateChanged → user yoksa LoginScreen, varsa AppShell. AppShell mount'ında otomatik `runMigrations()` ve `ensureKurlarLoaded()`. Profil pasifse (`aktif: false`) otomatik logout.
+### Boot sırası (App.jsx)
+AuthProvider (Firebase Auth) → ToastProvider → onAuthStateChanged → user yoksa LoginScreen, varsa AppShell. AppShell mount'ında otomatik `runMigrations()` ve `ensureKurlarLoaded()`. Profil pasifse (`aktif: false`) otomatik logout.
 
-**Sıradaki:**
-- **Görev 11 deploy (Mert):** Netlify dashboard'a "Import from GitHub" → env vars → ilk deploy → Firebase Authorized Domains'e Netlify URL ekle
-- **Görev 12:** hoteluter.com domain (GoDaddy → Netlify nameserver + Let's Encrypt SSL)
-- **Sonra:** Frankfurter CORS testi (Görev 11+12 sonrası ayrı adım) + canlıda sahada test
-
-Detaylı v1.0-rc dokümanı: `docs/CLAUDE_HOTELUTER_v1.0-rc.md`
+Detaylı v1.0 dokümanı: `docs/CLAUDE_HOTELUTER_v1.0.md`
 
 ---
 
@@ -204,8 +232,8 @@ Detaylı v1.0-rc dokümanı: `docs/CLAUDE_HOTELUTER_v1.0-rc.md`
 - `docs/CLAUDE_HOTELUTER_v*.md` — her sürümün detaylı tarihi
 - `docs/HOTELUTER_GECIS_PLANI.md` — 12 görevlik yol haritası
 
-**Yeni Claude session başlarken:**
-1. Bu dosyayı (`CLAUDE.md`) oku
-2. **`docs/CLAUDE_HOTELUTER_v1.0-rc.md`** oku — şu anki sistemin tam fotoğrafı (Auth + Rules aktif), kullanım akışı, bilinen sınırlamalar
-3. Geçiş planına bak (`docs/HOTELUTER_GECIS_PLANI.md`) — kalan görevler için
-4. Mert'le konuşmaya başla — hangi konuda yardım istediğini öğren (Görev 11-12 ilerleme, bug raporu, yeni feature)
+**Yeni Claude session başlarken (v1.0 production sonrası):**
+1. Bu dosyayı (`CLAUDE.md`) oku — proje özeti, mimari kuralları, mevcut durum
+2. **`docs/CLAUDE_HOTELUTER_v1.0.md`** oku — production sistemin tam fotoğrafı (URL, Auth, Rules, bug fix kayıtları, v1.1+ TODO listesi)
+3. **`docs/HOTELUTER_GECIS_PLANI.md`** — kapanmış geçiş planı (v0.7 → v1.0 yol haritası, referans için)
+4. Mert'le konuşmaya başla — sahada kullanım sırasında çıkan bug raporu, yeni feature isteği, veya bilinen TODO'lardan birini ele almak

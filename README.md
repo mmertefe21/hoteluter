@@ -2,8 +2,8 @@
 
 > Otel Yönetim Sistemi (PMS) — React + Vite + Firebase + Tailwind
 
-**Sürüm:** v1.0-rc — Auth + Security Rules aktif, Netlify deploy aşamasında
-**Domain:** hoteluter.com (Görev 12'de bağlanacak)
+**Sürüm:** v1.0 (production) 🚀
+**Production:** https://hoteluter.com (canlı)
 
 ---
 
@@ -117,8 +117,8 @@ Editorial boutique hotel estetiği:
 
 ## 🚀 Deploy
 
-**Production URL:** _(Netlify deploy sonrası buraya gerçek URL yazılacak)_
-**Domain (planlı):** https://hoteluter.com
+**Production URL:** https://hoteluter.com
+**Yedek URL:** https://hoteluter.netlify.app
 
 ### Continuous Deployment
 
@@ -158,21 +158,23 @@ Netlify URL'i (örn. `cosmic-hamster-1234.netlify.app` ve sonradan `hoteluter.co
 ## 📦 Versiyon Geçmişi
 
 - **v0.1 → v0.7** — Tek HTML dosyalı MVP iterasyonları (lokal localStorage). Final: `docs/backup/hoteluter-v0.7-final.html` (~6500 satır)
-- **v1.0-alpha** — Modüler React + Vite + Firebase, mock auth, sahada test öncesi
+- **v1.0-alpha** — Modüler React + Vite + Firebase, mock auth (Faz 1+2)
 - **v1.0-beta** — Gerçek Firebase Auth bağlandı (mock kalktı)
-- **v1.0-rc** — Firestore Security Rules eklendi + Netlify deploy hazırlığı (BU)
-- **v1.0** — Production deploy + hoteluter.com domain (planlı)
+- **v1.0-rc** — Firestore Security Rules + Netlify deploy hazırlığı
+- **v1.0** — Production deploy + hoteluter.com canlı + 2 bug fix (BU) ✅
 
 ---
 
-## 🚦 Kalan Görevler
+## 🚦 Faz Durumu
 
 | Faz | Görev | Durum |
 |---|---|---|
-| 3. Firestore | 9. Firebase Auth bağlama | ✅ |
-| 3. Firestore | 10. Firestore Security Rules | ✅ |
-| 4. Deploy | 11. GitHub + Netlify deploy | 🔄 hazırlık tamam |
-| 4. Deploy | 12. hoteluter.com domain | ⏳ |
+| 1. Hazırlık | 1. Firebase projesi · 2. Local environment | ✅ |
+| 2. Modülerleştirme | 3-7. Vite + lib + components + modals + pages | ✅ |
+| 3. Firestore | 8. Şema · 9. Auth · 10. Security Rules | ✅ |
+| 4. Deploy | 11. Netlify · 12. Domain | ✅ |
+
+**12/12 görev tamamlandı.** Sistem v1.0 ile production'da. Sıradaki: sahada kullanım + bug raporları + feature istekleri (v1.1+).
 
 Detaylı: `docs/HOTELUTER_GECIS_PLANI.md`
 
@@ -180,8 +182,8 @@ Detaylı: `docs/HOTELUTER_GECIS_PLANI.md`
 
 ## 📚 Yeni Claude Session Başlarken
 
-1. **`CLAUDE.md`** — proje kuruluş dokümanı
-2. **`docs/CLAUDE_HOTELUTER_v1.0-rc.md`** — şu anki sistemin tam fotoğrafı
-3. **`docs/HOTELUTER_GECIS_PLANI.md`** — kalan görevler
+1. **`CLAUDE.md`** — proje kuruluş dokümanı + mimari kuralları
+2. **`docs/CLAUDE_HOTELUTER_v1.0.md`** — production sistemin tam fotoğrafı (URL'ler, Auth, Rules, bug fix kayıtları, v1.1+ TODO listesi)
+3. **`docs/HOTELUTER_GECIS_PLANI.md`** — kapanmış geçiş planı (referans için)
 
 Bu üç dosya yeterli context verir.
