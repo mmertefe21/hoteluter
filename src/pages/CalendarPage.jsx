@@ -17,6 +17,9 @@ import Icon from '../components/Icon.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 import { useToast } from '../components/Toast.jsx';
 import ReservationFormModal from '../modals/ReservationFormModal.jsx';
+import GrupRezervasyonModal from '../modals/GrupRezervasyonModal.jsx';
+import GrupDetayModal from '../modals/GrupDetayModal.jsx';
+import RezervasyonTipiSecimModal from '../modals/RezervasyonTipiSecimModal.jsx';
 import SplitModal from '../modals/SplitModal.jsx';
 import { db, useCollection, useDoc } from '../lib/db.js';
 import { addDays, todayISO, fmtDateTR, fmtDateShort, isWeekend } from '../lib/helpers.js';
@@ -31,8 +34,10 @@ const CalendarPage = () => {
   const [days, setDays] = useState(15);
   const [filterTipId, setFilterTipId] = useState('');
   const [editingRez, setEditingRez] = useState(null);
-  const [creating, setCreating] = useState(false);
-  const [prefillData, setPrefillData] = useState(null);
+  const [tipiSecim, setTipiSecim] = useState(null);
+  const [tekRez, setTekRez] = useState(null);
+  const [grupRez, setGrupRez] = useState(null);
+  const [grupDetay, setGrupDetay] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [drag, setDrag] = useState(null);
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
@@ -53,6 +58,7 @@ const CalendarPage = () => {
   const hesapHareketleri = useCollection('hesapHareketleri');
   const tahsilatlar = useCollection('tahsilatlar');
   const kanallar = useCollection('kanallar');
+  const gruplar = useCollection('gruplar');
 
   const dateList = useMemo(
     () => Array.from({ length: days }, (_, i) => addDays(startDate, i)),
@@ -75,7 +81,8 @@ const CalendarPage = () => {
   const getResStyle = (res, seg) => {
     const tipId = (seg && seg.odaTipiId) || res.odaTipiId;
     const tip = odaTipleri.find((t) => t.id === tipId);
-    return { background: tip?.renk || 'var(--brass)' };
+    const grup = res.grupId ? gruplar.find((g) => g.id === res.grupId) : null;
+    return { background: grup?.renk || tip?.renk || 'var(--brass)' };
   };
 
   // Gece bazlı bar — çıkış günü boş kalır
@@ -119,8 +126,7 @@ const CalendarPage = () => {
       const giris = dateList[lo];
       const cikis = addDays(dateList[hi], 1);
       if (!checkOverlap(drag.odaId, giris, cikis, null, reservations)) {
-        setPrefillData({ odaId: drag.odaId, girisTarihi: giris, cikisTarihi: cikis });
-        setCreating(true);
+        setTipiSecim({ prefill: { odaId: drag.odaId, girisTarihi: giris, cikisTarihi: cikis } });
       }
       setDrag(null);
     };
@@ -215,7 +221,7 @@ const CalendarPage = () => {
               </button>
             )}
             {can('rezervasyon', 'ekle') && (
-              <button type="button" className="htl-btn htl-btn-accent" onClick={() => { setPrefillData(null); setCreating(true); }}>
+              <button type="button" className="htl-btn htl-btn-accent" onClick={() => setTipiSecim({ prefill: null })}>
                 <Icon name="plus" size={16} stroke="white" /><span>Yeni Rezervasyon</span>
               </button>
             )}
@@ -338,9 +344,15 @@ const CalendarPage = () => {
                             const pos = computeBar(seg.girisTarihi, seg.cikisTarihi);
                             if (!pos) return null;
                             const m = misafirler.find((x) => x.id === res.anaMisafirId);
+                            const grup = res.grupId ? gruplar.find((g) => g.id === res.grupId) : null;
                             const isBeingDragged = rezDrag && rezDrag.rez.id === res.id && rezDrag.segIdx === seg._segIdx;
                             const isMulti = seg._isMulti;
                             const segLabel = isMulti ? `${seg._segIdx + 1}/${res.segmentler.length}` : '';
+                            const misafirAd = m ? `${m.ad} ${m.soyad}` : res.rezervasyonKodu;
+                            const display = grup ? `${grup.ad} — ${misafirAd}` : misafirAd;
+                            const titleText = grup
+                              ? `Grup: ${grup.ad}\n${misafirAd} · ${fmtDateTR(seg.girisTarihi)} → ${fmtDateTR(seg.cikisTarihi)}${isMulti ? ` · ${segLabel}` : ''}`
+                              : `${isMulti ? `[${segLabel}] ` : ''}${m ? `${m.ad} ${m.soyad}` : ''} · ${fmtDateTR(seg.girisTarihi)} → ${fmtDateTR(seg.cikisTarihi)}`;
                             return (
                               <div key={`${res.id}-${seg._segIdx}`} className="htl-res-bar"
                                 draggable={editMode && can('rezervasyon', 'duzenle')}
@@ -353,16 +365,32 @@ const CalendarPage = () => {
                                 onDragEnd={() => setRezDrag(null)}
                                 style={{
                                   ...pos, ...getResStyle(res, seg),
+                                  position: 'absolute',
                                   cursor: editMode ? 'grab' : 'pointer',
                                   opacity: isBeingDragged ? 0.4 : 1,
                                   outline: editMode ? '1px dashed rgba(255,255,255,.6)' : 'none',
                                   outlineOffset: -3,
                                 }}
-                                onClick={() => { if (!editMode) setEditingRez(res); }}
-                                title={`${isMulti ? `[${segLabel}] ` : ''}${m ? `${m.ad} ${m.soyad}` : ''} · ${fmtDateTR(seg.girisTarihi)} → ${fmtDateTR(seg.cikisTarihi)}`}
+                                onClick={() => {
+                                  if (editMode) return;
+                                  if (res.grupId) setGrupDetay(res.grupId);
+                                  else setEditingRez(res);
+                                }}
+                                title={titleText}
                               >
-                                <Icon name={isMulti ? 'link' : (editMode ? 'move' : 'user')} size={12} stroke="white" strokeWidth={2.5} />
-                                <span className="ml-1 truncate">{m ? `${m.ad} ${m.soyad}` : res.rezervasyonKodu}{isMulti ? ` · ${segLabel}` : ''}</span>
+                                {grup && (
+                                  <div style={{
+                                    position: 'absolute',
+                                    top: 0, left: 0, right: 0,
+                                    height: 5,
+                                    background: grup.renk,
+                                    borderTopLeftRadius: 4,
+                                    borderTopRightRadius: 4,
+                                    pointerEvents: 'none',
+                                  }} />
+                                )}
+                                <Icon name={grup ? 'users' : (isMulti ? 'link' : (editMode ? 'move' : 'user'))} size={12} stroke="white" strokeWidth={2.5} />
+                                <span className="ml-1 truncate">{display}{isMulti ? ` · ${segLabel}` : ''}</span>
 
                                 {editMode && can('rezervasyon', 'duzenle') && pos.width > 60 && (
                                   <button
@@ -416,10 +444,10 @@ const CalendarPage = () => {
       </div>
 
       <ReservationFormModal
-        open={creating || !!editingRez}
-        onClose={() => { setCreating(false); setEditingRez(null); setPrefillData(null); }}
+        open={!!tekRez || !!editingRez}
+        onClose={() => { setTekRez(null); setEditingRez(null); }}
         rezervasyon={editingRez}
-        prefill={prefillData}
+        prefill={tekRez?.prefill}
         odalar={odalar}
         odaTipleri={odaTipleri}
         misafirler={misafirler}
@@ -427,6 +455,44 @@ const CalendarPage = () => {
         hesapHareketleri={hesapHareketleri}
         tahsilatlar={tahsilatlar}
         reservations={reservationsAll}
+        kanallar={kanallar}
+        ana={ana}
+        userId={user?.id}
+      />
+
+      <RezervasyonTipiSecimModal
+        open={!!tipiSecim}
+        onClose={() => setTipiSecim(null)}
+        prefill={tipiSecim?.prefill}
+        onTekSec={(p) => setTekRez({ prefill: p })}
+        onGrupSec={(p) => setGrupRez({ prefill: p })}
+      />
+
+      <GrupRezervasyonModal
+        open={!!grupRez}
+        onClose={() => setGrupRez(null)}
+        onSaved={() => setGrupRez(null)}
+        prefill={grupRez?.prefill}
+        gruplarMevcut={gruplar}
+        odalar={odalar}
+        odaTipleri={odaTipleri}
+        misafirler={misafirler}
+        kanallar={kanallar}
+        reservations={reservationsAll}
+        ana={ana}
+        userId={user?.id}
+      />
+
+      <GrupDetayModal
+        open={!!grupDetay}
+        onClose={() => setGrupDetay(null)}
+        grupId={grupDetay}
+        gruplar={gruplar}
+        reservations={reservationsAll}
+        odalar={odalar}
+        odaTipleri={odaTipleri}
+        misafirler={misafirler}
+        tahsilatlar={tahsilatlar}
         kanallar={kanallar}
         ana={ana}
         userId={user?.id}

@@ -73,7 +73,10 @@ export const addTahsilatWithHareket = async (tahsilat, kullaniciId, ana) => {
   const tahsilatId = batch.add('tahsilatlar', tahsilatData);
 
   let aciklamaText = tahsilat.aciklama || 'Tahsilat';
-  if (tahsilat.rezervasyonId) {
+  if (tahsilat.grupId) {
+    const grup = await db.get('gruplar', tahsilat.grupId);
+    if (grup) aciklamaText = `Tahsilat · [${grup.ad}] (grup)`;
+  } else if (tahsilat.rezervasyonId) {
     const rez = await db.get('rezervasyonlar', tahsilat.rezervasyonId);
     if (rez) aciklamaText = `Tahsilat · ${rez.rezervasyonKodu}`;
   }
@@ -89,6 +92,7 @@ export const addTahsilatWithHareket = async (tahsilat, kullaniciId, ana) => {
     tip: 'tahsilat',
     aciklama: aciklamaText,
     rezervasyonId: tahsilat.rezervasyonId || null,
+    grupId: tahsilat.grupId || null,
     tahsilatId,
     transferId: null,
     giderId: null,
@@ -158,7 +162,10 @@ export const updateTahsilatWithHareket = async (tahsilatId, partial, ana) => {
   batch.update('tahsilatlar', tahsilatId, final);
 
   let aciklamaText = final.aciklama || 'Tahsilat';
-  if (final.rezervasyonId) {
+  if (final.grupId) {
+    const grup = await db.get('gruplar', final.grupId);
+    if (grup) aciklamaText = `Tahsilat · [${grup.ad}] (grup)`;
+  } else if (final.rezervasyonId) {
     const rez = await db.get('rezervasyonlar', final.rezervasyonId);
     if (rez) aciklamaText = `Tahsilat · ${rez.rezervasyonKodu}`;
   }
@@ -173,6 +180,7 @@ export const updateTahsilatWithHareket = async (tahsilatId, partial, ana) => {
     tip: 'tahsilat',
     aciklama: aciklamaText,
     rezervasyonId: final.rezervasyonId || null,
+    grupId: final.grupId || null,
     tahsilatId,
     transferId: null,
     giderId: null,

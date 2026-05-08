@@ -7,6 +7,8 @@ import ConfirmModal from '../components/ConfirmModal.jsx';
 import Icon from '../components/Icon.jsx';
 import { useToast } from '../components/Toast.jsx';
 import ReservationFormModal from '../modals/ReservationFormModal.jsx';
+import GrupRezervasyonModal from '../modals/GrupRezervasyonModal.jsx';
+import RezervasyonTipiSecimModal from '../modals/RezervasyonTipiSecimModal.jsx';
 import { db, useCollection, useDoc } from '../lib/db.js';
 import { fmtMoney, fmtDateTR } from '../lib/helpers.js';
 import { DURUM_OPTS, DURUM_INFO } from '../lib/constants.js';
@@ -19,7 +21,9 @@ const ReservationListPage = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterTipId, setFilterTipId] = useState('');
   const [editingRez, setEditingRez] = useState(null);
-  const [creating, setCreating] = useState(false);
+  const [tipiSecim, setTipiSecim] = useState(null);
+  const [tekRez, setTekRez] = useState(null);
+  const [grupRez, setGrupRez] = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
 
   const otel = useDoc('otel', 'main');
@@ -32,6 +36,7 @@ const ReservationListPage = () => {
   const hesapHareketleri = useCollection('hesapHareketleri');
   const tahsilatlar = useCollection('tahsilatlar');
   const kanallar = useCollection('kanallar');
+  const gruplar = useCollection('gruplar');
 
   const filtered = reservations
     .filter((r) => !filterStatus || r.durum === filterStatus)
@@ -83,7 +88,7 @@ const ReservationListPage = () => {
             </select>
           </div>
           {can('rezervasyon', 'ekle') && (
-            <button type="button" className="htl-btn htl-btn-accent" onClick={() => setCreating(true)}>
+            <button type="button" className="htl-btn htl-btn-accent" onClick={() => setTipiSecim({ prefill: null })}>
               <Icon name="plus" size={16} stroke="white" /><span>Yeni</span>
             </button>
           )}
@@ -156,9 +161,10 @@ const ReservationListPage = () => {
       </div>
 
       <ReservationFormModal
-        open={creating || !!editingRez}
-        onClose={() => { setCreating(false); setEditingRez(null); }}
+        open={!!tekRez || !!editingRez}
+        onClose={() => { setTekRez(null); setEditingRez(null); }}
         rezervasyon={editingRez}
+        prefill={tekRez?.prefill}
         odalar={odalar}
         odaTipleri={odaTipleri}
         misafirler={misafirler}
@@ -167,6 +173,29 @@ const ReservationListPage = () => {
         tahsilatlar={tahsilatlar}
         reservations={reservations}
         kanallar={kanallar}
+        ana={ana}
+        userId={user?.id}
+      />
+
+      <RezervasyonTipiSecimModal
+        open={!!tipiSecim}
+        onClose={() => setTipiSecim(null)}
+        prefill={tipiSecim?.prefill}
+        onTekSec={(p) => setTekRez({ prefill: p })}
+        onGrupSec={(p) => setGrupRez({ prefill: p })}
+      />
+
+      <GrupRezervasyonModal
+        open={!!grupRez}
+        onClose={() => setGrupRez(null)}
+        onSaved={() => setGrupRez(null)}
+        prefill={grupRez?.prefill}
+        gruplarMevcut={gruplar}
+        odalar={odalar}
+        odaTipleri={odaTipleri}
+        misafirler={misafirler}
+        kanallar={kanallar}
+        reservations={reservations}
         ana={ana}
         userId={user?.id}
       />

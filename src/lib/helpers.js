@@ -8,11 +8,19 @@
 import { PARA_BIRIMI_INFO } from './constants.js';
 
 /* ===== TARİH ===== */
-export const todayISO = () => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString().slice(0, 10);
+/**
+ * Bir Date nesnesini lokal saate göre YYYY-MM-DD string'i olarak döndür.
+ * toISOString() UTC döndürür; lokal gece yarısı + UTC slice = 1 gün geri bug.
+ * Bu helper getFullYear/getMonth/getDate ile lokal tarihi sadık tutar.
+ */
+export const localISODate = (d) => {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 };
+
+export const todayISO = () => localISODate(new Date());
 
 export const addDays = (iso, n) => {
   const d = new Date(iso);

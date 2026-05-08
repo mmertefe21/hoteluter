@@ -4,7 +4,8 @@
 import { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
 import { useCollection, useDoc } from '../lib/db.js';
-import { todayISO, addDays, diffDays, fmtMoney, fmtDateTR } from '../lib/helpers.js';
+import { todayISO, fmtMoney, fmtDateTR, localISODate } from '../lib/helpers.js';
+import { getCiroByDateRange } from '../helpers/ciro.js';
 
 const DashboardPage = () => {
   const today = todayISO();
@@ -37,8 +38,8 @@ const DashboardPage = () => {
       0
     );
   const bugunTahsilat = sumTutarAna((t) => t.tarih === today);
-  const ayBaslangic = new Date(); ayBaslangic.setDate(1); ayBaslangic.setHours(0, 0, 0, 0);
-  const ayBasIso = ayBaslangic.toISOString().slice(0, 10);
+  const now = new Date();
+  const ayBasIso = localISODate(new Date(now.getFullYear(), now.getMonth(), 1));
   const buAyTahsilat = sumTutarAna((t) => t.tarih >= ayBasIso);
 
   const monthStats = useMemo(() => {
@@ -46,8 +47,8 @@ const DashboardPage = () => {
     if (!yyy || !mm) return null;
     const ayIlk = new Date(yyy, mm - 1, 1);
     const aySon = new Date(yyy, mm, 0);
-    const ilkIso = ayIlk.toISOString().slice(0, 10);
-    const sonIso = aySon.toISOString().slice(0, 10);
+    const ilkIso = localISODate(ayIlk);
+    const sonIso = localISODate(aySon);
     const ayGunSayisi = aySon.getDate();
     const totalRoomNights = odalar.length * ayGunSayisi;
 
@@ -58,24 +59,7 @@ const DashboardPage = () => {
       r.cikisTarihi > ilkIso
     );
 
-    let doluGece = 0;
-    let odaGeliri = 0;
-    ilgili.forEach((r) => {
-      let d = r.girisTarihi;
-      while (d < r.cikisTarihi) {
-        if (d >= ilkIso && d <= sonIso) {
-          doluGece++;
-          if (r.fiyatModu === 'detay' && Array.isArray(r.geceFiyatlari)) {
-            const idx = diffDays(r.girisTarihi, d);
-            const gf = r.geceFiyatlari[idx];
-            odaGeliri += Number(gf) || Number(r.geceFiyati) || 0;
-          } else {
-            odaGeliri += Number(r.geceFiyati) || 0;
-          }
-        }
-        d = addDays(d, 1);
-      }
-    });
+    const { ciro: odaGeliri, doluGece } = getCiroByDateRange(reservations, ilkIso, sonIso, aktifDurumlar);
 
     const dolulukYuzde = totalRoomNights > 0 ? (doluGece / totalRoomNights) * 100 : 0;
     const adr = doluGece > 0 ? odaGeliri / doluGece : 0;
@@ -86,10 +70,10 @@ const DashboardPage = () => {
 
   const monthOptions = useMemo(() => {
     const opts = [];
-    const now = new Date();
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const v = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const yyyy = new Date().getFullYear();
+    for (let m = 0; m < 12; m++) {
+      const d = new Date(yyyy, m, 1);
+      const v = `${yyyy}-${String(m + 1).padStart(2, '0')}`;
       const l = d.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
       opts.push({ v, l });
     }

@@ -81,6 +81,7 @@ service cloud.firestore {
     // Otel ekibi hep birlikte çalışır (otel içi). Rol bazlı incelikli
     // kontrol Görev 10+ olarak eklenebilir.
     match /rezervasyonlar/{docId}    { allow read, write: if isActiveUser(); }
+    match /gruplar/{docId}           { allow read, write: if isActiveUser(); }
     match /misafirler/{docId}        { allow read, write: if isActiveUser(); }
     match /odalar/{docId}            { allow read, write: if isActiveUser(); }
     match /odaTipleri/{docId}        { allow read, write: if isActiveUser(); }

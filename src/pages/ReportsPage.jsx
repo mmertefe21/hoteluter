@@ -4,7 +4,8 @@
 import { useMemo, useState } from 'react';
 import Icon from '../components/Icon.jsx';
 import { useCollection, useDoc } from '../lib/db.js';
-import { fmtMoney, todayISO, addDays, diffDays } from '../lib/helpers.js';
+import { fmtMoney, todayISO, addDays, diffDays, localISODate } from '../lib/helpers.js';
+import { getCiroByDateRange } from '../helpers/ciro.js';
 
 const ReportsPage = () => {
   const [tab, setTab] = useState('aralik');
@@ -63,33 +64,41 @@ const ReportsPage = () => {
 
   // === Yıllık ===
   const [yil, setYil] = useState(new Date().getFullYear());
+  const [hover, setHover] = useState(null);
 
   const yillikStats = useMemo(() => {
     const aylar = Array.from({ length: 12 }, (_, m) => {
       const ayBas = `${yil}-${String(m + 1).padStart(2, '0')}-01`;
       const ayBasD = new Date(yil, m, 1);
       const aySonD = new Date(yil, m + 1, 0);
-      const aySon = aySonD.toISOString().slice(0, 10);
+      const aySon = localISODate(aySonD);
       const tahs = tahsilatlar.filter((t) => t.tarih >= ayBas && t.tarih <= aySon);
       const totalTah = tahs.reduce((s, t) => s + Number(t.tutarAna != null ? t.tutarAna : t.tutar || 0), 0);
       const gid = giderler.filter((g) => g.tarih >= ayBas && g.tarih <= aySon);
       const totalGid = gid.reduce((s, g) => s + Number(g.tutarAna != null ? g.tutarAna : g.tutar || 0), 0);
+      const { ciro: totalCiro } = getCiroByDateRange(reservations, ayBas, aySon);
       return {
         m, label: ayBasD.toLocaleDateString('tr-TR', { month: 'short' }),
+        ciro: totalCiro,
         tahsilat: totalTah, gider: totalGid, net: totalTah - totalGid,
       };
     });
+    const yilCiro = aylar.reduce((s, a) => s + a.ciro, 0);
     const yilTah = aylar.reduce((s, a) => s + a.tahsilat, 0);
     const yilGid = aylar.reduce((s, a) => s + a.gider, 0);
-    return { aylar, yilTah, yilGid, yilNet: yilTah - yilGid };
-  }, [yil, tahsilatlar, giderler]);
+    return { aylar, yilCiro, yilTah, yilGid, yilNet: yilTah - yilGid };
+  }, [yil, tahsilatlar, giderler, reservations]);
 
-  const maxBar = Math.max(1, ...yillikStats.aylar.map((a) => Math.max(a.tahsilat, a.gider)));
+  const maxBar = Math.max(
+    1,
+    ...yillikStats.aylar.flatMap((a) => [a.ciro, a.tahsilat, a.gider])
+  );
   const chartW = 720, chartH = 260, margin = { top: 20, right: 20, bottom: 40, left: 60 };
   const innerW = chartW - margin.left - margin.right;
   const innerH = chartH - margin.top - margin.bottom;
   const barGroupW = innerW / 12;
-  const barW = (barGroupW - 8) / 2;
+  const barW = (barGroupW - 12) / 3;
+  const barGap = 2;
 
   return (
     <div className="space-y-4">
@@ -178,6 +187,7 @@ const ReportsPage = () => {
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-3 text-sm">
+                  <div><span style={{ color: 'var(--ink-soft)' }}>Ciro:</span> <strong style={{ color: 'var(--brass)' }}>{fmtMoney(yillikStats.yilCiro, ana)}</strong></div>
                   <div><span style={{ color: 'var(--ink-soft)' }}>Tahsilat:</span> <strong style={{ color: 'var(--success)' }}>{fmtMoney(yillikStats.yilTah, ana)}</strong></div>
                   <div><span style={{ color: 'var(--ink-soft)' }}>Gider:</span> <strong style={{ color: 'var(--danger)' }}>{fmtMoney(yillikStats.yilGid, ana)}</strong></div>
                   <div><span style={{ color: 'var(--ink-soft)' }}>Net:</span> <strong style={{ color: yillikStats.yilNet >= 0 ? 'var(--forest)' : 'var(--danger)' }}>{fmtMoney(yillikStats.yilNet, ana)}</strong></div>
@@ -202,18 +212,43 @@ const ReportsPage = () => {
                   {/* Bars */}
                   {yillikStats.aylar.map((a) => {
                     const xBase = margin.left + a.m * barGroupW + 4;
+                    const ciroH = (a.ciro / maxBar) * innerH;
                     const tahH = (a.tahsilat / maxBar) * innerH;
                     const gidH = (a.gider / maxBar) * innerH;
+                    const xCiro = xBase;
+                    const xTah = xBase + barW + barGap;
+                    const xGid = xBase + 2 * (barW + barGap);
+                    const yCiro = margin.top + innerH - ciroH;
+                    const yTah = margin.top + innerH - tahH;
+                    const yGid = margin.top + innerH - gidH;
                     return (
                       <g key={a.m}>
-                        <rect x={xBase} y={margin.top + innerH - tahH} width={barW} height={tahH} fill="var(--success)" rx="2" />
-                        <rect x={xBase + barW + 4} y={margin.top + innerH - gidH} width={barW} height={gidH} fill="var(--danger)" rx="2" />
-                        <text x={xBase + barW} y={margin.top + innerH + 16} fontSize="11" textAnchor="middle" fill="var(--ink-soft)">{a.label}</text>
+                        <rect x={xCiro} y={yCiro} width={barW} height={ciroH} fill="var(--brass)" rx="2"
+                          style={{ cursor: 'pointer' }}
+                          onMouseEnter={() => setHover({ ay: a.label, metric: 'Ciro', deger: a.ciro, x: xCiro + barW / 2, y: yCiro })}
+                          onMouseLeave={() => setHover(null)} />
+                        <rect x={xTah} y={yTah} width={barW} height={tahH} fill="var(--success)" rx="2"
+                          style={{ cursor: 'pointer' }}
+                          onMouseEnter={() => setHover({ ay: a.label, metric: 'Tahsilat', deger: a.tahsilat, x: xTah + barW / 2, y: yTah })}
+                          onMouseLeave={() => setHover(null)} />
+                        <rect x={xGid} y={yGid} width={barW} height={gidH} fill="var(--danger)" rx="2"
+                          style={{ cursor: 'pointer' }}
+                          onMouseEnter={() => setHover({ ay: a.label, metric: 'Gider', deger: a.gider, x: xGid + barW / 2, y: yGid })}
+                          onMouseLeave={() => setHover(null)} />
+                        <text x={xTah + barW / 2} y={margin.top + innerH + 16} fontSize="11" textAnchor="middle" fill="var(--ink-soft)">{a.label}</text>
                       </g>
                     );
                   })}
+                  {hover && (
+                    <g transform={`translate(${hover.x}, ${hover.y - 6})`} style={{ pointerEvents: 'none' }}>
+                      <rect x={-50} y={-44} width={100} height={40} fill="rgba(20,20,20,0.92)" rx={4} />
+                      <text x={0} y={-26} fill="rgba(255,255,255,0.65)" fontSize={10} textAnchor="middle">{hover.ay} · {hover.metric}</text>
+                      <text x={0} y={-12} fill="white" fontSize={12} textAnchor="middle" fontWeight="600">{fmtMoney(hover.deger, ana)}</text>
+                    </g>
+                  )}
                 </svg>
                 <div className="flex justify-center gap-4 text-xs mt-2" style={{ color: 'var(--ink-soft)' }}>
+                  <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'var(--brass)' }} />Ciro</div>
                   <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'var(--success)' }} />Tahsilat</div>
                   <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'var(--danger)' }} />Gider</div>
                 </div>
@@ -222,12 +257,13 @@ const ReportsPage = () => {
               <div className="overflow-x-auto">
                 <table className="htl-table">
                   <thead>
-                    <tr><th>Ay</th><th className="text-right">Tahsilat</th><th className="text-right">Gider</th><th className="text-right">Net</th></tr>
+                    <tr><th>Ay</th><th className="text-right">Ciro</th><th className="text-right">Tahsilat</th><th className="text-right">Gider</th><th className="text-right">Net</th></tr>
                   </thead>
                   <tbody>
                     {yillikStats.aylar.map((a) => (
                       <tr key={a.m}>
                         <td className="font-medium">{a.label}</td>
+                        <td className="text-right" style={{ color: 'var(--brass)' }}>{fmtMoney(a.ciro, ana)}</td>
                         <td className="text-right" style={{ color: 'var(--success)' }}>{fmtMoney(a.tahsilat, ana)}</td>
                         <td className="text-right" style={{ color: 'var(--danger)' }}>{fmtMoney(a.gider, ana)}</td>
                         <td className="text-right font-medium" style={{ color: a.net >= 0 ? 'var(--forest)' : 'var(--danger)' }}>{fmtMoney(a.net, ana)}</td>

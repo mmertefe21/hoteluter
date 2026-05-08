@@ -54,6 +54,7 @@ const TahsilatModal = ({
         ...target,
         paraBirimi: target.paraBirimi || ana,
         kur: target.kur || 1,
+        tahsilatTipi: target.grupId ? 'grup' : 'oda',
       });
     } else {
       const aktifHesaplar = hesaplar.filter((h) => h.aktif !== false);
@@ -67,6 +68,7 @@ const TahsilatModal = ({
         paraBirimi: ana,
         kur: 1,
         aciklama: '',
+        tahsilatTipi: 'oda',
       });
     }
   }, [open, target?.id]);
@@ -127,8 +129,14 @@ const TahsilatModal = ({
     if (!form.tutar || Number(form.tutar) <= 0) return show("Tutar 0'dan büyük olmalı.", 'error');
     if (uygunHesaplar.length === 0) return show(`${formPB} cinsinden hesap yok.`, 'error');
 
+    // Grup tahsilatı: rez gruplu ise ve "Grup geneli" seçildiyse → rezervasyonId null,
+    // grupId rezervasyonun grubuna işaretlenir (havuza yazım).
+    const seciliRezDoc = form.rezervasyonId ? rezervasyonlar.find((r) => r.id === form.rezervasyonId) : null;
+    const isGrupTahsilat = form.tahsilatTipi === 'grup' && seciliRezDoc?.grupId;
+
     const payload = {
-      rezervasyonId: form.rezervasyonId || null,
+      rezervasyonId: isGrupTahsilat ? null : (form.rezervasyonId || null),
+      grupId: isGrupTahsilat ? seciliRezDoc.grupId : null,
       tutar: Number(form.tutar),
       paraBirimi: formPB,
       kur: isFarkli && Number(form.kur) > 0 ? Number(form.kur) : undefined,
@@ -210,6 +218,28 @@ const TahsilatModal = ({
                 <span>
                   Kalan: <strong style={{ color: seciliRezKalan > 0 ? 'var(--danger)' : 'var(--success)' }}>{fmtMoney(seciliRezKalan, ana)}</strong>
                 </span>
+              </div>
+            )}
+            {seciliRez?.grupId && (
+              <div className="mt-2">
+                <label className="htl-label">Tahsilat Hedefi</label>
+                <div className="flex gap-4 flex-wrap items-center">
+                  <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <input type="radio" checked={form.tahsilatTipi === 'oda'}
+                      onChange={() => setForm({ ...form, tahsilatTipi: 'oda' })} />
+                    <span>Bu oda için</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <input type="radio" checked={form.tahsilatTipi === 'grup'}
+                      onChange={() => setForm({ ...form, tahsilatTipi: 'grup' })} />
+                    <span>Grup geneli için</span>
+                  </label>
+                </div>
+                {form.tahsilatTipi === 'grup' && (
+                  <div className="text-[11px] mt-1" style={{ color: 'var(--ink-soft)' }}>
+                    Tahsilat grubun ortak havuzuna yazılacak (oda bakiyesinden düşmez).
+                  </div>
+                )}
               </div>
             )}
           </div>

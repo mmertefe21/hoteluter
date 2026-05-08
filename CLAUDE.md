@@ -2,8 +2,8 @@
 
 > **Amaç:** Bu dosya, Hoteluter projesinde çalışan herhangi bir Claude (yeni sohbet, yeni session) için **kurucu dokümandır**. İlk okunacak dosyadır. Projenin tarihi, mimarisi, çalışan kuralları ve aktif görevler buradadır.
 
-**Son güncelleme:** 06.05.2026
-**Mevcut sürüm:** **v1.0** (production) 🚀 — Sistem canlıda: https://hoteluter.com. Tüm 12 görev + 2 bug fix tamamlandı. Firebase Auth + Firestore Security Rules + Netlify continuous deployment + custom domain + Let's Encrypt SSL aktif.
+**Son güncelleme:** 08.05.2026
+**Mevcut sürüm:** **v1.1** (production) 🚀 — Sistem canlıda: https://hoteluter.com. Sahada ilk hafta düzeltmeleri (5 hızlı kazanım: tarih bug, giderler menü, istatistik ay listesi, hesap yetkisi, yedek dosya adı) + **Madde 6** raporlar 3 sütun (Ciro + hover tooltip + segment-aware helper) + **Madde 4** grup rezervasyon büyük feature (gruplar koleksiyonu, 2 adımlı modal, takvim grup şeridi, hibrit bakiye). 15/15 test geçti.
 **Tek-dosya MVP final:** v0.7 (`docs/backup/hoteluter-v0.7-final.html`, ~6500 satır, referans için saklı)
 
 ---
@@ -31,7 +31,8 @@
 | **v0.5** | Kanallar + Giderler + Gece-Gece Fiyat | Dinamik kanallar, `giderler` + `giderKategorileri`, SabeeApp tarzı fiyat editörü |
 | **v0.6** | Drag-to-Move + Aylık İstatistik + Yıllık Ciro Raporu | Düzenleme modu, 7/15/30 gün view, Reports yıllık tab |
 | **v0.7** | Split + Toplam Ciro + Bar Gece Düzeltmesi | Rezervasyon bölme (segmentler), tek hesap/N segment, bar tam-hücre kapsama |
-| **v1.0** | **Mevcut hedef** | Vite + React + Firebase + Netlify production deploy |
+| **v1.0** | 06.05.2026 | Vite + React + Firebase + Netlify production deploy |
+| **v1.1** | **Mevcut** (08.05.2026) | Tarih bug fix (`localISODate`) + giderler menü kaldır + istatistik ay yıl bazlı + hesap silme yetkisi `hesap-yonet` flag + yedek dosya adı UTC fix + **raporlar 3 sütun** (Ciro/Tahsilat/Gider, hover tooltip, segment-aware `helpers/ciro.js`) + **grup rezervasyon** (`gruplar` koleksiyonu, 2 adımlı modal, takvim renk şeridi + isim formatı, hibrit bakiye, `PRESET_RENKLER`) |
 
 Detaylı sürüm dokümanları: `docs/CLAUDE_HOTELUTER_v0.1.md` → `v0.7.md`
 Geçiş planı: `docs/HOTELUTER_GECIS_PLANI.md`
@@ -94,10 +95,11 @@ hoteluter/
 | `odaTipleri` | Standart, Deluxe, Suite vs. | ad, varsayilanFiyat, renk, kapasite |
 | `odalar` | Fiziksel odalar | odaNumarasi, odaTipiId, kat |
 | `misafirler` | Misafir kayıtları | ad, soyad, email, telefon, tckn, pasaportNo |
-| `rezervasyonlar` | Tüm rezervasyonlar | rezervasyonKodu, anaMisafirId, odaId, girisTarihi, cikisTarihi, durum, **fiyatModu**, **geceFiyatlari[]**, **segmentler[]**, toplamTutar, kanal, pansiyonTipi |
-| `tahsilatlar` | Misafirden alınan ödemeler | rezervasyonId, hesapId, **paraBirimi**, **kur**, tutar (orijinal), **tutarAna**, tarih, odemeYontemi |
+| `rezervasyonlar` | Tüm rezervasyonlar | rezervasyonKodu, anaMisafirId, odaId, girisTarihi, cikisTarihi, durum, **fiyatModu**, **geceFiyatlari[]**, **segmentler[]**, **grupId** (opsiyonel, v1.1+), toplamTutar, kanal, pansiyonTipi |
+| `gruplar` | Grup rezervasyonu başlıkları (v1.1+) | ad, iletisimKisi, telefon, email, **renk**, notlar, aktif, olusturmaTarihi |
+| `tahsilatlar` | Misafirden alınan ödemeler | rezervasyonId, **grupId** (opsiyonel havuz tahsilatları için, v1.1+), hesapId, **paraBirimi**, **kur**, tutar (orijinal), **tutarAna**, tarih, odemeYontemi |
 | `hesaplar` | Kasa/Banka/POS hesapları | ad, tip, **paraBirimi**, renk, aktif |
-| `hesapHareketleri` | Tüm hesap giriş/çıkışları (audit) | hesapId, tutar (hesabın PB'sinde), tip, aciklama, transferId, tahsilatId, giderId, rezervasyonId |
+| `hesapHareketleri` | Tüm hesap giriş/çıkışları (audit) | hesapId, tutar (hesabın PB'sinde), tip, aciklama, transferId, tahsilatId, giderId, rezervasyonId, **grupId** (opsiyonel, v1.1+) |
 | `kanallar` | Booking, Etstur, Manuel vs. | kod, ad, aktif |
 | `giderler` | Maaş, kira, fatura | kategoriId, hesapId, tutar, paraBirimi, **tutarAna**, tarih |
 | `giderKategorileri` | Personel Maaşı, Kira, ... | ad, icon, renk, aktif |
@@ -145,7 +147,19 @@ hoteluter/
 
 ## 🚀 Şu An Nerede
 
-**v1.0 PRODUCTION RELEASE (06.05.2026):** 🎉 Tüm 12 görev + 2 kritik bug fix tamamlandı, sistem canlıda.
+**v1.1 RELEASE (08.05.2026):** 🎉 Sahada ilk hafta düzeltmeleri + 2 büyük feature — 4 yeni dosya + 13 değişen dosya, ~1500 yeni satır + ~250 düzenlenen, 15/15 test geçti.
+
+- **Madde 5 (kritik):** `localISODate(d)` helper'ı eklendi (`src/lib/helpers.js`), `todayISO()` onun üzerine kuruldu. UTC-zinciri yayılımı 4 sayfada + 1 ekstra (yedek dosya adı) tek-noktalı temizlendi. TRT 1-gün-geri bug kapandı.
+- **Madde 2:** Sol menüden "Giderler" kaldırıldı (`permissions.js` + `App.jsx`). Sidebar/KullaniciFormModal otomatik temizlendi. Giderler hâlâ Ön Muhasebe içinde tab.
+- **Madde 3:** İstatistik dropdown'u son 12 ay geriye yerine içinde bulunulan yılın 12 ayı (Ocak..Aralık).
+- **Madde 1:** `AccountingPage` hesap silme `canDelete` prop'u `can('onMuhasebe','hesap-yonet')` flag'ine bağlandı, hardcoded superadmin kontrolü kaldırıldı.
+- **Extras:** SettingsPage yedek dosya adı UTC zinciri fix; yedekleme `collections` array'ine `'gruplar'` eklendi.
+- **Madde 6 (yıllık ciro):** Yeni `src/helpers/ciro.js` segment-aware ciro hesabı. ReportsPage Yıllık Ciro tab'ı 4 metrik üst özet + 3-bar grup grafik + hover tooltip + 5 kolon tablo. DashboardPage istatistik panel aynı helper'a refactor — gizli bir gece dağıtım bug'ı (bölünmüş rez yanlış aya yığılması) çözüldü.
+- **Madde 4 (grup rezervasyon):** Yeni `gruplar` Firestore koleksiyonu + Rules. 3 yeni modal (`GrupRezervasyonModal` 2 adımlı, `RezervasyonTipiSecimModal` Tek/Grup seçim, `GrupDetayModal` oda ekle/çıkar + hibrit bakiye). CalendarPage bar render: grup rengi öncelik, üst 5px renkli şerit, isim "Grup — Misafir" formatı. TahsilatModal "Bu oda / Grup geneli" radio. `PRESET_RENKLER` `constants.js`'e taşındı. `helpers/tahsilat.js` `grupId` propagation.
+
+⚠ **v1.1'de keşfedilen kullanıcı silme bug v1.2'ye taşındı:** Firestore'dan silinen kullanıcının Firebase Auth kaydı kalıyor, aynı email ile yeni user yaratılamıyor. Cloud Functions admin SDK gerekiyor; yeni user oturum-değişimi bug'ı ile aynı kurulumda çözülecek.
+
+v1.0 production altyapısı v1.1'e olduğu gibi miras kaldı:
 
 **Production:**
 - **URL:** https://hoteluter.com (custom domain) · https://hoteluter.netlify.app (Netlify default, hâlâ aktif)
@@ -161,45 +175,48 @@ hoteluter/
 **Database:**
 - Firestore + Security Rules (default deny + role-based + privilege escalation guard)
 - `users/{userId}` get/list/create/update/delete ayrımı (Görev 10 bug fix sonrası)
-- 12 koleksiyon (users, otel, _meta + 10 operasyonel)
+- 13 koleksiyon (users, otel, _meta + 10 operasyonel + gruplar v1.1)
 - Migration boot otomatik: 5 kanal + 8 gider kategorisi + 3 hesap
 
 **Bundle:** ~1.55 MB (gzip 328 KB), 1632 modül, build ~5-8 sn
 
-**Commit timeline (toplam 11 commit, ~24 saatlik aktif çalışma):**
+**Commit timeline:**
 - 05.05.2026 20:55 → 21:55 — Faz 1+2: Görev 1-7 (5 commit)
-- 06.05.2026 14:14 → 17:04 — Faz 3+4: Görev 9-11 + 2 bug fix (6 commit)
+- 06.05.2026 14:14 → 17:04 — Faz 3+4: Görev 9-11 + 2 bug fix + v1.0 release (6 commit)
+- 08.05.2026 — v1.1 release (sahada ilk hafta düzeltmeleri)
 
-**v1.0 release commit:** Bu sohbet sonunda eklenecek (release dokümantasyonu).
+### Sıradaki — v1.2+ Yol Haritası
 
-### Sıradaki — v1.1+ Yol Haritası
+- **v1.2:** **Cloud Functions admin SDK kurulumu** — `deleteUser` callable + `createUser` oturum koruma. İki bilinen sınırlamayı tek seferde çözer: (1) Firestore'dan silinen user'ın Auth kaydının manuel temizlenmesi (v1.1'de keşfedildi), (2) yeni user yaratırken mevcut admin oturumunun kaybolması. Frankfurter API CORS proxy de aynı Functions kurulumuna entegre edilebilir (`exchangerate.host` çağrısı server-side).
+- **v1.3+:** Sahada gelen yeni feature istekleri, multi-property (`oteliId` FK + tenant-aware rules), mobile drag-to-move (touch event handlers), code splitting (1.55MB → ~200KB initial), combobox klavye navigasyonu, TahsilatModal rez seçimi combobox'a çevirme.
+- **v2.0+:** Booking.com / Airbnb channel manager entegrasyonu, server-side incelikli yetki (modül bazlı r/w rules).
 
-Sahada kullanım dönemi başlıyor. Yeni Claude session'lar şu konularda yardım edebilir:
+Yeni Claude session'lar şu konularda yardım edebilir:
 
-- **Bug raporları (sahada kullanım):** Mert canlı sistemde sorun bulduğunda raporlayacak; bu dokümanlardaki "Bilinen Sınırlamalar" tablosunu önce kontrol et
-- **"Şu da olsun" feature istekleri:** v1.1, v1.2 sürümleri için yeni feature'lar (her sürüm için ayrı `docs/CLAUDE_HOTELUTER_vN.N.md` doğmalı)
-- **Frankfurter API CORS fix:** Lokal'de çalışıyor; production'da CORS sorunu çıkarsa kur servisi alternatifine geçilmeli (`exchangerate.host` veya TCMB EVDS proxy via Cloud Function)
-- **Cloud Functions ile incelikli yetki:** Server-side rol/modül kontrolü (şu an client-side `can()` ile filtreli, server-side tüm aktif user r/w)
-- **Kullanıcı oluşturma oturum-değişimi:** Cloud Functions admin SDK ile düzeltilebilir (mevcut çözüm: uyarı banner)
+- **Bug raporları (sahada kullanım):** Mert canlı sistemde sorun bulduğunda raporlayacak; bilinen sınırlamalar tablosunu önce kontrol et
+- **"Şu da olsun" feature istekleri:** Her sürüm için ayrı `docs/CLAUDE_HOTELUTER_vN.N.md` doğmalı
 - **Mobile drag-to-move:** Touch event desteği (CalendarPage)
 - **Yedekleme import flow:** Şu an sadece export var
 - **Code splitting:** Bundle 1.55MB → initial yükleme optimize
 
-### Bilinen Sınırlamalar (özet — detay v1.0 dokümanında)
+### Bilinen Sınırlamalar (özet — detay v1.1 dokümanında)
 
-- Frankfurter API CORS riski (production'da test edilecek)
+- 🔴 **Kullanıcı silme bug** (v1.1'de keşfedildi): Firestore'dan silinen user'ın Auth kaydı kalır → aynı email ile yeni user yaratılamaz. v1.2'ye taşındı (Cloud Functions). Geçici workaround: Firebase Console → Auth → Users'tan manuel sil
+- Frankfurter API CORS (production'da çalışmıyor)
 - Yeni user yaratırken oturum-değişimi (Firebase client-side davranışı)
 - Modül bazlı incelikli yetki sadece client-side
 - Mobile drag-to-move yok
-- Yedekleme import yok (sadece export)
+- Yedekleme import yok (sadece export, `gruplar` da dahil v1.1+)
 - Bundle code splitting yok
 - Multi-property desteği yok (tek otel varsayımı)
 - Update kuralı `modulYetkileri`'ni serbest bırakıyor (bilinen takas)
 - Combobox klavye navigasyonu yok (sadece mouse)
+- TahsilatModal rez seçimi basit `<select>` (combobox değil)
 
 ### Modal envanteri (`src/modals/`)
-- Mali: TahsilatModal, GiderModal, TransferModal, HesapFormModal, HesapDetayModal
+- Mali: TahsilatModal (v1.1: oda/grup radio), GiderModal, TransferModal, HesapFormModal, HesapDetayModal
 - Rezervasyon: ReservationFormModal (combobox + entegre TahsilatModal + nested MisafirFormModal), SplitModal
+- **Grup (v1.1+):** RezervasyonTipiSecimModal (Tek/Grup seçim), GrupRezervasyonModal (2 adımlı + mevcut gruba oda ekleme modu), GrupDetayModal (oda ekle/çıkar, hibrit bakiye)
 - CRUD: MisafirFormModal (prefill prop ile), OdaTipFormModal, OdaFormModal, KullaniciFormModal
 
 ### Sayfa envanteri (`src/pages/`)
@@ -208,7 +225,8 @@ LoginScreen · DashboardPage · CalendarPage · ReservationListPage · GuestsPag
 ### Boot sırası (App.jsx)
 AuthProvider (Firebase Auth) → ToastProvider → onAuthStateChanged → user yoksa LoginScreen, varsa AppShell. AppShell mount'ında otomatik `runMigrations()` ve `ensureKurlarLoaded()`. Profil pasifse (`aktif: false`) otomatik logout.
 
-Detaylı v1.0 dokümanı: `docs/CLAUDE_HOTELUTER_v1.0.md`
+Detaylı v1.1 dokümanı: `docs/CLAUDE_HOTELUTER_v1.1.md`
+Önceki sürüm referansı: `docs/CLAUDE_HOTELUTER_v1.0.md`
 
 ---
 
@@ -232,8 +250,9 @@ Detaylı v1.0 dokümanı: `docs/CLAUDE_HOTELUTER_v1.0.md`
 - `docs/CLAUDE_HOTELUTER_v*.md` — her sürümün detaylı tarihi
 - `docs/HOTELUTER_GECIS_PLANI.md` — 12 görevlik yol haritası
 
-**Yeni Claude session başlarken (v1.0 production sonrası):**
-1. Bu dosyayı (`CLAUDE.md`) oku — proje özeti, mimari kuralları, mevcut durum
-2. **`docs/CLAUDE_HOTELUTER_v1.0.md`** oku — production sistemin tam fotoğrafı (URL, Auth, Rules, bug fix kayıtları, v1.1+ TODO listesi)
-3. **`docs/HOTELUTER_GECIS_PLANI.md`** — kapanmış geçiş planı (v0.7 → v1.0 yol haritası, referans için)
-4. Mert'le konuşmaya başla — sahada kullanım sırasında çıkan bug raporu, yeni feature isteği, veya bilinen TODO'lardan birini ele almak
+**Yeni Claude session başlarken (v1.1 sonrası):**
+1. Bu dosyayı (`CLAUDE.md`) oku — proje özeti, mimari kuralları, mevcut sürüm
+2. **`docs/CLAUDE_HOTELUTER_v1.1.md`** oku — son sürüm fotoğrafı (5 hızlı kazanım + Madde 6 raporlar 3 sütun + Madde 4 grup rezervasyon, test sonuçları 15/15, v1.2+ yol haritası, kullanıcı silme bug detayı)
+3. **`docs/CLAUDE_HOTELUTER_v1.0.md`** — önceki sürüm referansı (production altyapısı, Auth/Rules/Netlify, dosya yapısı, Bug 1/Bug 2 bağlamı)
+4. **`docs/HOTELUTER_GECIS_PLANI.md`** — kapanmış geçiş planı (v0.7 → v1.0 yol haritası, mimari kuralları için referans)
+5. Mert'le konuşmaya başla — sahada kullanım sırasında çıkan bug raporu, yeni feature isteği, veya v1.2 (Cloud Functions admin SDK) hedefini ele almak

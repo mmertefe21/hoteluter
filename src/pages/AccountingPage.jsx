@@ -17,7 +17,7 @@ import { db, useCollection, useDoc } from '../lib/db.js';
 import {
   HESAP_TIP_INFO, HAREKET_TIP_INFO, PARA_BIRIMI_INFO, ODEME_OPTS,
 } from '../lib/constants.js';
-import { fmtMoney, fmtDateTR, todayISO } from '../lib/helpers.js';
+import { fmtMoney, fmtDateTR, todayISO, localISODate } from '../lib/helpers.js';
 import { cevirKur } from '../lib/kur.js';
 import {
   getHesapBakiye, getHesapBakiyeAna, getToplamBakiyeAna,
@@ -57,9 +57,9 @@ const AccountingPage = () => {
   const sumTutarAna = (list) =>
     list.reduce((s, t) => s + Number(t.tutarAna != null ? t.tutarAna : t.tutar || 0), 0);
 
-  const ayBas = new Date(); ayBas.setDate(1); ayBas.setHours(0, 0, 0, 0);
-  const ayBasIso = ayBas.toISOString().slice(0, 10);
-  const yilBas = `${new Date().getFullYear()}-01-01`;
+  const now = new Date();
+  const ayBasIso = localISODate(new Date(now.getFullYear(), now.getMonth(), 1));
+  const yilBas = `${now.getFullYear()}-01-01`;
 
   const tahsilatBugun = sumTutarAna(tahsilatlar.filter((t) => t.tarih === today));
   const tahsilatAy = sumTutarAna(tahsilatlar.filter((t) => t.tarih >= ayBasIso));
@@ -360,7 +360,7 @@ const AccountingPage = () => {
         hesapHareketleri={hesapHareketleri}
         ana={ana}
         userId={user?.id}
-        canDelete={user?.rol === 'superadmin'}
+        canDelete={can('onMuhasebe', 'hesap-yonet')}
       />
 
       <ConfirmModal

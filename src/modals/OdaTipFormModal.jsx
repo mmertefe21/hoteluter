@@ -6,8 +6,8 @@ import Modal from '../components/Modal.jsx';
 import Icon from '../components/Icon.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { db } from '../lib/db.js';
+import { PRESET_RENKLER } from '../lib/constants.js';
 
-const PRESET_RENKLER = ['#4a6b85', '#a87842', '#4a7c59', '#8e5572', '#5e6b8e', '#c87f3e', '#a64545', '#6b6b6b'];
 const DEFAULT = { ad: '', kapasiteYetiskin: 2, kapasiteCocuk: 0, varsayilanFiyat: 0, aciklama: '', renk: PRESET_RENKLER[0] };
 
 const OdaTipFormModal = ({ open, onClose, onSaved, target = null }) => {

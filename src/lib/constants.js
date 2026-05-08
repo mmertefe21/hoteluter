@@ -5,6 +5,10 @@
  * Dropdown'larda, badge'lerde, formlarda kullanılır.
  */
 
+/* ===== ORTAK RENK PALETI ===== */
+/* Oda tipleri, gruplar ve diğer kullanıcı-seçimli renk alanları için. */
+export const PRESET_RENKLER = ['#4a6b85', '#a87842', '#4a7c59', '#8e5572', '#5e6b8e', '#c87f3e', '#a64545', '#6b6b6b'];
+
 /* ===== PARA BİRİMLERİ ===== */
 export const PARA_BIRIMI_OPTS = [
   { v: 'EUR', l: 'Euro',    symbol: '€', locale: 'tr-TR' },

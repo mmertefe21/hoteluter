@@ -44,12 +44,6 @@ export const ALL_MODULES = [
     actions: ['goruntule', 'tahsilat', 'transfer', 'hesap-yonet']
   },
   {
-    key: 'giderler',
-    ad: 'Giderler',
-    icon: 'receipt',
-    actions: ['goruntule', 'ekle', 'duzenle', 'sil']
-  },
-  {
     key: 'raporlar',
     ad: 'Raporlar',
     icon: 'bar-chart-3',

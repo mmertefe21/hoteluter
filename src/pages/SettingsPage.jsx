@@ -16,6 +16,7 @@ import { useToast } from '../components/Toast.jsx';
 import UsersPage from './UsersPage.jsx';
 import { db, useCollection, useDoc } from '../lib/db.js';
 import { PARA_BIRIMI_OPTS } from '../lib/constants.js';
+import { localISODate } from '../lib/helpers.js';
 import {
   getActiveKurlar, fetchKurlar, getManuelKurlar, setManuelKurlar, clearManuelKurlar,
 } from '../lib/kur.js';
@@ -426,6 +427,7 @@ const YedekTab = () => {
     try {
       const collections = [
         'otel', 'odaTipleri', 'odalar', 'misafirler', 'rezervasyonlar',
+        'gruplar',
         'kanallar', 'tahsilatlar', 'giderKategorileri', 'giderler',
         'hesaplar', 'hesapHareketleri', 'users',
       ];
@@ -441,7 +443,7 @@ const YedekTab = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `hoteluter-yedek-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `hoteluter-yedek-${localISODate(new Date())}.json`;
       a.click();
       URL.revokeObjectURL(url);
       show('Yedek dosyası indirildi.');

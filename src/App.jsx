@@ -39,7 +39,6 @@ const PAGE_MAP = {
   misafirler: GuestsPage,
   odalar: RoomsPage,
   onMuhasebe: AccountingPage,
-  giderler: AccountingPage,
   raporlar: ReportsPage,
   ayarlar: SettingsPage,
   kullanicilar: UsersPage,
