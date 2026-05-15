@@ -56,6 +56,13 @@ export const ALL_MODULES = [
     actions: ['goruntule', 'duzenle']
   },
   {
+    key: 'aktivite',
+    ad: 'Aktivite Log',
+    icon: 'activity',
+    actions: ['goruntule'],
+    hideFromSidebar: true
+  },
+  {
     key: 'kullanicilar',
     ad: 'Kullanıcılar',
     icon: 'user-cog',

@@ -26,6 +26,14 @@ service cloud.firestore {
     function isActiveUser() {
       return isAuth() && userDoc().aktif == true;
     }
+    function hasYetki(modul, aksiyon) {
+      return isSuperadmin() || (
+        isActiveUser() &&
+        'modulYetkileri' in userDoc() &&
+        modul in userDoc().modulYetkileri &&
+        aksiyon in userDoc().modulYetkileri[modul]
+      );
+    }
 
     // ===== users — get/list/create/update/delete ayrımı =====
     // createUserWithProfile akışında setDoc, yeni user'ın session'ında çalışır
@@ -82,6 +90,14 @@ service cloud.firestore {
     // kontrol Görev 10+ olarak eklenebilir.
     match /rezervasyonlar/{docId}    { allow read, write: if isActiveUser(); }
     match /gruplar/{docId}           { allow read, write: if isActiveUser(); }
+    match /aktiviteLog/{logId} {
+      // Sadece 'aktivite.goruntule' yetkisi olanlar okuyabilir (superadmin dahil)
+      allow read:           if hasYetki('aktivite', 'goruntule');
+      // Her kullanıcı yalnızca kendi kullaniciId'siyle log ekleyebilir (append-only)
+      allow create:         if isAuth() && request.resource.data.kullaniciId == request.auth.uid;
+      // AUDIT — güncelleme ve silme kesinlikle yasak
+      allow update, delete: if false;
+    }
     match /misafirler/{docId}        { allow read, write: if isActiveUser(); }
     match /odalar/{docId}            { allow read, write: if isActiveUser(); }
     match /odaTipleri/{docId}        { allow read, write: if isActiveUser(); }
@@ -91,6 +107,7 @@ service cloud.firestore {
     match /giderler/{docId}          { allow read, write: if isActiveUser(); }
     match /giderKategorileri/{docId} { allow read, write: if isActiveUser(); }
     match /kanallar/{docId}          { allow read, write: if isActiveUser(); }
+    match /duyurular/{docId}         { allow read, write: if isActiveUser(); }
 
     // ===== Default deny — hiçbir koleksiyon eşleşmezse engelle =====
     match /{document=**} {

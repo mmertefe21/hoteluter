@@ -16,7 +16,7 @@
  *   }
  */
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -24,8 +24,9 @@ import {
   onAuthStateChanged,
   updatePassword
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db as firestore } from './firebase.js';
+import { doc, getDoc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { auth, db as firestore, secondaryAuth } from './firebase.js';
+import { logGiris, logAksiyon } from '../helpers/aktiviteLog.js';
 
 /* ===== CONTEXT ===== */
 const AuthContext = createContext(null);
@@ -40,9 +41,15 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);     // Firestore profile + Firebase Auth user
   const [authReady, setAuthReady] = useState(false);
+  const sessionSnapUnsubRef = useRef(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
+      // Her auth state değişiminde eski session snapshot'unu temizle
+      if (sessionSnapUnsubRef.current) {
+        sessionSnapUnsubRef.current();
+        sessionSnapUnsubRef.current = null;
+      }
       if (!fbUser) {
         setUser(null);
         setAuthReady(true);
@@ -63,6 +70,30 @@ export const AuthProvider = ({ children }) => {
             email: fbUser.email,
             ...profile
           });
+
+          // Session güvenliği: bu cihazın session ID'sini Firestore'a yaz
+          let localSid = localStorage.getItem('hoteluter_sid');
+          if (!localSid) {
+            localSid = crypto.randomUUID();
+            localStorage.setItem('hoteluter_sid', localSid);
+          }
+          await updateDoc(doc(firestore, 'users', fbUser.uid), { aktifSessionId: localSid }).catch(() => {});
+
+          // Başka cihazdan giriş kontrolü — onSnapshot callback'i async olmamalı
+          sessionSnapUnsubRef.current = onSnapshot(doc(firestore, 'users', fbUser.uid), (snap) => {
+            const data = snap.data();
+            const currentSid = localStorage.getItem('hoteluter_sid');
+            if (data?.aktifSessionId && currentSid && data.aktifSessionId !== currentSid) {
+              if (sessionSnapUnsubRef.current) {
+                sessionSnapUnsubRef.current();
+                sessionSnapUnsubRef.current = null;
+              }
+              localStorage.setItem('hoteluter_loginMsg', 'Başka bir cihazdan giriş yapıldı. Oturumunuz sonlandırıldı.');
+              signOut(auth).catch(() => {});
+            }
+          });
+
+          void logGiris(fbUser.uid, profile.adSoyad);
         } else {
           // Profil yok — bu kullanıcı için users koleksiyonunda kayıt eksik
           console.warn('[auth] No Firestore profile for', fbUser.uid);
@@ -75,7 +106,13 @@ export const AuthProvider = ({ children }) => {
       }
       setAuthReady(true);
     });
-    return () => unsub();
+    return () => {
+      unsub();
+      if (sessionSnapUnsubRef.current) {
+        sessionSnapUnsubRef.current();
+        sessionSnapUnsubRef.current = null;
+      }
+    };
   }, []);
 
   /**
@@ -103,7 +140,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    // a) Snapshot dinleyiciyi durdur
+    if (sessionSnapUnsubRef.current) {
+      sessionSnapUnsubRef.current();
+      sessionSnapUnsubRef.current = null;
+    }
+    localStorage.removeItem('hoteluter_sid');
+    // b) Oturumu kapat
+    const currentUser = auth.currentUser;
     await signOut(auth);
+    // c) Firestore'daki aktifSessionId'yi temizle (best-effort)
+    if (currentUser) {
+      updateDoc(doc(firestore, 'users', currentUser.uid), { aktifSessionId: null }).catch(() => {});
+    }
   };
 
   /**
@@ -161,20 +210,26 @@ export const AuthProvider = ({ children }) => {
  * Yeni kullanıcı oluştur — Firebase Auth + Firestore profil birlikte.
  * Bu fonksiyon sadece UsersPage'den çağrılır.
  *
- * NOT: createUserWithEmailAndPassword çağrıldığında MEVCUT OTURUM logout olur,
- * yeni oluşturulan kullanıcı session'a girer. Bu yan etkiyi önlemek için
- * Firebase Cloud Functions ile admin SDK kullanılması gerekir.
- *
- * Şu anki MVP çözümü: Yeni kullanıcı oluşturulduğunda mevcut admin
- * tekrar login olmak zorunda kalacak. Production'da Cloud Function ile düzeltilir.
+ * Secondary Firebase App kullanılır — birincil admin oturumu etkilenmez.
+ * Oluşturma sonrası secondary session signOut ile temizlenir (try/finally garantisi).
  */
 export const createUserWithProfile = async ({ email, password, profile }) => {
-  const cred = await createUserWithEmailAndPassword(auth, email, password);
-  await setDoc(doc(firestore, 'users', cred.user.uid), {
-    ...profile,
-    email,
-    aktif: true,
-    olusturmaTarihi: new Date().toISOString()
-  });
-  return cred.user.uid;
+  try {
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    await setDoc(doc(firestore, 'users', cred.user.uid), {
+      ...profile,
+      email,
+      aktif: true,
+      olusturmaTarihi: new Date().toISOString()
+    });
+    void logAksiyon({
+      aksiyon: 'kullanici.olustur',
+      aciklama: `Kullanıcı oluşturuldu: ${profile.adSoyad || email}`,
+      hedefTip: 'user',
+      hedefId: cred.user.uid,
+    });
+    return cred.user.uid;
+  } finally {
+    await signOut(secondaryAuth).catch(() => {});
+  }
 };

@@ -93,7 +93,7 @@ const ReportsPage = () => {
     1,
     ...yillikStats.aylar.flatMap((a) => [a.ciro, a.tahsilat, a.gider])
   );
-  const chartW = 720, chartH = 260, margin = { top: 20, right: 20, bottom: 40, left: 60 };
+  const chartW = 720, chartH = 290, margin = { top: 50, right: 20, bottom: 40, left: 60 };
   const innerW = chartW - margin.left - margin.right;
   const innerH = chartH - margin.top - margin.bottom;
   const barGroupW = innerW / 12;

@@ -13,6 +13,7 @@ import { db, useCollection, useDoc } from '../lib/db.js';
 import { fmtMoney, fmtDateTR } from '../lib/helpers.js';
 import { DURUM_OPTS, DURUM_INFO } from '../lib/constants.js';
 import { useAuth } from '../lib/auth.jsx';
+import { logAksiyon } from '../helpers/aktiviteLog.js';
 
 const ReservationListPage = () => {
   const { can, user } = useAuth();
@@ -51,8 +52,12 @@ const ReservationListPage = () => {
     .sort((a, b) => `${b.girisTarihi}`.localeCompare(`${a.girisTarihi}`));
 
   const handleDelete = async () => {
+    const del = confirmDel;
     try {
-      await db.delete('rezervasyonlar', confirmDel.id);
+      await db.delete('rezervasyonlar', del.id);
+      const m = misafirler.find((x) => x.id === del.anaMisafirId);
+      const misafirAd = m ? `${m.ad} ${m.soyad}` : 'Misafir';
+      void logAksiyon({ aksiyon: 'rezervasyon.sil', aciklama: `${misafirAd} rezervasyonunu sildi${del.rezervasyonKodu ? ` (${del.rezervasyonKodu})` : ''}`, hedefTip: 'rezervasyon', hedefId: del.id });
       show('Rezervasyon silindi.');
     } catch (e) {
       show('Hata: ' + e.message, 'error');

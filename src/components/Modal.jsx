@@ -20,7 +20,7 @@ const SIZE_CLASS = {
   lg: 'htl-modal-lg',
 };
 
-const Modal = ({ open, onClose, title, children, size = 'md', footer = null }) => {
+const Modal = ({ open, onClose, title, children, size = 'md', footer = null, hideClose = false }) => {
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e) => {
@@ -50,15 +50,17 @@ const Modal = ({ open, onClose, title, children, size = 'md', footer = null }) =
           <h3 className="font-display text-xl font-medium" style={{ color: 'var(--forest)' }}>
             {title}
           </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded-md hover:bg-[var(--bone-warm)]"
-            style={{ color: 'var(--ink-soft)' }}
-            aria-label="Kapat"
-          >
-            <Icon name="x" size={20} />
-          </button>
+          {!hideClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 rounded-md hover:bg-[var(--bone-warm)]"
+              style={{ color: 'var(--ink-soft)' }}
+              aria-label="Kapat"
+            >
+              <Icon name="x" size={20} />
+            </button>
+          )}
         </div>
         <div className="px-6 py-5">{children}</div>
         {footer && (

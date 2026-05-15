@@ -14,12 +14,22 @@
 
 import { db } from '../lib/db.js';
 import { randomId } from '../lib/helpers.js';
+import { cevirKur } from '../lib/kur.js';
 
 /**
  * Aynı para birimindeki iki hesap arasında transfer.
  * Çıkış (-) ve giriş (+) iki hareket oluşur, transferId ile bağlanır.
+ *
+ * komisyon > 0 ve bankaMasraflariKategoriId varsa POS çözme modu:
+ *   - POS hesabından brüt (tutar) çıkar
+ *   - Banka hesabına net (tutar - komisyon) girer
+ *   - Komisyon için gider dokümanı + gider hareketi aynı batch'e eklenir (atomik)
  */
-export const yapTransfer = async ({ kaynakHesapId, hedefHesapId, tutar, tarih, aciklama }, kullaniciId) => {
+export const yapTransfer = async (
+  { kaynakHesapId, hedefHesapId, tutar, tarih, aciklama, komisyon = 0, bankaMasraflariKategoriId = null },
+  kullaniciId,
+  ana = 'EUR'
+) => {
   if (kaynakHesapId === hedefHesapId) throw new Error('Kaynak ve hedef hesap aynı olamaz');
   const kaynak = await db.get('hesaplar', kaynakHesapId);
   const hedef = await db.get('hesaplar', hedefHesapId);
@@ -30,6 +40,9 @@ export const yapTransfer = async ({ kaynakHesapId, hedefHesapId, tutar, tarih, a
 
   const t = Math.abs(Number(tutar) || 0);
   if (t <= 0) throw new Error('Tutar 0\'dan büyük olmalı');
+
+  const k = Math.max(0, Math.abs(Number(komisyon) || 0));
+  if (k > t) throw new Error('Komisyon transfer tutarından büyük olamaz');
 
   const transferId = randomId('tr_');
   const pb = kaynak.paraBirimi || 'EUR';
@@ -52,7 +65,7 @@ export const yapTransfer = async ({ kaynakHesapId, hedefHesapId, tutar, tarih, a
   batch.add('hesapHareketleri', {
     hesapId: hedefHesapId,
     tarih,
-    tutar: t,
+    tutar: t - k,
     paraBirimi: pb,
     tip: 'transfer-giris',
     aciklama: `Transfer ← ${kaynak.ad}${aciklama ? ' · ' + aciklama : ''}`,
@@ -63,6 +76,43 @@ export const yapTransfer = async ({ kaynakHesapId, hedefHesapId, tutar, tarih, a
     olusturmaTarihi: new Date().toISOString(),
     olusturanId: kullaniciId
   });
+
+  if (k > 0 && bankaMasraflariKategoriId) {
+    let tutarAna = k;
+    let kur = 1;
+    if (pb !== ana) {
+      const cev = cevirKur(k, pb, ana);
+      if (cev !== null && cev > 0) { tutarAna = cev; kur = tutarAna / k; }
+    }
+    const giderId = batch.add('giderler', {
+      kategoriId: bankaMasraflariKategoriId,
+      hesapId: kaynakHesapId,
+      paraBirimi: pb,
+      kur,
+      tutar: k,
+      tutarAna,
+      tarih,
+      aciklama: `POS komisyonu · ${kaynak.ad}`,
+      gorseller: [],
+      olusturmaTarihi: new Date().toISOString(),
+      olusturanId: kullaniciId
+    });
+    batch.add('hesapHareketleri', {
+      hesapId: kaynakHesapId,
+      tarih,
+      tutar: -k,
+      paraBirimi: pb,
+      tip: 'gider',
+      aciklama: `Gider · Banka Masrafları · POS komisyonu`,
+      rezervasyonId: null,
+      tahsilatId: null,
+      transferId: null,
+      giderId,
+      olusturmaTarihi: new Date().toISOString(),
+      olusturanId: kullaniciId
+    });
+  }
+
   await batch.commit();
   return { transferId };
 };

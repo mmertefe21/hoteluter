@@ -10,16 +10,19 @@
  * - Mobile drawer
  * - Migration boot: ilk açılışta default kanal/kategori/hesap seed
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Sidebar from './components/Sidebar.jsx';
 import Icon from './components/Icon.jsx';
+import Modal from './components/Modal.jsx';
 import { ToastProvider, useToast } from './components/Toast.jsx';
 import { AuthProvider, useAuth } from './lib/auth.jsx';
-import { useDoc } from './lib/db.js';
+import { useDoc, useCollection, db } from './lib/db.js';
 import { runMigrations } from './lib/migrations.js';
 import { ensureKurlarLoaded } from './lib/kur.js';
 import { initials } from './lib/helpers.js';
 import { ALL_MODULES } from './lib/permissions.js';
+import { logAksiyon } from './helpers/aktiviteLog.js';
+import { arrayUnion } from 'firebase/firestore';
 
 import LoginScreen from './pages/LoginScreen.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
@@ -89,9 +92,42 @@ const Bootstrap = () => {
 const AppShell = () => {
   const { user, can, logout } = useAuth();
   const otel = useDoc('otel', 'main');
+  const duyurular = useCollection('duyurular');
   const [activeModule, setActiveModule] = useState('dashboard');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [acilPopupOpen, setAcilPopupOpen] = useState(false);
+  const [acilDuyurular, setAcilDuyurular] = useState([]);
+  const acilShownRef = useRef(false);
+
+  const okunmamisDuyuruSayisi = duyurular.filter((d) =>
+    d.aktif !== false &&
+    !(d.okuyanlar || []).includes(user?.id) &&
+    (d.hedef === 'hepsi' || (d.hedefKullanicilar || []).includes(user?.id))
+  ).length;
+
+  useEffect(() => {
+    if (acilShownRef.current || duyurular.length === 0) return;
+    const acil = duyurular.filter((d) =>
+      d.aktif !== false &&
+      !(d.okuyanlar || []).includes(user?.id) &&
+      (d.hedef === 'hepsi' || (d.hedefKullanicilar || []).includes(user?.id))
+    );
+    if (acil.length > 0) {
+      setAcilDuyurular(acil);
+      setAcilPopupOpen(true);
+      acilShownRef.current = true;
+    } else if (duyurular.length > 0) {
+      acilShownRef.current = true;
+    }
+  }, [duyurular]);
+
+  const handleAcilTamam = async () => {
+    for (const d of acilDuyurular) {
+      try { await db.update('duyurular', d.id, { okuyanlar: arrayUnion(user.id) }); } catch {}
+    }
+    setAcilPopupOpen(false);
+  };
 
   const PageCmp = PAGE_MAP[activeModule] || DashboardPage;
   const activeLabel = ALL_MODULES.find((m) => m.key === activeModule)?.ad || 'Hoteluter';
@@ -134,7 +170,7 @@ const AppShell = () => {
                   <Icon name="settings" size={16} />
                   <span>Ayarlar</span>
                 </button>
-                <button type="button" onClick={() => { setUserMenuOpen(false); logout(); }}
+                <button type="button" onClick={async () => { setUserMenuOpen(false); await logAksiyon({ aksiyon: 'auth.cikis', aciklama: 'Sistemden çıkış yaptı', hedefTip: 'auth' }); logout(); }}
                   className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--bone-warm)] flex items-center gap-2"
                   style={{ color: 'var(--danger)' }}>
                   <Icon name="log-out" size={16} />
@@ -156,12 +192,50 @@ const AppShell = () => {
           drawerOpen={drawerOpen}
           onCloseDrawer={() => setDrawerOpen(false)}
           versionLabel="v1.0 · Görev 7"
+          duyuruSayisi={okunmamisDuyuruSayisi}
         />
 
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <PageCmp />
         </main>
       </div>
+
+      <Modal
+        open={acilPopupOpen}
+        title="Duyurular"
+        size="md"
+        hideClose
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <button type="button" className="htl-btn htl-btn-primary" onClick={handleAcilTamam}>
+              <Icon name="check" size={16} stroke="white" />
+              <span>Tamam, Anladım</span>
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          {acilDuyurular.map((d) => {
+            const cfg = d.onem === 'acil'
+              ? { icon: 'alert-circle',   color: '#dc2626', bg: '#fef2f2', border: '#fecaca' }
+              : d.onem === 'uyari'
+              ? { icon: 'alert-triangle', color: '#d97706', bg: '#fffbeb', border: '#fde68a' }
+              : { icon: 'info',           color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' };
+            return (
+              <div key={d.id} className="rounded-lg p-4"
+                style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon name={cfg.icon} size={16} stroke={cfg.color} />
+                  <div className="font-medium text-sm" style={{ color: cfg.color }}>{d.baslik}</div>
+                </div>
+                {d.icerik && (
+                  <div className="text-sm" style={{ color: 'var(--ink-soft)' }}>{d.icerik}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Modal>
     </div>
   );
 };

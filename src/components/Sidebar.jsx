@@ -17,7 +17,7 @@
 import { ALL_MODULES } from '../lib/permissions.js';
 import Icon from './Icon.jsx';
 
-const SidebarPanel = ({ activeModule, onSelect, otelAd, modules, versionLabel }) => (
+const SidebarPanel = ({ activeModule, onSelect, otelAd, modules, versionLabel, duyuruSayisi = 0 }) => (
   <aside
     className="w-60 flex-shrink-0 flex flex-col h-full"
     style={{ background: 'var(--forest)' }}
@@ -62,6 +62,19 @@ const SidebarPanel = ({ activeModule, onSelect, otelAd, modules, versionLabel })
           >
             <Icon name={m.icon} size={18} strokeWidth={1.6} />
             <span>{m.ad}</span>
+            {m.key === 'dashboard' && duyuruSayisi > 0 && (
+              <span style={{
+                marginLeft: 'auto',
+                background: 'var(--brass)',
+                color: 'white',
+                borderRadius: 10,
+                padding: '1px 6px',
+                fontSize: 11,
+                fontWeight: 700,
+                flexShrink: 0,
+                lineHeight: '16px',
+              }}>{duyuruSayisi}</span>
+            )}
           </button>
         </div>
       ))}
@@ -90,6 +103,7 @@ const Sidebar = ({
   drawerOpen = false,
   onCloseDrawer,
   versionLabel = 'v1.0 · MVP',
+  duyuruSayisi = 0,
 }) => {
   const modules = ALL_MODULES.filter((m) => {
     if (m.hideFromSidebar) return false;
@@ -109,6 +123,7 @@ const Sidebar = ({
       otelAd={otelAd}
       modules={modules}
       versionLabel={versionLabel}
+      duyuruSayisi={duyuruSayisi}
     />
   );
 

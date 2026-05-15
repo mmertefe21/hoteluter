@@ -25,6 +25,8 @@ import { fmtMoney, todayISO } from '../lib/helpers.js';
 import { cevirKur, getActiveKurlar } from '../lib/kur.js';
 import { getHesapBakiye } from '../helpers/exchange-utils.js';
 import { addGiderWithHareket, updateGiderWithHareket } from '../helpers/gider.js';
+import { logAksiyon } from '../helpers/aktiviteLog.js';
+import { uploadGiderGorsel, validateFile, validateTotalSize, STORAGE_LIMITS } from '../lib/storage.js';
 
 const GiderModal = ({
   open,
@@ -51,6 +53,7 @@ const GiderModal = ({
         ...target,
         paraBirimi: target.paraBirimi || ana,
         kur: target.kur || 1,
+        gorseller: target.gorseller || [],
       });
     } else {
       const aktifHesaplar = hesaplar.filter((h) => h.aktif !== false);
@@ -63,6 +66,7 @@ const GiderModal = ({
         kur: 1,
         tarih: todayISO(),
         aciklama: '',
+        gorseller: [],
       });
     }
   }, [open, target?.id]);
@@ -98,28 +102,68 @@ const GiderModal = ({
     });
   };
 
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    const mevcut = form.gorseller || [];
+    if (mevcut.length + files.length > STORAGE_LIMITS.MAX_FILES) {
+      show(`En fazla ${STORAGE_LIMITS.MAX_FILES} dosya yüklenebilir.`, 'error');
+      e.target.value = '';
+      return;
+    }
+    const yeniGorseller = [...mevcut];
+    for (const file of files) {
+      const v1 = validateFile(file);
+      if (!v1.ok) { show(v1.error, 'error'); continue; }
+      const v2 = validateTotalSize(yeniGorseller, file);
+      if (!v2.ok) { show(v2.error, 'error'); continue; }
+      yeniGorseller.push({ _pending: true, file, fileName: file.name, size: file.size, type: file.type });
+    }
+    setForm({ ...form, gorseller: yeniGorseller });
+    e.target.value = '';
+  };
+
+  const removeGorsel = (index) => {
+    setForm({ ...form, gorseller: (form.gorseller || []).filter((_, i) => i !== index) });
+  };
+
   const save = async () => {
     if (!form.kategoriId) return show('Kategori seçilmeli.', 'error');
     if (!form.hesapId) return show('Hesap seçilmeli.', 'error');
     if (!form.tutar || Number(form.tutar) <= 0) return show("Tutar 0'dan büyük olmalı.", 'error');
 
-    const payload = {
-      kategoriId: form.kategoriId,
-      hesapId: form.hesapId,
-      tutar: Number(form.tutar),
-      paraBirimi: formPB,
-      kur: isFarkli && Number(form.kur) > 0 ? Number(form.kur) : undefined,
-      tarih: form.tarih,
-      aciklama: form.aciklama || '',
-    };
-
     setSaving(true);
     try {
+      // Pending dosyaları Storage'a yükle; mevcut görselleri sanitize et
+      const finalGorseller = [];
+      for (const g of (form.gorseller || [])) {
+        if (g._pending && g.file) {
+          const uploaded = await uploadGiderGorsel(g.file);
+          finalGorseller.push(uploaded);
+        } else {
+          const { _pending, file, ...rest } = g;
+          finalGorseller.push(rest);
+        }
+      }
+
+      const payload = {
+        kategoriId: form.kategoriId,
+        hesapId: form.hesapId,
+        tutar: Number(form.tutar),
+        paraBirimi: formPB,
+        kur: isFarkli && Number(form.kur) > 0 ? Number(form.kur) : undefined,
+        tarih: form.tarih,
+        aciklama: form.aciklama || '',
+        gorseller: finalGorseller,
+      };
+
+      const gorselEk = finalGorseller.length > 0 ? ` (${finalGorseller.length} görsel)` : '';
       if (target) {
-        await updateGiderWithHareket(target.id, payload, ana);
+        await updateGiderWithHareket(target.id, payload, ana, userId);
+        void logAksiyon({ aksiyon: 'gider.duzenle', aciklama: `${seciliKat?.ad || 'Gider'} - ${form.tutar} ${formPB} gideri düzenledi${gorselEk}`, hedefTip: 'gider', hedefId: target.id });
         show('Gider güncellendi.');
       } else {
-        await addGiderWithHareket(payload, userId, ana);
+        const yeniGider = await addGiderWithHareket(payload, userId, ana);
+        void logAksiyon({ aksiyon: 'gider.olustur', aciklama: `${seciliKat?.ad || 'Gider'} - ${form.tutar} ${formPB} gider eklendi${gorselEk}`, hedefTip: 'gider', hedefId: yeniGider?.id ?? null });
         show('Gider kaydedildi, hesaptan düşüldü.');
       }
       onSaved?.();
@@ -317,6 +361,67 @@ const GiderModal = ({
               value={form.aciklama || ''}
               onChange={(e) => setForm({ ...form, aciklama: e.target.value })}
             />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="htl-label">
+              Görseller / Faturalar
+              <span className="ml-2 text-xs" style={{ color: 'var(--ink-faint)', textTransform: 'none', fontWeight: 'normal' }}>
+                Max {STORAGE_LIMITS.MAX_FILES} dosya · tekil 5 MB · toplam 25 MB · JPG/PNG/PDF
+              </span>
+            </label>
+            <div className="space-y-2">
+              <label className="htl-btn htl-btn-ghost cursor-pointer inline-flex items-center gap-2"
+                style={{ width: 'fit-content' }}>
+                <Icon name="upload" size={16} stroke="currentColor" />
+                <span>Dosya Seç</span>
+                <input type="file" multiple accept="image/jpeg,image/png,application/pdf"
+                  onChange={handleFileChange} className="hidden" />
+              </label>
+
+              {(form.gorseller || []).length > 0 && (
+                <div className="space-y-1.5">
+                  {(form.gorseller || []).map((g, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 rounded"
+                      style={{ background: 'var(--bone-warm)', border: '1px solid var(--line-soft)' }}>
+                      {g.type?.startsWith('image/') && (g.url || g.dataUrl) ? (
+                        <img src={g.url || g.dataUrl} alt={g.fileName} className="w-10 h-10 object-cover rounded flex-shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0"
+                          style={{ background: 'var(--bone-light)' }}>
+                          <Icon name={g.type?.startsWith('image/') ? 'image' : 'file-text'} size={20} stroke="var(--ink-faint)" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{g.fileName}</div>
+                        <div className="text-xs" style={{ color: 'var(--ink-faint)' }}>
+                          {(g.size / 1024).toFixed(0)} KB
+                          {g._pending && ' · kaydete basınca yüklenecek'}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {(g.url || g.dataUrl) && !g._pending && (
+                          <a href={g.url || g.dataUrl} target="_blank" rel="noopener noreferrer"
+                            className="p-1.5 rounded hover:bg-[var(--bone-light)]" title="Görseli aç">
+                            <Icon name="external-link" size={14} stroke="var(--ink-soft)" />
+                          </a>
+                        )}
+                        <button type="button" onClick={() => removeGorsel(i)}
+                          className="p-1.5 rounded hover:bg-[var(--bone-light)]" title="Kaldır">
+                          <Icon name="x" size={14} stroke="var(--ink-soft)" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {(form.gorseller || []).length > 0 && (
+                <div className="text-xs" style={{ color: 'var(--ink-faint)' }}>
+                  Toplam: {((form.gorseller || []).reduce((s, g) => s + (g.size || 0), 0) / 1024 / 1024).toFixed(2)} MB / 25 MB
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

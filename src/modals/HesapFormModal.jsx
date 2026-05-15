@@ -14,10 +14,12 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import Modal from '../components/Modal.jsx';
+import ConfirmModal from '../components/ConfirmModal.jsx';
 import Icon from '../components/Icon.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { db } from '../lib/db.js';
-import { HESAP_TIP_OPTS, HESAP_TIP_INFO, PARA_BIRIMI_OPTS } from '../lib/constants.js';
+import { HESAP_TIP_OPTS, HESAP_TIP_INFO, PARA_BIRIMI_OPTS, PRESET_RENKLER } from '../lib/constants.js';
+import { logAksiyon } from '../helpers/aktiviteLog.js';
 
 const DEFAULT_FORM = {
   ad: '',
@@ -39,6 +41,7 @@ const HesapFormModal = ({
   const { show } = useToast();
   const [form, setForm] = useState(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
+  const [confirmPasif, setConfirmPasif] = useState(null); // null | 'sil' | 'pasif'
 
   const harSayisi = useMemo(
     () => (target ? hesapHareketleri.filter((h) => h.hesapId === target.id).length : 0),
@@ -59,6 +62,12 @@ const HesapFormModal = ({
     if (!form.ad?.trim()) return show('Ad zorunlu.', 'error');
     if (!form.paraBirimi) return show('Para birimi seçilmeli.', 'error');
 
+    // Deactivation intercept: mevcut aktif hesap pasif yapılıyorsa onayla
+    if (target && target.aktif !== false && form.aktif === false) {
+      setConfirmPasif(harSayisi === 0 ? 'sil' : 'pasif');
+      return;
+    }
+
     setSaving(true);
     try {
       if (target) {
@@ -78,7 +87,31 @@ const HesapFormModal = ({
     }
   };
 
+  const handlePasifConfirm = async () => {
+    const action = confirmPasif;
+    setConfirmPasif(null);
+    setSaving(true);
+    try {
+      if (action === 'sil') {
+        await db.delete('hesaplar', target.id);
+        void logAksiyon({ aksiyon: 'hesap.sil', aciklama: `Hesap silindi: ${target.ad}`, hedefTip: 'hesap', hedefId: target.id });
+        show('Hesap silindi.');
+      } else {
+        const payload = paraBirimiKilitli ? { ...form, paraBirimi: target.paraBirimi } : { ...form };
+        await db.update('hesaplar', target.id, payload);
+        show('Hesap pasif yapıldı (geçmiş hareketler korundu).');
+      }
+      onSaved?.();
+      onClose?.();
+    } catch (e) {
+      show('Hata: ' + e.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
+    <>
     <Modal
       open={open}
       onClose={onClose}
@@ -128,6 +161,27 @@ const HesapFormModal = ({
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="htl-label">Renk</label>
+          <div className="flex gap-2 flex-wrap">
+            {PRESET_RENKLER.map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setForm({ ...form, renk: r })}
+                className="w-7 h-7 rounded-full transition"
+                style={{
+                  background: r,
+                  outline: form.renk === r ? `2px solid ${r}` : 'none',
+                  outlineOffset: form.renk === r ? 2 : 0,
+                  boxShadow: form.renk === r ? '0 0 0 1px white, 0 0 0 3px ' + r : 'none',
+                }}
+                title={r}
+              />
+            ))}
           </div>
         </div>
 
@@ -190,6 +244,20 @@ const HesapFormModal = ({
         </div>
       </div>
     </Modal>
+    <ConfirmModal
+      open={!!confirmPasif}
+      title={confirmPasif === 'sil' ? 'Hesabı Sil' : 'Hesabı Pasif Yap'}
+      msg={
+        confirmPasif === 'sil'
+          ? `"${form.ad}" hesabında hiç hareket yok. Hesap kalıcı olarak silinecek. Emin misiniz?`
+          : `"${form.ad}" hesabında ${harSayisi} hareket var. Hesap pasif yapılacak (tahsilatlarda görünmez), geçmiş hareketler korunacak. Emin misiniz?`
+      }
+      onConfirm={handlePasifConfirm}
+      onCancel={() => setConfirmPasif(null)}
+      confirmLabel={confirmPasif === 'sil' ? 'Sil' : 'Pasif Yap'}
+      danger={confirmPasif === 'sil'}
+    />
+    </>
   );
 };
 

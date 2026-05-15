@@ -4,7 +4,7 @@
  * useAuth().login(email, sifre) → success/error döner.
  * Hata mesajları auth.js içinde Türkçeye çevrilmiş halde gelir.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '../components/Icon.jsx';
 import { useAuth } from '../lib/auth.jsx';
 
@@ -13,6 +13,14 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [sifre, setSifre] = useState('');
   const [err, setErr] = useState('');
+
+  useEffect(() => {
+    const msg = localStorage.getItem('hoteluter_loginMsg');
+    if (msg) {
+      setErr(msg);
+      localStorage.removeItem('hoteluter_loginMsg');
+    }
+  }, []);
   const [loading, setLoading] = useState(false);
 
   const submit = async (e) => {

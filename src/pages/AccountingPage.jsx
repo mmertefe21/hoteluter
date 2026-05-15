@@ -25,6 +25,23 @@ import {
 import { deleteTahsilatWithHareket } from '../helpers/tahsilat.js';
 import { deleteGiderWithHareket } from '../helpers/gider.js';
 import { useAuth } from '../lib/auth.jsx';
+import { logAksiyon } from '../helpers/aktiviteLog.js';
+
+const hexToRgba = (hex, alpha = 1) => {
+  if (!hex || !hex.startsWith('#')) return hex;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const getReadableTextColor = (hex) => {
+  if (!hex || !hex.startsWith('#')) return 'var(--ink)';
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 < 128 ? '#ffffff' : '#1a1a1a';
+};
 
 const AccountingPage = () => {
   const { can, user } = useAuth();
@@ -40,6 +57,8 @@ const AccountingPage = () => {
   const giderKategorileri = useCollection('giderKategorileri');
   const reservationsAll = useCollection('rezervasyonlar');
   const misafirler = useCollection('misafirler');
+  const gruplar = useCollection('gruplar');
+  const users = useCollection('users');
 
   // Modal state
   const [tahsilatOpen, setTahsilatOpen] = useState(false);
@@ -68,6 +87,11 @@ const AccountingPage = () => {
   const toplamBakiye = useMemo(
     () => getToplamBakiyeAna(hesaplar, hesapHareketleri, ana, cevirKur),
     [hesaplar, hesapHareketleri, ana]
+  );
+
+  const userMap = useMemo(
+    () => Object.fromEntries(users.map((u) => [u.id, u])),
+    [users]
   );
 
   return (
@@ -135,21 +159,29 @@ const AccountingPage = () => {
                     const tipInfo = HESAP_TIP_INFO(h.tip);
                     const bakiye = getHesapBakiye(h.id, hesapHareketleri);
                     const bakiyeAna = getHesapBakiyeAna(h.id, hesaplar, hesapHareketleri, ana, cevirKur);
+                    const cardRenk = h.renk || tipInfo.renk;
+                    const textRenk = getReadableTextColor(cardRenk);
+                    const textSoft = textRenk === '#ffffff' ? 'rgba(255,255,255,0.85)' : 'rgba(26,26,26,0.7)';
+                    const bakiyeRenk = bakiye === 0 ? textRenk
+                      : textRenk === '#ffffff'
+                        ? (bakiye > 0 ? '#a8e6a8' : '#ffb3b3')
+                        : (bakiye > 0 ? 'var(--success)' : 'var(--danger)');
                     return (
                       <div key={h.id} className="rounded-lg p-4 cursor-pointer hover:shadow-md transition"
-                        style={{ background: 'var(--bone-light)', border: `1px solid ${tipInfo.renk}40` }}
+                        style={{ background: hexToRgba(cardRenk, 0.5), border: `1px solid ${textRenk === '#ffffff' ? 'rgba(255,255,255,.15)' : cardRenk + '40'}` }}
                         onClick={() => setHesapDetay(h)}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: tipInfo.renk }}>
+                            <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+                              style={{ background: textRenk === '#ffffff' ? 'rgba(255,255,255,.2)' : tipInfo.renk }}>
                               <Icon name={tipInfo.icon} size={18} stroke="white" />
                             </div>
                             <div>
-                              <div className="font-medium text-sm flex items-center gap-1.5">
+                              <div className="font-medium text-sm flex items-center gap-1.5" style={{ color: textRenk }}>
                                 {h.ad}
                                 {h.aktif === false && <span className="htl-badge htl-badge-danger" style={{ fontSize: 9 }}>Pasif</span>}
                               </div>
-                              <div className="text-[11px]" style={{ color: 'var(--ink-faint)' }}>
+                              <div className="text-[11px]" style={{ color: textSoft }}>
                                 {tipInfo.l} · {PARA_BIRIMI_INFO(pb).symbol} {pb}
                               </div>
                             </div>
@@ -157,17 +189,16 @@ const AccountingPage = () => {
                           {can('onMuhasebe', 'hesap-yonet') && (
                             <button type="button" className="p-1 rounded hover:bg-[var(--bone-warm)]"
                               onClick={(e) => { e.stopPropagation(); setEditingHesap(h); setHesapFormOpen(true); }}>
-                              <Icon name="square-pen" size={14} stroke="var(--ink-soft)" />
+                              <Icon name="square-pen" size={14} stroke={textRenk} />
                             </button>
                           )}
                         </div>
                         <div className="mt-3">
-                          <div className="font-display text-2xl font-medium"
-                            style={{ color: bakiye >= 0 ? 'var(--forest)' : 'var(--danger)' }}>
+                          <div className="font-display text-2xl font-medium" style={{ color: bakiyeRenk }}>
                             {fmtMoney(bakiye, pb)}
                           </div>
                           {pb !== ana && bakiyeAna != null && (
-                            <div className="text-[11px]" style={{ color: 'var(--ink-soft)' }}>
+                            <div className="text-[11px]" style={{ color: textSoft }}>
                               ≈ {fmtMoney(bakiyeAna, ana)}
                             </div>
                           )}
@@ -282,7 +313,7 @@ const AccountingPage = () => {
                 ) : (
                   <table className="htl-table">
                     <thead>
-                      <tr><th>Tarih</th><th>Hesap</th><th>Tip</th><th>Açıklama</th><th className="text-right">Tutar</th></tr>
+                      <tr><th>Tarih</th><th>Hesap</th><th>Tip</th><th>Kullanıcı</th><th>Açıklama</th><th className="text-right">Tutar</th></tr>
                     </thead>
                     <tbody>
                       {[...hesapHareketleri].sort((a, b) => `${b.tarih}`.localeCompare(`${a.tarih}`)).slice(0, 200).map((h) => {
@@ -295,6 +326,7 @@ const AccountingPage = () => {
                             <td className="text-sm">{fmtDateTR(h.tarih)}</td>
                             <td className="text-sm">{hesap?.ad || '-'}</td>
                             <td><span className={`htl-badge ${isPos ? 'htl-badge-success' : 'htl-badge-danger'}`}>{ti.l}</span></td>
+                            <td className="text-sm" style={{ color: 'var(--ink-soft)' }}>{userMap[h.olusturanId]?.kullaniciAdi || '—'}</td>
                             <td className="text-sm" style={{ color: 'var(--ink-soft)' }}>{h.aciklama || '-'}</td>
                             <td className="text-right font-medium" style={{ color: isPos ? 'var(--success)' : 'var(--danger)' }}>
                               {isPos ? '+' : ''}{fmtMoney(h.tutar, pb)}
@@ -320,6 +352,7 @@ const AccountingPage = () => {
         rezervasyonlar={reservationsAll}
         misafirler={misafirler}
         tahsilatlar={tahsilatlar}
+        gruplar={gruplar}
         ana={ana}
         userId={user?.id}
       />
@@ -342,6 +375,7 @@ const AccountingPage = () => {
         hesapHareketleri={hesapHareketleri}
         ana={ana}
         userId={user?.id}
+        giderKategorileri={giderKategorileri}
       />
 
       <HesapFormModal
@@ -365,23 +399,31 @@ const AccountingPage = () => {
 
       <ConfirmModal
         open={!!confirmDelTah}
-        title="Tahsilatı Sil"
-        msg="Bu tahsilat ve bağlı hesap hareketi silinecek."
+        title="Tahsilatı İptal Et"
+        msg="Bu tahsilat iptal edilecek. Emin misiniz?"
         onConfirm={async () => {
-          try { await deleteTahsilatWithHareket(confirmDelTah.id); show('Tahsilat silindi.'); }
-          catch (e) { show('Hata: ' + e.message, 'error'); }
+          const del = confirmDelTah;
           setConfirmDelTah(null);
+          try {
+            await deleteTahsilatWithHareket(del.id, user?.id);
+            void logAksiyon({ aksiyon: 'tahsilat.sil', aciklama: `${del.tutar} ${del.paraBirimi || ''} tahsilatı sildi`, hedefTip: 'tahsilat', hedefId: del.id });
+            show('Tahsilat silindi.');
+          } catch (e) { show('Hata: ' + e.message, 'error'); }
         }}
         onCancel={() => setConfirmDelTah(null)}
       />
       <ConfirmModal
         open={!!confirmDelGider}
-        title="Gideri Sil"
-        msg="Bu gider ve bağlı hesap hareketi silinecek."
+        title="Gideri İptal Et"
+        msg="Bu gider iptal edilecek. Emin misiniz?"
         onConfirm={async () => {
-          try { await deleteGiderWithHareket(confirmDelGider.id); show('Gider silindi.'); }
-          catch (e) { show('Hata: ' + e.message, 'error'); }
+          const del = confirmDelGider;
           setConfirmDelGider(null);
+          try {
+            await deleteGiderWithHareket(del.id, user?.id);
+            void logAksiyon({ aksiyon: 'gider.sil', aciklama: `${del.tutar} ${del.paraBirimi || ''} giderini sildi`, hedefTip: 'gider', hedefId: del.id });
+            show('Gider silindi.');
+          } catch (e) { show('Hata: ' + e.message, 'error'); }
         }}
         onCancel={() => setConfirmDelGider(null)}
       />

@@ -22,7 +22,7 @@ import Modal from '../components/Modal.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 import Icon from '../components/Icon.jsx';
 import { useToast } from '../components/Toast.jsx';
-import { db } from '../lib/db.js';
+import { db, useCollection } from '../lib/db.js';
 import { cevirKur } from '../lib/kur.js';
 import {
   HAREKET_TIP_INFO,
@@ -34,6 +34,7 @@ import { getHesapBakiye, getHesapBakiyeAna } from '../helpers/exchange-utils.js'
 import { addManuelHareket } from '../helpers/transfer.js';
 import { deleteTahsilatWithHareket } from '../helpers/tahsilat.js';
 import { deleteGiderWithHareket } from '../helpers/gider.js';
+import { logAksiyon } from '../helpers/aktiviteLog.js';
 
 const TIP_GROUP = {
   all: () => true,
@@ -98,6 +99,12 @@ const HesapDetayModal = ({
       .sort((a, b) => `${b.tarih}${b._createdAt || ''}`.localeCompare(`${a.tarih}${a._createdAt || ''}`));
   }, [hesap, hesapHareketleri, filterTip, dateFrom, dateTo]);
 
+  const users = useCollection('users');
+  const userMap = useMemo(
+    () => Object.fromEntries(users.map((u) => [u.id, u])),
+    [users]
+  );
+
   // Running balance — en yeniden başlayıp geriye doğru toplar
   const harWithBalance = useMemo(() => {
     let running = bakiye;
@@ -123,6 +130,11 @@ const HesapDetayModal = ({
         },
         userId
       );
+      if (manForm.tip === 'manuel-giris') {
+        void logAksiyon({ aksiyon: 'hesap.giris', aciklama: `${hesap.ad} hesabına manuel giriş yaptı, ${manForm.tutar} ${hesapPB}`, hedefTip: 'hesap', hedefId: hesap.id });
+      } else {
+        void logAksiyon({ aksiyon: 'hesap.cikis', aciklama: `${hesap.ad} hesabından manuel çıkış yaptı, ${manForm.tutar} ${hesapPB}`, hedefTip: 'hesap', hedefId: hesap.id });
+      }
       show('Manuel hareket eklendi.');
       setManForm({ tip: 'manuel-giris', tutar: '', aciklama: '' });
       setShowManuel(false);
@@ -139,10 +151,12 @@ const HesapDetayModal = ({
     setSaving(true);
     try {
       if (h.tahsilatId) {
-        await deleteTahsilatWithHareket(h.tahsilatId);
+        await deleteTahsilatWithHareket(h.tahsilatId, userId);
+        void logAksiyon({ aksiyon: 'tahsilat.sil', aciklama: `${h.tutar} hesap hareketinden tahsilat sildi`, hedefTip: 'tahsilat', hedefId: h.tahsilatId });
         show('Tahsilat ve bağlı hareketler silindi.');
       } else if (h.giderId) {
-        await deleteGiderWithHareket(h.giderId);
+        await deleteGiderWithHareket(h.giderId, userId);
+        void logAksiyon({ aksiyon: 'gider.sil', aciklama: `${h.tutar} hesap hareketinden gider sildi`, hedefTip: 'gider', hedefId: h.giderId });
         show('Gider ve bağlı hareketler silindi.');
       } else if (h.transferId) {
         // Transfer çift hareketten oluşur — transferId ile bağlı tüm hareketleri sil
@@ -333,6 +347,7 @@ const HesapDetayModal = ({
                     <tr>
                       <th>Tarih</th>
                       <th>Tip</th>
+                      <th>Kullanıcı</th>
                       <th>Açıklama</th>
                       <th className="text-right">Tutar</th>
                       <th className="text-right">Bakiye</th>
@@ -351,6 +366,7 @@ const HesapDetayModal = ({
                               {ti.l}
                             </span>
                           </td>
+                          <td className="text-sm" style={{ color: 'var(--ink-soft)' }}>{userMap[h.olusturanId]?.kullaniciAdi || '—'}</td>
                           <td className="text-sm">{h.aciklama || '-'}</td>
                           <td
                             className="text-right font-medium"
@@ -392,9 +408,9 @@ const HesapDetayModal = ({
         title="Hareket sil"
         msg={
           confirmDel?.tahsilatId
-            ? 'Bu tahsilatı ve bağlı hesap hareketini silmek istediğine emin misin?'
+            ? 'Bu tahsilat iptal edilecek. Emin misin?'
             : confirmDel?.giderId
-              ? 'Bu gideri ve bağlı hesap hareketini silmek istediğine emin misin?'
+              ? 'Bu gider iptal edilecek. Emin misin?'
               : confirmDel?.transferId
                 ? 'Bu transferin her iki tarafını birden silmek istediğine emin misin?'
                 : 'Bu manuel hareketi silmek istediğine emin misin?'

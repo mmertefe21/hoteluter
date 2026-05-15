@@ -71,6 +71,51 @@ const migrate_v03_hesaplar = async () => {
 };
 
 /**
+ * v11_aktivite_log_users — Mevcut kullanıcılara sonGiris/sonAksiyon/sonAksiyonTarih ekle.
+ *
+ * db.list('users') superadmin yetkisi gerektirir. Non-superadmin boot'ta Firestore
+ * permission hatası alır — try/catch ile sessizce atlanır, flag set edilmez.
+ * Superadmin ilk boot'ta çalıştırır → flag set edilir → sonraki herkes skip eder.
+ */
+const migrate_v11_aktivite_log_users = async () => {
+  const flag = await db.getMeta('seeded_v1_1_aktivite');
+  if (flag) return { skipped: true };
+
+  try {
+    const users = await db.list('users');
+    let updated = 0;
+    for (const u of users) {
+      const patch = {};
+      if (!('sonGiris' in u))        patch.sonGiris = null;
+      if (!('sonAksiyon' in u))      patch.sonAksiyon = null;
+      if (!('sonAksiyonTarih' in u)) patch.sonAksiyonTarih = null;
+      if (Object.keys(patch).length > 0) {
+        await db.update('users', u.id, patch);
+        updated++;
+      }
+    }
+    await db.setMeta('seeded_v1_1_aktivite', true);
+    return { updated };
+  } catch (e) {
+    // Non-superadmin users listeyemez; sessizce atla
+    console.warn('[migrations] v11_aktivite_users: yetki yok, atlandı:', e.message);
+    return { skipped: true, reason: 'no-permission' };
+  }
+};
+
+/**
+ * v13_bankaMasraflari — "Banka Masrafları" gider kategorisini ekle (POS komisyonu için).
+ */
+const migrate_v13_bankaMasraflari = async () => {
+  const flag = await db.getMeta('seeded_v13_bankaMasraflari');
+  if (flag) return { skipped: true };
+
+  await db.add('giderKategorileri', { ad: 'Banka Masrafları', icon: 'landmark', renk: '#6366f1', aktif: true });
+  await db.setMeta('seeded_v13_bankaMasraflari', true);
+  return { added: 1 };
+};
+
+/**
  * Tüm migration'ları sırayla çalıştır.
  * App boot'unda bir kez çağrılır.
  *
@@ -82,6 +127,8 @@ export const runMigrations = async () => {
     results.v01_kanallar = await migrate_v01_kanallar();
     results.v02_giderKategorileri = await migrate_v02_giderKategorileri();
     results.v03_hesaplar = await migrate_v03_hesaplar();
+    results.v11_aktivite = await migrate_v11_aktivite_log_users();
+    results.v13_bankaMasraflari = await migrate_v13_bankaMasraflari();
     console.log('[migrations] Tamamlandı:', results);
   } catch (e) {
     console.error('[migrations] Hata:', e);

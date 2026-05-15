@@ -2,9 +2,7 @@
  * KullaniciFormModal — kullanıcı ekle/düzenle.
  *
  * - Yeni kullanıcı: createUserWithProfile (Firebase Auth user + Firestore profil birlikte).
- *   ⚠ Yan etki: createUserWithEmailAndPassword çağırıldığında mevcut oturum yeni
- *   user'a geçer; mevcut admin tekrar login olmak zorunda kalır.
- *   Production'da Cloud Functions ile düzeltilecek.
+ *   Secondary Firebase App kullanılır — mevcut admin oturumu etkilenmez.
  * - Düzenleme: sadece Firestore profil update. Email/şifre değişimi kapalı
  *   (admin SDK gerektirir; ileri sürümde Cloud Function veya kullanıcının kendi
  *   şifre değiştirme akışıyla halledilecek).
@@ -78,7 +76,7 @@ const KullaniciFormModal = ({ open, onClose, onSaved, target = null }) => {
           password: sifre,
           profile: { ...profile, aktif: aktif !== false },
         });
-        show('Kullanıcı oluşturuldu. Mevcut oturum yeni kullanıcıya geçti — tekrar giriş yapın.', 'info');
+        show('Kullanıcı oluşturuldu.');
       }
       onSaved?.();
       onClose?.();
@@ -104,17 +102,6 @@ const KullaniciFormModal = ({ open, onClose, onSaved, target = null }) => {
         </button>
       </>}
     >
-      {!target && (
-        <div className="mb-4 px-3 py-2 rounded-md text-xs flex items-start gap-2"
-          style={{ background: 'var(--warn-soft, #fef6e7)', color: 'var(--ink, #2a2a2a)', border: '1px solid var(--warn, #d4a04a)' }}>
-          <Icon name="alert-triangle" size={14} stroke="var(--warn, #d4a04a)" className="mt-0.5 flex-shrink-0" />
-          <span>
-            Yeni kullanıcı oluşturulduğunda mevcut oturumunuz kapanacak ve yeni kullanıcıya geçilecek.
-            Tekrar giriş yapmanız gerekebilir. (Bu Firebase'in client-side davranışı; production'da
-            Cloud Functions ile düzeltilecek.)
-          </span>
-        </div>
-      )}
 
       <div className="grid md:grid-cols-2 gap-4">
         <div><label className="htl-label">Kullanıcı Adı *</label><input className="htl-input" value={form.kullaniciAdi || ''} onChange={(e) => setForm({ ...form, kullaniciAdi: e.target.value })} /></div>

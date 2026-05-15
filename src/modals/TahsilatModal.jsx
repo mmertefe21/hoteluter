@@ -28,6 +28,7 @@ import {
   addTahsilatWithHareket,
   updateTahsilatWithHareket,
 } from '../helpers/tahsilat.js';
+import { logAksiyon } from '../helpers/aktiviteLog.js';
 
 const TahsilatModal = ({
   open,
@@ -39,6 +40,7 @@ const TahsilatModal = ({
   rezervasyonlar = [],
   misafirler = [],
   tahsilatlar = [],
+  gruplar = [],
   ana = 'EUR',
   userId = null,
 }) => {
@@ -149,10 +151,22 @@ const TahsilatModal = ({
     setSaving(true);
     try {
       if (target) {
-        await updateTahsilatWithHareket(target.id, payload, ana);
+        await updateTahsilatWithHareket(target.id, payload, ana, userId);
+        void logAksiyon({ aksiyon: 'tahsilat.duzenle', aciklama: `${form.tutar} ${formPB} tahsilatı düzenledi`, hedefTip: 'tahsilat', hedefId: target.id });
         show('Tahsilat güncellendi.');
       } else {
-        await addTahsilatWithHareket(payload, userId, ana);
+        const result = await addTahsilatWithHareket(payload, userId, ana);
+        const hesap = hesaplar.find((h) => h.id === form.hesapId);
+        let aciklama;
+        if (isGrupTahsilat) {
+          const g = gruplar.find((x) => x.id === payload.grupId);
+          aciklama = `${g?.ad || 'Grup'} için ${form.tutar} ${formPB} tahsilat yaptı (${hesap?.ad || ''})`;
+        } else {
+          const m = seciliRezDoc ? misafirler.find((x) => x.id === seciliRezDoc.anaMisafirId) : null;
+          const misafirAd = m ? `${m.ad} ${m.soyad}` : 'Misafir';
+          aciklama = `${misafirAd} için ${form.tutar} ${formPB} tahsilat yaptı (${hesap?.ad || ''})`;
+        }
+        void logAksiyon({ aksiyon: 'tahsilat.olustur', aciklama, hedefTip: 'tahsilat', hedefId: result?.id ?? null });
         show('Tahsilat eklendi, hesaba yansıdı.');
       }
       onSaved?.();

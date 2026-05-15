@@ -27,8 +27,9 @@ const DashboardPage = () => {
   const bugunGiris = aktifRezler.filter((r) => r.girisTarihi === today);
   const bugunCikis = aktifRezler.filter((r) => r.cikisTarihi === today);
   const gemide = aktifRezler.filter((r) =>
-    r.durum === 'giris-yapildi' ||
-    (r.girisTarihi <= today && r.cikisTarihi > today && r.durum === 'onayli')
+    (r.durum === 'giris-yapildi' || r.durum === 'onayli') &&
+    r.girisTarihi <= today &&
+    r.cikisTarihi > today
   );
   const dolulukOrani = odalar.length > 0 ? Math.round((gemide.length / odalar.length) * 100) : 0;
 

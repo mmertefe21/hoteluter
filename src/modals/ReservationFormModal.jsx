@@ -19,6 +19,7 @@ import { addDays, diffDays, todayISO, fmtMoney, fmtDateTR, generateRezKodu } fro
 import { DURUM_OPTS, PANSIYON_OPTS, ODEME_OPTS, HESAP_TIP_INFO } from '../lib/constants.js';
 import { checkOverlap } from '../helpers/segmentler.js';
 import { deleteTahsilatWithHareket } from '../helpers/tahsilat.js';
+import { logAksiyon } from '../helpers/aktiviteLog.js';
 import TahsilatModal from './TahsilatModal.jsx';
 import MisafirFormModal from './MisafirFormModal.jsx';
 
@@ -56,6 +57,9 @@ const ReservationFormModal = ({
   const [saving, setSaving] = useState(false);
   const [tahsilatOpen, setTahsilatOpen] = useState(false);
   const [confirmTahDel, setConfirmTahDel] = useState(null);
+  const [checkInConfirm, setCheckInConfirm] = useState(false);
+  const [checkOutConfirm, setCheckOutConfirm] = useState(false);
+  const today = todayISO();
 
   // Misafir combobox state'i
   const [misafirArama, setMisafirArama] = useState('');
@@ -219,11 +223,15 @@ const ReservationFormModal = ({
     try {
       if (rezervasyon) {
         await db.update('rezervasyonlar', rezervasyon.id, payload);
+        const misafirAdDuz = seciliMisafir ? `${seciliMisafir.ad} ${seciliMisafir.soyad}` : 'Misafir';
+        void logAksiyon({ aksiyon: 'rezervasyon.duzenle', aciklama: `${misafirAdDuz} rezervasyonunu düzenledi`, hedefTip: 'rezervasyon', hedefId: rezervasyon.id });
         show('Rezervasyon güncellendi.');
       } else {
         payload.rezervasyonKodu = await generateRezKodu(db);
         payload.olusturmaTarihi = new Date().toISOString();
-        await db.add('rezervasyonlar', payload);
+        const savedRez = await db.add('rezervasyonlar', payload);
+        const misafirAdYeni = seciliMisafir ? `${seciliMisafir.ad} ${seciliMisafir.soyad}` : 'Misafir';
+        void logAksiyon({ aksiyon: 'rezervasyon.olustur', aciklama: `${misafirAdYeni} için ${geceSayisi} gece rez. oluşturdu, ${fmtMoney(payload.toplamTutar, ana)}`, hedefTip: 'rezervasyon', hedefId: savedRez.id });
         show('Rezervasyon oluşturuldu.');
       }
       onSaved?.();
@@ -246,12 +254,47 @@ const ReservationFormModal = ({
   const toplam = Number(form.toplamTutar) || 0;
   const kalan = toplam - odenen;
 
-  const tahsilatSil = async (tahsilatId) => {
+  const tahsilatSil = async () => {
+    const tah = confirmTahDel; // FIX: state önceden temizleniyordu, capture eklendi
     setConfirmTahDel(null);
     try {
-      await deleteTahsilatWithHareket(tahsilatId);
+      await deleteTahsilatWithHareket(tah.id, userId);
+      void logAksiyon({
+        aksiyon: 'tahsilat.sil',
+        aciklama: `${tah.tutar} ${tah.paraBirimi || ''} tahsilatı sildi`,
+        hedefTip: 'tahsilat',
+        hedefId: tah.id,
+      });
       show('Tahsilat silindi.');
       onSaved?.();
+    } catch (e) {
+      show('Hata: ' + e.message, 'error');
+    }
+  };
+
+  const handleCheckIn = async () => {
+    setCheckInConfirm(false);
+    try {
+      await db.update('rezervasyonlar', rezervasyon.id, { checkInTarihi: new Date().toISOString() });
+      const misafirAd = seciliMisafir ? `${seciliMisafir.ad} ${seciliMisafir.soyad}` : 'Misafir';
+      void logAksiyon({ aksiyon: 'rezervasyon.checkin', aciklama: `${misafirAd} check-in yapıldı`, hedefTip: 'rezervasyon', hedefId: rezervasyon.id });
+      show('Check-in yapıldı.');
+      onSaved?.();
+      onClose?.();
+    } catch (e) {
+      show('Hata: ' + e.message, 'error');
+    }
+  };
+
+  const handleCheckOut = async () => {
+    setCheckOutConfirm(false);
+    try {
+      await db.update('rezervasyonlar', rezervasyon.id, { checkOutTarihi: new Date().toISOString() });
+      const misafirAd = seciliMisafir ? `${seciliMisafir.ad} ${seciliMisafir.soyad}` : 'Misafir';
+      void logAksiyon({ aksiyon: 'rezervasyon.checkout', aciklama: `${misafirAd} check-out yapıldı`, hedefTip: 'rezervasyon', hedefId: rezervasyon.id });
+      show('Check-out yapıldı.');
+      onSaved?.();
+      onClose?.();
     } catch (e) {
       show('Hata: ' + e.message, 'error');
     }
@@ -280,6 +323,38 @@ const ReservationFormModal = ({
           <div className="mb-4 px-3 py-2 rounded-md text-sm flex items-center gap-2"
             style={{ background: 'var(--danger-soft)', color: 'var(--danger)' }}>
             <Icon name="alert-circle" size={16} />{err}
+          </div>
+        )}
+
+        {isExisting && (
+          <div className="flex gap-2 mb-4 flex-wrap">
+            {!rezervasyon.checkInTarihi && (() => {
+              const checkInAktif = today >= rezervasyon.girisTarihi && today <= rezervasyon.cikisTarihi;
+              return (
+                <button type="button" disabled={!checkInAktif}
+                  onClick={() => setCheckInConfirm(true)} className="htl-btn"
+                  title={!checkInAktif ? (today < rezervasyon.girisTarihi ? 'Henüz giriş günü gelmedi' : 'Rezervasyon süresi geçti') : ''}
+                  style={{
+                    background: checkInAktif ? '#16a34a' : 'var(--bone-warm)',
+                    color: checkInAktif ? 'white' : 'var(--ink-faint)',
+                    cursor: checkInAktif ? 'pointer' : 'not-allowed',
+                  }}>
+                  <Icon name="log-in" size={15} stroke="currentColor" /><span>Check-in Yap</span>
+                </button>
+              );
+            })()}
+            {rezervasyon.checkInTarihi && !rezervasyon.checkOutTarihi && (
+              <button type="button" disabled={today !== rezervasyon.cikisTarihi}
+                onClick={() => setCheckOutConfirm(true)} className="htl-btn"
+                title={today !== rezervasyon.cikisTarihi ? 'Check-out günü değil' : ''}
+                style={{
+                  background: today === rezervasyon.cikisTarihi ? '#d97706' : 'var(--bone-warm)',
+                  color: today === rezervasyon.cikisTarihi ? 'white' : 'var(--ink-faint)',
+                  cursor: today === rezervasyon.cikisTarihi ? 'pointer' : 'not-allowed',
+                }}>
+                <Icon name="log-out" size={15} stroke="currentColor" /><span>Check-out Yap</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -589,10 +664,20 @@ const ReservationFormModal = ({
           </div>
         )}
 
-        <ConfirmModal open={!!confirmTahDel} title="Tahsilatı Sil"
-          msg="Bu ödeme ve hesap hareketi silinecek. Emin misiniz?"
-          onConfirm={() => tahsilatSil(confirmTahDel.id)}
+        <ConfirmModal open={!!confirmTahDel} title="Tahsilatı İptal Et"
+          msg="Bu tahsilat iptal edilecek. Emin misiniz?"
+          onConfirm={tahsilatSil}
           onCancel={() => setConfirmTahDel(null)} />
+        <ConfirmModal open={checkInConfirm} title="Check-in Yapılacak"
+          msg="Check-in yapacaksınız, emin misiniz?"
+          confirmLabel="Evet" danger={false}
+          onConfirm={handleCheckIn}
+          onCancel={() => setCheckInConfirm(false)} />
+        <ConfirmModal open={checkOutConfirm} title="Check-out Yapılacak"
+          msg="Check-out yapacaksınız, emin misiniz?"
+          confirmLabel="Evet" danger={false}
+          onConfirm={handleCheckOut}
+          onCancel={() => setCheckOutConfirm(false)} />
       </Modal>
 
       {isExisting && (

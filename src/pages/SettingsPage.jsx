@@ -14,6 +14,8 @@ import Icon from '../components/Icon.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 import { useToast } from '../components/Toast.jsx';
 import UsersPage from './UsersPage.jsx';
+import AktiviteSettings from './settings/AktiviteSettings.jsx';
+import DuyuruFormModal from '../modals/DuyuruFormModal.jsx';
 import { db, useCollection, useDoc } from '../lib/db.js';
 import { PARA_BIRIMI_OPTS } from '../lib/constants.js';
 import { localISODate } from '../lib/helpers.js';
@@ -23,7 +25,7 @@ import {
 import { useAuth } from '../lib/auth.jsx';
 
 const SettingsPage = () => {
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const { show } = useToast();
   const [tab, setTab] = useState('otel');
   const isSuper = user?.rol === 'superadmin';
@@ -41,6 +43,12 @@ const SettingsPage = () => {
             {isSuper && (
               <div className={`htl-tab ${tab === 'kullanicilar' ? 'active' : ''}`} onClick={() => setTab('kullanicilar')}>Kullanıcılar</div>
             )}
+            {can('aktivite', 'goruntule') && (
+              <div className={`htl-tab ${tab === 'aktivite' ? 'active' : ''}`} onClick={() => setTab('aktivite')}>Aktivite</div>
+            )}
+            {isSuper && (
+              <div className={`htl-tab ${tab === 'duyurular' ? 'active' : ''}`} onClick={() => setTab('duyurular')}>Duyurular</div>
+            )}
           </div>
         </div>
         <div className="htl-card-body">
@@ -50,6 +58,8 @@ const SettingsPage = () => {
           {tab === 'kategoriler' && <KategoriTab />}
           {tab === 'yedek' && <YedekTab />}
           {tab === 'kullanicilar' && isSuper && <UsersPage embedded />}
+          {tab === 'aktivite' && can('aktivite', 'goruntule') && <AktiviteSettings />}
+          {tab === 'duyurular' && isSuper && <DuyurularTab />}
         </div>
       </div>
     </div>
@@ -430,6 +440,7 @@ const YedekTab = () => {
         'gruplar',
         'kanallar', 'tahsilatlar', 'giderKategorileri', 'giderler',
         'hesaplar', 'hesapHareketleri', 'users',
+        'aktiviteLog', 'duyurular',
       ];
       const out = { exportedAt: new Date().toISOString(), data: {} };
       for (const c of collections) {
@@ -475,6 +486,102 @@ const YedekTab = () => {
       <div className="text-xs px-3 py-2 rounded" style={{ background: 'var(--bone-warm)', color: 'var(--ink-soft)' }}>
         <strong>Not:</strong> Geri yükleme (import) henüz aktif değil. Görev 10 (Firestore Security Rules) sonrası eklenecek.
       </div>
+    </div>
+  );
+};
+
+/* ===== DUYURULAR ===== */
+const ONEM_RENK = { bilgi: '#2563eb', uyari: '#d97706', acil: '#dc2626' };
+const ONEM_LABEL = { bilgi: 'Bilgi', uyari: 'Uyarı', acil: 'Acil' };
+
+const DuyurularTab = () => {
+  const { show } = useToast();
+  const list = useCollection('duyurular');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [confirmDel, setConfirmDel] = useState(null);
+
+  const openNew = () => { setEditing(null); setFormOpen(true); };
+  const openEdit = (d) => { setEditing(d); setFormOpen(true); };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button type="button" className="htl-btn htl-btn-primary" onClick={openNew}>
+          <Icon name="plus" size={14} stroke="white" />
+          <span>Yeni Duyuru</span>
+        </button>
+      </div>
+
+      {list.length === 0 ? (
+        <div className="htl-empty">Henüz duyuru yok.</div>
+      ) : (
+        <table className="htl-table">
+          <thead>
+            <tr>
+              <th>Başlık</th>
+              <th>Önem</th>
+              <th>Hedef</th>
+              <th>Durum</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((d) => (
+              <tr key={d.id}>
+                <td className="font-medium">{d.baslik}</td>
+                <td>
+                  <span style={{ color: ONEM_RENK[d.onem] || 'var(--ink)', fontWeight: 600, fontSize: 12 }}>
+                    {ONEM_LABEL[d.onem] || d.onem}
+                  </span>
+                </td>
+                <td className="text-sm">
+                  {d.hedef === 'hepsi' ? 'Hepsi' : `Seçili (${(d.hedefKullanicilar || []).length} kişi)`}
+                </td>
+                <td>
+                  <button type="button" onClick={async () => {
+                    try { await db.update('duyurular', d.id, { aktif: !d.aktif }); }
+                    catch (e) { show('Hata: ' + e.message, 'error'); }
+                  }}>
+                    <span className={`htl-badge ${d.aktif !== false ? 'htl-badge-success' : 'htl-badge-danger'}`}>
+                      {d.aktif !== false ? 'Aktif' : 'Pasif'}
+                    </span>
+                  </button>
+                </td>
+                <td>
+                  <div className="flex justify-end gap-1">
+                    <button type="button" className="p-1.5 rounded hover:bg-[var(--bone-light)]" onClick={() => openEdit(d)}>
+                      <Icon name="pencil" size={14} stroke="var(--ink-soft)" />
+                    </button>
+                    <button type="button" className="p-1.5 rounded hover:bg-[var(--bone-light)]" onClick={() => setConfirmDel(d)}>
+                      <Icon name="trash-2" size={14} stroke="var(--danger)" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <DuyuruFormModal
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSaved={() => setFormOpen(false)}
+        target={editing}
+      />
+
+      <ConfirmModal
+        open={!!confirmDel}
+        title="Duyuru Sil"
+        msg={`"${confirmDel?.baslik}" duyurusu kalıcı olarak silinecek.`}
+        onConfirm={async () => {
+          try { await db.delete('duyurular', confirmDel.id); show('Duyuru silindi.'); }
+          catch (e) { show('Hata: ' + e.message, 'error'); }
+          setConfirmDel(null);
+        }}
+        onCancel={() => setConfirmDel(null)}
+      />
     </div>
   );
 };

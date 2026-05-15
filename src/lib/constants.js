@@ -7,7 +7,7 @@
 
 /* ===== ORTAK RENK PALETI ===== */
 /* Oda tipleri, gruplar ve diğer kullanıcı-seçimli renk alanları için. */
-export const PRESET_RENKLER = ['#4a6b85', '#a87842', '#4a7c59', '#8e5572', '#5e6b8e', '#c87f3e', '#a64545', '#6b6b6b'];
+export const PRESET_RENKLER = ['#5b8def', '#4caf7c', '#f0a050', '#b894d9', '#7eb0d5', '#e8a87c', '#ef9a9a', '#b5b5b5'];
 
 /* ===== PARA BİRİMLERİ ===== */
 export const PARA_BIRIMI_OPTS = [
@@ -40,7 +40,9 @@ export const HAREKET_TIP_OPTS = [
   { v: 'gider',                l: 'Gider',            yon: '-' },
   { v: 'manuel-giris',         l: 'Manuel Giriş',     yon: '+' },
   { v: 'manuel-cikis',         l: 'Manuel Çıkış',     yon: '-' },
-  { v: 'tahsilat-iptal',       l: 'Tahsilat İptal',   yon: '-' }
+  { v: 'tahsilat-iptal',       l: 'Tahsilat İptal',   yon: '-' },
+  { v: 'duzeltme',             l: 'Düzeltme',         yon: '+' },
+  { v: 'iptal',                l: 'İptal',            yon: '-' },
 ];
 
 export const HAREKET_TIP_INFO = (v) => HAREKET_TIP_OPTS.find(t => t.v === v) || { l: v, yon: '+' };
@@ -104,3 +106,25 @@ export const DEFAULT_HESAPLAR = [
   { ad: 'Banka Hesabı', tip: 'banka', renk: '#4a6b85', aciklama: 'Ana banka hesabı' },
   { ad: 'POS / Kart',   tip: 'pos',   renk: '#a87842', aciklama: 'Kredi kartı POS' }
 ];
+
+/* ===== AKSİYON TİPLERİ — aktivite log UI etiketleri ===== */
+export const AKSIYON_TIPLERI = {
+  'auth.giris':          'Sisteme Giriş',
+  'auth.cikis':          'Sistemden Çıkış',
+  'rezervasyon.olustur': 'Rezervasyon Oluşturma',
+  'rezervasyon.duzenle': 'Rezervasyon Düzenleme',
+  'rezervasyon.sil':     'Rezervasyon Silme',
+  'tahsilat.olustur':    'Tahsilat Oluşturma',
+  'tahsilat.duzenle':    'Tahsilat Düzenleme',
+  'tahsilat.sil':        'Tahsilat Silme',
+  'gider.olustur':       'Gider Oluşturma',
+  'gider.duzenle':       'Gider Düzenleme',
+  'gider.sil':           'Gider Silme',
+  'transfer.olustur':    'Transfer Oluşturma',
+  'hesap.giris':         'Hesap Manuel Giriş',
+  'hesap.cikis':         'Hesap Manuel Çıkış',
+  'rezervasyon.checkin': 'Check-in Yap',
+  'rezervasyon.checkout':'Check-out Yap',
+  'kullanici.olustur':   'Kullanıcı Oluşturma',
+  'hesap.sil':           'Hesap Silme',
+};

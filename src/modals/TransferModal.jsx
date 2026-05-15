@@ -23,6 +23,7 @@ import { fmtMoney, todayISO } from '../lib/helpers.js';
 import { cevirKur } from '../lib/kur.js';
 import { getHesapBakiye } from '../helpers/exchange-utils.js';
 import { yapTransfer, yapDovizTransfer } from '../helpers/transfer.js';
+import { logAksiyon } from '../helpers/aktiviteLog.js';
 
 const TransferModal = ({
   open,
@@ -32,11 +33,13 @@ const TransferModal = ({
   hesapHareketleri = [],
   ana = 'EUR',
   userId = null,
+  giderKategorileri = [],
 }) => {
   const { show } = useToast();
   const [tab, setTab] = useState('normal');
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [komisyonMod, setKomisyonMod] = useState('yuzde');
 
   const aktifHesaplar = hesaplar.filter((h) => h.aktif !== false);
 
@@ -50,8 +53,10 @@ const TransferModal = ({
       girenTutar: '',
       tarih: todayISO(),
       aciklama: '',
+      komisyon: '',
     });
     setTab('normal');
+    setKomisyonMod('yuzde');
   }, [open]);
 
   const kaynak = form.kaynakHesapId ? hesaplar.find((h) => h.id === form.kaynakHesapId) : null;
@@ -68,6 +73,12 @@ const TransferModal = ({
     if (ayniPB && tab === 'doviz') setTab('normal');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.kaynakHesapId, form.hedefHesapId]);
+
+  const isPosToBank = tab === 'normal' && ayniPB && kaynak?.tip === 'pos' && hedef?.tip === 'banka';
+  console.log('isPosToBank debug:', { tab, ayniPB, kaynakTip: kaynak?.tip, hedefTip: hedef?.tip, isPosToBank });
+  const komisyonTutar = komisyonMod === 'yuzde'
+    ? Number(form.tutar || 0) * Number(form.komisyon || 0) / 100
+    : Number(form.komisyon || 0);
 
   const otoKurDoviz = canDoviz && kPB !== hPB ? cevirKur(1, kPB, hPB) : null;
   const efKur =
@@ -92,16 +103,25 @@ const TransferModal = ({
         if (!form.tutar || Number(form.tutar) <= 0) {
           throw new Error("Tutar 0'dan büyük olmalı.");
         }
-        await yapTransfer(
+        const k = isPosToBank ? komisyonTutar : 0;
+        if (k < 0) throw new Error("Komisyon negatif olamaz.");
+        if (k > Number(form.tutar)) throw new Error("Komisyon transfer tutarından büyük olamaz.");
+        const bankaMasraflariKat = giderKategorileri.find((g) => g.ad === 'Banka Masrafları');
+        const result = await yapTransfer(
           {
             kaynakHesapId: form.kaynakHesapId,
             hedefHesapId: form.hedefHesapId,
             tutar: Number(form.tutar),
             tarih: form.tarih,
             aciklama: form.aciklama || '',
+            komisyon: isPosToBank ? k : 0,
+            bankaMasraflariKategoriId: (isPosToBank && k > 0) ? (bankaMasraflariKat?.id || null) : null,
           },
-          userId
+          userId,
+          ana
         );
+        const komisyonNot = isPosToBank && k > 0 ? `, komisyon: ${k.toFixed(2)} ${kPB}` : '';
+        void logAksiyon({ aksiyon: 'transfer.olustur', aciklama: `${kaynak.ad} → ${hedef.ad} transfer yaptı, ${form.tutar} ${kPB}${komisyonNot}`, hedefTip: 'transfer', hedefId: result?.transferId ?? null });
         show('Transfer yapıldı.');
       } else {
         if (!form.cikanTutar || Number(form.cikanTutar) <= 0) {
@@ -110,7 +130,7 @@ const TransferModal = ({
         if (!form.girenTutar || Number(form.girenTutar) <= 0) {
           throw new Error("Giren tutar 0'dan büyük olmalı.");
         }
-        await yapDovizTransfer(
+        const result = await yapDovizTransfer(
           {
             kaynakHesapId: form.kaynakHesapId,
             hedefHesapId: form.hedefHesapId,
@@ -121,6 +141,7 @@ const TransferModal = ({
           },
           userId
         );
+        void logAksiyon({ aksiyon: 'transfer.olustur', aciklama: `${kaynak.ad} → ${hedef.ad} transfer yaptı, ${form.cikanTutar} ${kPB}`, hedefTip: 'transfer', hedefId: result?.transferId ?? null });
         show('Döviz transferi yapıldı.');
       }
       onSaved?.();
@@ -281,6 +302,61 @@ const TransferModal = ({
                 onChange={(e) => setForm({ ...form, tarih: e.target.value })}
               />
             </div>
+            {isPosToBank && (
+              <>
+                <div>
+                  <label className="htl-label">POS Komisyonu</label>
+                  <div className="flex gap-2 items-center">
+                    <div className="flex rounded-md overflow-hidden flex-shrink-0" style={{ border: '1px solid var(--line)' }}>
+                      <button
+                        type="button"
+                        onClick={() => setKomisyonMod('yuzde')}
+                        className="px-2.5 py-1.5 text-xs font-medium transition"
+                        style={{
+                          background: komisyonMod === 'yuzde' ? 'var(--brass)' : 'var(--bone-warm)',
+                          color: komisyonMod === 'yuzde' ? 'white' : 'var(--ink-soft)',
+                        }}
+                      >
+                        %
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setKomisyonMod('tutar')}
+                        className="px-2.5 py-1.5 text-xs font-medium transition"
+                        style={{
+                          background: komisyonMod === 'tutar' ? 'var(--brass)' : 'var(--bone-warm)',
+                          color: komisyonMod === 'tutar' ? 'white' : 'var(--ink-soft)',
+                        }}
+                      >
+                        {kPB}
+                      </button>
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="htl-input"
+                      placeholder={komisyonMod === 'yuzde' ? '1.65' : '5.00'}
+                      value={form.komisyon || ''}
+                      onChange={(e) => setForm({ ...form, komisyon: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-end pb-1">
+                  <div className="text-xs leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
+                    {Number(form.tutar) > 0 ? (
+                      <>
+                        Gönderilecek: <strong>{Number(form.tutar).toFixed(2)} {kPB}</strong>
+                        {' — '}Komisyon: <strong>{komisyonTutar.toFixed(2)} {kPB}{komisyonMod === 'yuzde' && Number(form.komisyon) > 0 ? ` (%${Number(form.komisyon).toFixed(2)})` : ''}</strong>
+                        {' — '}Bankaya geçecek: <strong>{(Number(form.tutar) - komisyonTutar).toFixed(2)} {kPB}</strong>
+                      </>
+                    ) : (
+                      <span>POS komisyon alanı — tutar girince hesaplanır.</span>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
 
