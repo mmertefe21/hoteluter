@@ -1,5 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const root = fileURLToPath(new URL('.', import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -10,6 +14,14 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
+    sourcemap: false,
+    // Multi-page: index.html = pazarlama landing + inline login,
+    // app.html = React PMS (giriş noktası /src/main.jsx)
+    rollupOptions: {
+      input: {
+        main: resolve(root, 'index.html'),
+        app: resolve(root, 'app.html')
+      }
+    }
   }
 });

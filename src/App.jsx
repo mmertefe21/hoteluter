@@ -85,7 +85,17 @@ const Bootstrap = () => {
     );
   }
 
-  if (!user) return <LoginScreen />;
+  // v1.3: Login artık landing (index.html) hero kartında. app.html'e
+  // oturumsuz gelen kullanıcıyı landing'e at. LoginScreen import'u
+  // geriye uyum için korunuyor (additive override — eski kod silinmez).
+  if (!user) {
+    window.location.replace('index.html');
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bone)' }}>
+        <Icon name="loader-2" size={32} stroke="var(--brass)" className="animate-spin" />
+      </div>
+    );
+  }
   return <AppShell />;
 };
 

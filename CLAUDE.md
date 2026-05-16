@@ -3,24 +3,12 @@
 > **Amaç:** Bu dosya, Hoteluter projesinde çalışan herhangi bir Claude (yeni sohbet, yeni session) için **kurucu dokümandır**. İlk okunacak dosyadır. Projenin tarihi, mimarisi, çalışan kuralları ve aktif görevler buradadır.
 
 **Son güncelleme:** 15.05.2026
-**Mevcut sürüm:** **v1.3-dev** (deploy bekliyor)
+**Mevcut sürüm:** **v1.3** (production — commit `3f85421`, push 15.05.2026 15:34)
 
-> ⚠️ **DEPLOY NOTU:** `main.jsx`'teki 3 DEV migration scriptini kaldır (`window.cleanupGorseller`, `window.migrateHesapRenkleri`, `window.migrateOdaTipiSiraNo`). Sonra: `git add -A` → `git commit -m "v1.3: calisma havuzu + doluluk grafik + POS cozme + duyuru sistemi"` → `git push origin main` → Netlify otomatik deploy.
-> **Son eklenen değişiklikler (15.05.2026, son session):**
-> - `CalendarPage.jsx` — Çalışma Havuzu bug fixleri: çoklu rezervasyon ekleme, Kaydet/İptal mantığı (İptal orijinal odalara geri yazar, Kaydet yalnızca havuz boşken çalışır), boş panel tasarımı (minHeight + footer her zaman görünür), havuz highlight renkleri (sarı=geçerli, kırmızı=çakışma), havuzdaki rezervasyonların odası boş sayılması
-> - `CalendarPage.jsx` — Doluluk İstatistik Grafiği ince ayar: dolu oda sayısı gösterimi
-> - `TransferModal.jsx` + `transfer.js` — POS Çözme: komisyon UI yüzde/tutar toggle (pill buton grubu, brass seçili), atomik batch (4 yazma: transfer-çıkış brüt + transfer-giriş net + gider doc + gider hareketi), `komisyonMod` state + `komisyonTutar` computed
-> - `migrations.js` — `migrate_v13_bankaMasraflari`: "Banka Masrafları" gider kategorisi seed
-> - `AccountingPage.jsx` — `giderKategorileri` prop TransferModal'a bağlandı
-> - `DuyuruFormModal.jsx` — yeni dosya: başlık/içerik/önem/hedef (hepsi veya seçili kullanıcılar)/aktif; tarih alanı yok (hardcoded 2000–2099)
-> - `SettingsPage.jsx` — DuyurularTab (superadmin): tablo, aktif toggle, düzenle/sil; YedekTab'a `duyurular` koleksiyonu eklendi
-> - `App.jsx` — login sonrası okunmamış duyuru popup (acilShownRef guard, X yok, "Tamam Anladım" ortada); Sidebar'a `duyuruSayisi` prop
-> - `Sidebar.jsx` — dashboard öğesinde okunmamış duyuru brass badge
-> - `Modal.jsx` — `hideClose` prop eklendi
-> - `DashboardPage.jsx` — duyuru bant kodu tamamen temizlendi
-> - `firestore.rules` — `duyurular` bloğu eklenmeli (Console'dan deploy edilecek)
+> ✅ **DEPLOY DURUMU (15.05.2026):** v1.2 + v1.3 birlikte production'a alındı. 34 dosya, +3547/-430 satır. `main.jsx` DEV scriptleri temizlendi, `firestore.rules`'a `duyurular` bloğu eklendi, `.gitignore`'a `firebase-debug.log*` eklendi.
+> **Manuel adım:** `firestore.rules` Firebase Console > Firestore > Rules > yapıştır > Publish ile production'a alındı (Console standart deploy yöntemi — Firebase CLI kurulu değil).
 
- — Rules + Storage Rules ✅ production'da; frontend kodu ⏳ deploy bekliyor. **Oturum 1:** Aktivite Log 3 faz. **Oturum 2:** 6 UI iyileştirmesi + Check-in/Out + Gider görseli. **Oturum 3:** Kullanıcı kolonu + Audit Trail + Secondary App + Storage prod + Pastel UI. **Oturum 4 (14.05.2026):** chart fix + tek session + hesap sil/pasif + oda tipi sıralama. 18 AKSIYON_TIPLERI. **Oturum 5 (15.05.2026):** Çalışma Havuzu bug fixleri + doluluk grafik ince ayar + POS Çözme (komisyon toggle + atomik batch) + Banka Masrafları migration + Duyuru sistemi (CRUD + popup + badge) + Modal hideClose prop + DashboardPage temizliği.
+**Önceki sürüm özetleri** — **Oturum 1:** Aktivite Log 3 faz. **Oturum 2:** 6 UI iyileştirmesi + Check-in/Out + Gider görseli. **Oturum 3:** Kullanıcı kolonu + Audit Trail + Secondary App + Storage prod + Pastel UI. **Oturum 4 (14.05.2026):** chart fix + tek session + hesap sil/pasif + oda tipi sıralama. 18 AKSIYON_TIPLERI. **Oturum 5 (15.05.2026):** Çalışma Havuzu bug fixleri + doluluk grafik ince ayar + POS Çözme (komisyon toggle + atomik batch) + Banka Masrafları migration + Duyuru sistemi (CRUD + popup + badge) + Modal hideClose prop + DashboardPage temizliği.
 **Tek-dosya MVP final:** v0.7 (`docs/backup/hoteluter-v0.7-final.html`, ~6500 satır, referans için saklı)
 
 ---
@@ -51,7 +39,7 @@
 | **v1.0** | 06.05.2026 | Vite + React + Firebase + Netlify production deploy |
 | **v1.1** | 08.05.2026 | Tarih bug fix (`localISODate`) + giderler menü kaldır + istatistik ay yıl bazlı + hesap silme yetkisi `hesap-yonet` flag + yedek dosya adı UTC fix + **raporlar 3 sütun** (Ciro/Tahsilat/Gider, hover tooltip, segment-aware `helpers/ciro.js`) + **grup rezervasyon** (`gruplar` koleksiyonu, 2 adımlı modal, takvim renk şeridi + isim formatı, hibrit bakiye, `PRESET_RENKLER`) |
 | **v1.2** | 14.05.2026 | **Aktivite Log** 3 faz + 18 AKSIYON_TIPLERI. **6 UI iyileştirmesi**. **Check-in/Out**. **Gider görseli** (Storage prod). Kullanıcı kolonu + Audit Trail + Secondary Firebase App. Tek session güvenliği + Hesap koşullu silme + Takvim oda tipi sıralama. |
-| **v1.3-dev** | **Mevcut** (15.05.2026, deploy bekliyor) | **Çalışma Havuzu** bug fixleri (İptal geri yazar, Kaydet boşken çalışır, highlight renkleri). **POS Çözme** (komisyon yüzde/tutar toggle, atomik 4-yazma batch, Banka Masrafları migration). **Duyuru sistemi** (DuyuruFormModal yeni, SettingsPage DuyurularTab, App.jsx popup, Sidebar badge, Modal hideClose prop). |
+| **v1.3** | 15.05.2026 | **Mevcut** — production. **Çalışma Havuzu** bug fixleri (İptal geri yazar, Kaydet boşken çalışır, highlight renkleri). **POS Çözme** (komisyon yüzde/tutar toggle, atomik 4-yazma batch, Banka Masrafları migration). **Duyuru sistemi** (DuyuruFormModal yeni, SettingsPage DuyurularTab, App.jsx popup, Sidebar badge, Modal hideClose prop). |
 
 Detaylı sürüm dokümanları: `docs/CLAUDE_HOTELUTER_v0.1.md` → `v0.7.md`
 Geçiş planı: `docs/HOTELUTER_GECIS_PLANI.md`
@@ -168,7 +156,7 @@ hoteluter/
 
 ## 🚀 Şu An Nerede
 
-**v1.2-dev (12.05.2026) — DEPLOY BEKLİYOR:** Tüm feature'lar tamamlandı (~30 dosya, 3 yeni). Firestore Rules ✅ production'da. Frontend kodu ⏳ push/deploy edilmedi.
+**v1.3 (15.05.2026) — PRODUCTION:** v1.2 + v1.3 birlikte deploy edildi (commit `3f85421`, 34 dosya, +3547/-430). Frontend ✅ Netlify'da canlı. Firestore Rules ✅ production'da (duyurular bloğu dahil). Storage Rules ✅ production'da.
 
 **Oturum 1 (11.05.2026) — Aktivite Log:**
 - **Faz 1 (Altyapı):** `src/helpers/aktiviteLog.js` yeni dosya (logAksiyon + logGiris, fire-and-forget, try/catch). `AKSIYON_TIPLERI` 14 tip `constants.js`'e. `aktivite` modülü `permissions.js`'e. `firestore.rules`'a `aktiviteLog` + `hasYetki()`.
@@ -231,11 +219,12 @@ v1.0 production altyapısı v1.1'e olduğu gibi miras kaldı:
 - 05.05.2026 20:55 → 21:55 — Faz 1+2: Görev 1-7 (5 commit)
 - 06.05.2026 14:14 → 17:04 — Faz 3+4: Görev 9-11 + 2 bug fix + v1.0 release (6 commit)
 - 08.05.2026 — v1.1 release (sahada ilk hafta düzeltmeleri)
+- 15.05.2026 15:34 — v1.2 + v1.3 release (commit `3f85421`, 34 dosya): Aktivite Log + Check-in/Out + Storage prod + Audit Trail + Çalışma Havuzu + POS Çözme + Duyuru sistemi
 
-### Sıradaki — v1.3+ Yol Haritası
+### Sıradaki — v1.4+ Yol Haritası
 
-- **v1.3:** **Cloud Functions admin SDK kurulumu** — `deleteUser` callable. Bir bilinen sınırlamayı çözer: Firestore'dan silinen user'ın Auth kaydının manuel temizlenmesi (v1.1'de keşfedildi). Frankfurter API CORS proxy de aynı Functions kurulumuna entegre edilebilir. (Kullanıcı oluşturma oturum-değişimi v1.2 Oturum 3'te Secondary App ile çözüldü.)
-- **v1.4+:** Aktivite Log detay navigasyonu (`hedefId` ile ilgili kayda atlama), log export, mobile drag-to-move (touch event handlers), code splitting (1.55MB → ~200KB initial), combobox klavye navigasyonu, TahsilatModal rez seçimi combobox'a çevirme.
+- **v1.4 (planlı):** **Cloud Functions admin SDK kurulumu** — `deleteUser` callable. Bir bilinen sınırlamayı çözer: Firestore'dan silinen user'ın Auth kaydının manuel temizlenmesi (v1.1'de keşfedildi). Frankfurter API CORS proxy de aynı Functions kurulumuna entegre edilebilir. (Kullanıcı oluşturma oturum-değişimi v1.2 Oturum 3'te Secondary App ile çözüldü.)
+- **v1.5+:** Aktivite Log detay navigasyonu (`hedefId` ile ilgili kayda atlama), log export, mobile drag-to-move (touch event handlers), code splitting (1.55MB → ~200KB initial), combobox klavye navigasyonu, TahsilatModal rez seçimi combobox'a çevirme.
 - **v2.0+:** Booking.com / Airbnb channel manager entegrasyonu, server-side incelikli yetki (modül bazlı r/w rules).
 
 Yeni Claude session'lar şu konularda yardım edebilir:
@@ -248,19 +237,17 @@ Yeni Claude session'lar şu konularda yardım edebilir:
 
 ### Bilinen Sınırlamalar (özet — detay v1.1 dokümanında)
 
-- ⏳ **v1.3-dev kodu deploy edilmedi**: Rules production'da, frontend kodu henüz push edilmedi. `firestore.rules`'a `duyurular` bloğu da eklenmeli (Console'dan)
-- 🔴 **Kullanıcı silme bug** (v1.1'de keşfedildi): Firestore'dan silinen user'ın Auth kaydı kalır → aynı email ile yeni user yaratılamaz. v1.3'e taşındı (Cloud Functions). Geçici workaround: Firebase Console → Auth → Users'tan manuel sil
+- 🔴 **Kullanıcı silme bug** (v1.1'de keşfedildi): Firestore'dan silinen user'ın Auth kaydı kalır → aynı email ile yeni user yaratılamaz. v1.4'e taşındı (Cloud Functions). Geçici workaround: Firebase Console → Auth → Users'tan manuel sil
 - Frankfurter API CORS (production'da çalışmıyor)
 - Modül bazlı incelikli yetki sadece client-side
 - Mobile drag-to-move yok
-- Yedekleme import yok (sadece export, `gruplar` da dahil v1.1+, `aktiviteLog` hariç)
+- Yedekleme import yok (sadece export, `gruplar` v1.1+ ve `duyurular` v1.3+ dahil, `aktiviteLog` hariç)
 - Bundle code splitting yok
 - Multi-property desteği yok (tek otel varsayımı)
 - Update kuralı `modulYetkileri`'ni serbest bırakıyor (bilinen takas)
 - Combobox klavye navigasyonu yok (sadece mouse)
 - TahsilatModal rez seçimi basit `<select>` (combobox değil)
-- **DEV migration scriptleri main.jsx'te** (v1.2-dev): `window.cleanupGorseller` + `window.migrateHesapRenkleri` + `window.migrateOdaTipiSiraNo` (3 script) DEV bloğunda kalıyor — production deploy ÖNCESİ kaldırılacak
-- **HesapFormModal renk butonları doygun**: Modal'da doygun renk, kart render'da `hexToRgba(0.5)` pastel — tutarsızlık bilinçli tercih (v1.3+ değerlendirilebilir)
+- **HesapFormModal renk butonları doygun**: Modal'da doygun renk, kart render'da `hexToRgba(0.5)` pastel — tutarsızlık bilinçli tercih (v1.4+ değerlendirilebilir)
 
 ### Modal envanteri (`src/modals/`)
 - Mali: TahsilatModal, GiderModal, TransferModal (v1.2: C7; **v1.3: komisyon yüzde/tutar toggle + komisyonMod state + komisyonTutar computed**), HesapFormModal (koşullu sil/pasif), HesapDetayModal (Kullanıcı kolonu)
@@ -300,9 +287,9 @@ Detaylı v1.2 dokümanı: `docs/CLAUDE_HOTELUTER_v1.2.md`
 - `docs/CLAUDE_HOTELUTER_v*.md` — her sürümün detaylı tarihi
 - `docs/HOTELUTER_GECIS_PLANI.md` — 12 görevlik yol haritası
 
-**Yeni Claude session başlarken (v1.3 sonrası):**
+**Yeni Claude session başlarken (v1.3 production sonrası):**
 1. Bu dosyayı (`CLAUDE.md`) oku — proje özeti, mimari kuralları, mevcut sürüm
 2. **`docs/CLAUDE_HOTELUTER_v1.2.md`** oku — v1.2 fotoğrafı (Aktivite Log + Check-in/Out + Storage + session security + oda tipi sıralama)
 3. **`docs/CLAUDE_HOTELUTER_v1.1.md`** — önceki sürüm (sahada ilk hafta düzeltmeleri + grup rezervasyon + yıllık ciro)
 4. **`docs/HOTELUTER_GECIS_PLANI.md`** — kapanmış geçiş planı (mimari kuralları için referans)
-5. Mert'le konuşmaya başla — v1.3 deploy onayı (`firestore.rules` duyurular bloğu + 3 DEV script temizliği), sahada kullanım bug raporu, veya v1.4 (Cloud Functions admin SDK) hedefi
+5. Mert'le konuşmaya başla — sahada kullanım bug raporu (v1.2 + v1.3 yeni canlıda), veya v1.4 (Cloud Functions admin SDK — kullanıcı silme Auth temizliği + Frankfurter CORS proxy) hedefi

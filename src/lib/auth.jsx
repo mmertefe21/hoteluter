@@ -153,6 +153,8 @@ export const AuthProvider = ({ children }) => {
     if (currentUser) {
       updateDoc(doc(firestore, 'users', currentUser.uid), { aktifSessionId: null }).catch(() => {});
     }
+    // d) v1.3: Landing'e dön (App.jsx guard da yakalar; bu anında redirect)
+    window.location.replace('index.html');
   };
 
   /**

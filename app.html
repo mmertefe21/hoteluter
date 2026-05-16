@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Hoteluter — Otel Yönetim Sistemi" />
+    <title>Hoteluter — Otel Yönetim Sistemi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=DM+Sans:opsz,wght@9..40,300..700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root">
+      <div id="initial-loader" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f7f4ec;font-family:'DM Sans',system-ui,sans-serif;color:#2c4a3a;flex-direction:column;gap:16px;">
+        <div style="width:48px;height:48px;border:3px solid #d4c8a8;border-top-color:#a87842;border-radius:50%;animation:htlspin 0.8s linear infinite;"></div>
+        <div style="font-family:'Fraunces',Georgia,serif;font-style:italic;font-size:18px;color:#a87842;">Hoteluter yükleniyor...</div>
+      </div>
+    </div>
+    <style>
+      @keyframes htlspin { to { transform: rotate(360deg); } }
+    </style>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
