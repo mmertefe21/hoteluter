@@ -2669,8 +2669,8 @@ footer {
 .dropdown-foot a:hover { color: var(--brass-deep, #8a5f30) !important; }
 .dropdown-foot a strong { display: inline; font-family: inherit; font-size: inherit; color: inherit; }
 
-/* Modül kartlarında scroll anchor offset (sticky header altında kalmasın) */
-.module[id^="mod-"] { scroll-margin-top: 110px; }
+/* Preview section'larında scroll anchor offset (sticky header altında kalmasın) */
+[id^="preview-"], #ai { scroll-margin-top: 110px; }
 
 /* Mobil: dropdown gizle, "Modüller" doğrudan modules.html'e götürsün */
 @media (max-width: 880px) {
@@ -2719,11 +2719,11 @@ footer {
     <nav class="mainnav">
       <div class="has-dropdown"><a href="modules.html" class="has-arrow">Modüller</a>
       <div class="dropdown-menu" role="menu" aria-label="Modüller">
-        <a href="index.html#mod-rezervasyon" role="menuitem"><strong>Rezervasyon Takvimi</strong><span>Sürükle-bırak, çakışma uyarısı</span></a>
-        <a href="index.html#mod-muhasebe" role="menuitem"><strong>Ön Muhasebe</strong><span>Folio, e-Arşiv, cari hesap</span></a>
-        <a href="index.html#mod-raporlar" role="menuitem"><strong>Raporlar &amp; Analitik</strong><span>ADR, RevPAR, doluluk</span></a>
-        <a href="index.html#mod-crm" role="menuitem"><strong>Misafir CRM</strong><span>Tercih, segmentasyon, KVKK</span></a>
-        <a href="index.html#mod-ai" role="menuitem"><strong>Hoteluter AI</strong><span>Doluluk tahmini, dinamik fiyat</span></a>
+        <a href="index.html#preview-rezervasyon" role="menuitem"><strong>Rezervasyon Takvimi</strong><span>Sürükle-bırak, çakışma uyarısı</span></a>
+        <a href="index.html#preview-muhasebe" role="menuitem"><strong>Ön Muhasebe</strong><span>Folio, e-Arşiv, cari hesap</span></a>
+        <a href="index.html#preview-raporlar" role="menuitem"><strong>Raporlar &amp; Analitik</strong><span>ADR, RevPAR, doluluk</span></a>
+        <a href="index.html#preview-crm" role="menuitem"><strong>Misafir CRM</strong><span>Tercih, segmentasyon, KVKK</span></a>
+        <a href="index.html#ai" role="menuitem"><strong>Hoteluter AI</strong><span>Doluluk tahmini, dinamik fiyat</span></a>
         <div class="dropdown-foot"><a href="modules.html">Tüm modülleri keşfet →</a></div>
       </div></div>
       <a href="pricing.html">Fiyatlandırma</a>
@@ -2869,7 +2869,7 @@ footer {
 </section>
 
 <!-- ── PRODUCT PREVIEW: RESERVATION CALENDAR ─────────────────────── -->
-<section style="padding-top: 0;">
+<section id="preview-rezervasyon" style="padding-top: 0;">
   <div class="container">
     <div class="product-preview">
       <div class="preview-frame">
@@ -3020,7 +3020,7 @@ footer {
     </div>
 
     <div class="modules">
-      <div class="module" id="mod-rezervasyon">
+      <div class="module">
         <div class="module-ico">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
         </div>
@@ -3033,7 +3033,7 @@ footer {
         </ul>
       </div>
 
-      <div class="module" id="mod-muhasebe">
+      <div class="module">
         <div class="module-ico">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="13" rx="2"></rect><path d="M2 11h20M6 16h3"></path></svg>
         </div>
@@ -3046,7 +3046,7 @@ footer {
         </ul>
       </div>
 
-      <div class="module" id="mod-raporlar">
+      <div class="module">
         <div class="module-ico">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3v18h18"></path><path d="M7 14l4-4 4 4 5-7"></path></svg>
         </div>
@@ -3059,7 +3059,7 @@ footer {
         </ul>
       </div>
 
-      <div class="module" id="mod-crm">
+      <div class="module">
         <div class="module-ico">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"></path></svg>
         </div>
@@ -3072,7 +3072,7 @@ footer {
         </ul>
       </div>
 
-      <div class="module" id="mod-ai">
+      <div class="module">
         <div class="module-ico">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"></path><circle cx="12" cy="12" r="5"></circle></svg>
         </div>
@@ -3089,7 +3089,7 @@ footer {
 </section>
 
 <!-- ── PREVIEW: FOLIO / ÖN MUHASEBE ─────────────────────────────── -->
-<section class="tight" style="padding-top: 0;">
+<section id="preview-muhasebe" class="tight" style="padding-top: 0;">
   <div class="container">
     <div class="section-mini-head">
       <span class="section-eyebrow">Ön muhasebe</span>
@@ -3439,7 +3439,7 @@ footer {
 </section>
 
 <!-- ── PREVIEW: NIGHT AUDIT / RAPORLAR ──────────────────────────── -->
-<section class="tight" style="padding-top: 0;">
+<section id="preview-raporlar" class="tight" style="padding-top: 0;">
   <div class="container">
     <div class="section-mini-head">
       <span class="section-eyebrow">Gece raporu</span>
@@ -3561,7 +3561,7 @@ footer {
 </section>
 
 <!-- ── PREVIEW: MİSAFİR CRM ─────────────────────────────────────── -->
-<section class="tight" style="padding-top: 0;">
+<section id="preview-crm" class="tight" style="padding-top: 0;">
   <div class="container">
     <div class="section-mini-head">
       <span class="section-eyebrow">Misafir CRM</span>

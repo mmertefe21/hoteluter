@@ -2744,8 +2744,8 @@ footer {
 .dropdown-foot a:hover { color: var(--brass-deep, #8a5f30) !important; }
 .dropdown-foot a strong { display: inline; font-family: inherit; font-size: inherit; color: inherit; }
 
-/* Modül kartlarında scroll anchor offset (sticky header altında kalmasın) */
-.module[id^="mod-"] { scroll-margin-top: 110px; }
+/* Preview section'larında scroll anchor offset (sticky header altında kalmasın) */
+[id^="preview-"], #ai { scroll-margin-top: 110px; }
 
 /* Mobil: dropdown gizle, "Modüller" doğrudan modules.html'e götürsün */
 @media (max-width: 880px) {
@@ -2787,11 +2787,11 @@ footer {
     <nav class="mainnav">
       <div class="has-dropdown"><a href="modules.html" class="has-arrow">Modüller</a>
       <div class="dropdown-menu" role="menu" aria-label="Modüller">
-        <a href="index.html#mod-rezervasyon" role="menuitem"><strong>Rezervasyon Takvimi</strong><span>Sürükle-bırak, çakışma uyarısı</span></a>
-        <a href="index.html#mod-muhasebe" role="menuitem"><strong>Ön Muhasebe</strong><span>Folio, e-Arşiv, cari hesap</span></a>
-        <a href="index.html#mod-raporlar" role="menuitem"><strong>Raporlar &amp; Analitik</strong><span>ADR, RevPAR, doluluk</span></a>
-        <a href="index.html#mod-crm" role="menuitem"><strong>Misafir CRM</strong><span>Tercih, segmentasyon, KVKK</span></a>
-        <a href="index.html#mod-ai" role="menuitem"><strong>Hoteluter AI</strong><span>Doluluk tahmini, dinamik fiyat</span></a>
+        <a href="index.html#preview-rezervasyon" role="menuitem"><strong>Rezervasyon Takvimi</strong><span>Sürükle-bırak, çakışma uyarısı</span></a>
+        <a href="index.html#preview-muhasebe" role="menuitem"><strong>Ön Muhasebe</strong><span>Folio, e-Arşiv, cari hesap</span></a>
+        <a href="index.html#preview-raporlar" role="menuitem"><strong>Raporlar &amp; Analitik</strong><span>ADR, RevPAR, doluluk</span></a>
+        <a href="index.html#preview-crm" role="menuitem"><strong>Misafir CRM</strong><span>Tercih, segmentasyon, KVKK</span></a>
+        <a href="index.html#ai" role="menuitem"><strong>Hoteluter AI</strong><span>Doluluk tahmini, dinamik fiyat</span></a>
         <div class="dropdown-foot"><a href="modules.html">Tüm modülleri keşfet →</a></div>
       </div></div>
       <a href="pricing.html" class="active">Fiyatlandırma</a>
