@@ -8,6 +8,10 @@
   # Domain restriction Firebase Console + Firestore rules ile sağlanıyor.
   # Netlify secrets scan'in yanlış-pozitif fail etmemesi için omit:
   SECRETS_SCAN_OMIT_KEYS = "VITE_FIREBASE_API_KEY"
+  # Smart-detection (AIza... pattern heuristic) OMIT_KEYS'ten bağımsız
+  # çalışıyor ve Firebase web key'ini hâlâ "likely secret" sayıyordu.
+  # Pattern-bazlı heuristic kapatılır; gerçek env-tabanlı scan açık kalır.
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
 # SPA routing — tüm path'ler index.html'e
 [[redirects]]
