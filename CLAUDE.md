@@ -2,11 +2,12 @@
 
 > **Amaç:** Bu dosya, Hoteluter projesinde çalışan herhangi bir Claude (yeni sohbet, yeni session) için **kurucu dokümandır**. İlk okunacak dosyadır. Projenin tarihi, mimarisi, çalışan kuralları ve aktif görevler buradadır.
 
-**Son güncelleme:** 15.05.2026
-**Mevcut sürüm:** **v1.3** (production — commit `3f85421`, push 15.05.2026 15:34)
+**Son güncelleme:** 16.05.2026
+**Mevcut sürüm:** **v1.7** (production — commit `4cafac2`, hoteluter.com canlı 16.05.2026)
 
-> ✅ **DEPLOY DURUMU (15.05.2026):** v1.2 + v1.3 birlikte production'a alındı. 34 dosya, +3547/-430 satır. `main.jsx` DEV scriptleri temizlendi, `firestore.rules`'a `duyurular` bloğu eklendi, `.gitignore`'a `firebase-debug.log*` eklendi.
-> **Manuel adım:** `firestore.rules` Firebase Console > Firestore > Rules > yapıştır > Publish ile production'a alındı (Console standart deploy yöntemi — Firebase CLI kurulu değil).
+> ✅ **DEPLOY DURUMU (16.05.2026):** **Pazarlama landing + login zinciri canlıya çıktı.** v1.3→v1.7 (7 commit) production'da. `hoteluter.com` artık pazarlama sitesi (landing + hero inline login + 4 alt sayfa), PMS `app.html`'e taşındı (Vite MPA). Asset doğrulandı: `main-Ciuixp5r.js` (landing) + `app-*.js` (React PMS).
+> ⚠️ **Kök neden notu:** v1.3–v1.5.2 ~3 saat yayına çıkamadı — **Netlify Secrets Scanning** Firebase web API key'ini sızıntı sanıp build'i fail ediyordu. v1.6 (`SECRETS_SCAN_OMIT_KEYS`) yetmedi, v1.7 (`SECRETS_SCAN_SMART_DETECTION_ENABLED=false`) çözdü. Detay: aşağıdaki "Landing/Login Zinciri" bölümü.
+> **PMS Firestore Rules manuel adımı (v1.2+v1.3, hâlâ geçerli):** `firestore.rules` Firebase Console > Firestore > Rules > yapıştır > Publish (Firebase CLI kurulu değil).
 
 **Önceki sürüm özetleri** — **Oturum 1:** Aktivite Log 3 faz. **Oturum 2:** 6 UI iyileştirmesi + Check-in/Out + Gider görseli. **Oturum 3:** Kullanıcı kolonu + Audit Trail + Secondary App + Storage prod + Pastel UI. **Oturum 4 (14.05.2026):** chart fix + tek session + hesap sil/pasif + oda tipi sıralama. 18 AKSIYON_TIPLERI. **Oturum 5 (15.05.2026):** Çalışma Havuzu bug fixleri + doluluk grafik ince ayar + POS Çözme (komisyon toggle + atomik batch) + Banka Masrafları migration + Duyuru sistemi (CRUD + popup + badge) + Modal hideClose prop + DashboardPage temizliği.
 **Tek-dosya MVP final:** v0.7 (`docs/backup/hoteluter-v0.7-final.html`, ~6500 satır, referans için saklı)
@@ -39,7 +40,11 @@
 | **v1.0** | 06.05.2026 | Vite + React + Firebase + Netlify production deploy |
 | **v1.1** | 08.05.2026 | Tarih bug fix (`localISODate`) + giderler menü kaldır + istatistik ay yıl bazlı + hesap silme yetkisi `hesap-yonet` flag + yedek dosya adı UTC fix + **raporlar 3 sütun** (Ciro/Tahsilat/Gider, hover tooltip, segment-aware `helpers/ciro.js`) + **grup rezervasyon** (`gruplar` koleksiyonu, 2 adımlı modal, takvim renk şeridi + isim formatı, hibrit bakiye, `PRESET_RENKLER`) |
 | **v1.2** | 14.05.2026 | **Aktivite Log** 3 faz + 18 AKSIYON_TIPLERI. **6 UI iyileştirmesi**. **Check-in/Out**. **Gider görseli** (Storage prod). Kullanıcı kolonu + Audit Trail + Secondary Firebase App. Tek session güvenliği + Hesap koşullu silme + Takvim oda tipi sıralama. |
-| **v1.3** | 15.05.2026 | **Mevcut** — production. **Çalışma Havuzu** bug fixleri (İptal geri yazar, Kaydet boşken çalışır, highlight renkleri). **POS Çözme** (komisyon yüzde/tutar toggle, atomik 4-yazma batch, Banka Masrafları migration). **Duyuru sistemi** (DuyuruFormModal yeni, SettingsPage DuyurularTab, App.jsx popup, Sidebar badge, Modal hideClose prop). |
+| **v1.3** | 15.05.2026 | PMS son özellikleri: **Çalışma Havuzu** bug fixleri (İptal geri yazar, Kaydet boşken çalışır, highlight renkleri). **POS Çözme** (komisyon yüzde/tutar toggle, atomik 4-yazma batch, Banka Masrafları migration). **Duyuru sistemi** (DuyuruFormModal yeni, SettingsPage DuyurularTab, App.jsx popup, Sidebar badge, Modal hideClose prop). + **Landing/Login split** (`3f85421` PMS özellikleri; `9d37e33` landing — bkz. aşağı) |
+| **v1.4** | 16.05.2026 | `af4fa66` — 4 alt pazarlama sayfası (modules/pricing/about/contact). Vite `rollupOptions.input` → 6 entry. "Müşteriler" nav linki kaldırıldı |
+| **v1.5** | 16.05.2026 | `b255dc1`/`ecc75a3`/`2fe55ff` — "Modüller" CSS-only hover dropdown (focus-within klavye, 12px bridge, ≤880px gizli); v1.5.1 hedefler ana sayfa preview bölümlerine (`#preview-*`/`#ai`, scroll-margin 110px); v1.5.2 footer linki kaldırıldı (`.dropdown-foot` dead class korundu) |
+| **v1.6** | 16.05.2026 | `475913c` — `netlify.toml` `SECRETS_SCAN_OMIT_KEYS="VITE_FIREBASE_API_KEY"` (tek başına yetmedi, smart-detection bağımsız) |
+| **v1.7** | 16.05.2026 | **Mevcut** — `4cafac2` — `SECRETS_SCAN_SMART_DETECTION_ENABLED="false"` (AIza... pattern heuristic kapatıldı, deploy nihayet geçti — **canlı**) |
 
 Detaylı sürüm dokümanları: `docs/CLAUDE_HOTELUTER_v0.1.md` → `v0.7.md`
 Geçiş planı: `docs/HOTELUTER_GECIS_PLANI.md`
@@ -158,6 +163,26 @@ hoteluter/
 
 **v1.3 (15.05.2026) — PRODUCTION:** v1.2 + v1.3 birlikte deploy edildi (commit `3f85421`, 34 dosya, +3547/-430). Frontend ✅ Netlify'da canlı. Firestore Rules ✅ production'da (duyurular bloğu dahil). Storage Rules ✅ production'da.
 
+### 🌐 Landing/Login Zinciri (v1.3→v1.7, 16.05.2026) — CANLI
+
+**hoteluter.com artık pazarlama sitesi; PMS `app.html`'de.** Vite tek-sayfadan **MPA**'ya geçti. `src/` (React PMS) **değişmedi** — sadece giriş noktası taşındı.
+
+- **v1.3** (`9d37e33`) — Landing + hero inline login (Firebase Auth **modular SDK v10.12.0**, gstatic CDN). PMS `index.html` → `app.html` (kopya, `/src/main.jsx` entry). Vite MPA: `index.html`=landing, `app.html`=React PMS. Auth guard: oturum yoksa `App.jsx` + `auth.jsx` logout → `index.html`'e `window.location.replace`.
+- **v1.4** (`af4fa66`) — 4 alt sayfa: `modules.html` `pricing.html` `about.html` `contact.html`. `vite.config.js` → `rollupOptions.input` 6 entry. "Müşteriler" nav linki kaldırıldı.
+- **v1.5 / .1 / .2** (`b255dc1` / `ecc75a3` / `2fe55ff`) — "Modüller" CSS-only hover dropdown (`:focus-within` klavye, 12px görünmez bridge, ≤880px mobilde gizli). Hedefler ana sayfa preview bölümlerine: `#preview-rezervasyon/muhasebe/raporlar/crm` + `#ai`, `[id^="preview-"], #ai { scroll-margin-top:110px }`. Footer "Tüm modülleri keşfet →" linki kaldırıldı (`.dropdown-foot` dead class olarak korundu).
+- **v1.6** (`475913c`) — `netlify.toml` `SECRETS_SCAN_OMIT_KEYS="VITE_FIREBASE_API_KEY"`.
+- **v1.7** (`4cafac2`) — `SECRETS_SCAN_SMART_DETECTION_ENABLED="false"` → **deploy nihayet geçti**.
+
+**🔑 Mimari notlar (ileride mutlaka hatırla):**
+1. **Firebase web API key public-by-design** — frontend SDK gerektiriyor, gizlenemez. Gerçek güvenlik 3 katman, hepsi v1.3'ten beri ayarlı: (1) Firebase Console Authorized Domains, (2) Firestore Security Rules, (3) Google Cloud API Restrictions.
+2. **Netlify Secrets Scanning'in İKİ bağımsız katmanı var:** (a) env-adı eşleşmesi → `SECRETS_SCAN_OMIT_KEYS` atlar; (b) pattern heuristic (`AIza...` formatını env adından **bağımsız** yakalar) → `SECRETS_SCAN_SMART_DETECTION_ENABLED` kontrol eder. **Firebase/Google API key kullanan Vite projeleri için İKİSİ de gerekli** (bu zincirde 3 saatlik blocker'ın kök nedeni — sadece (a) yetmedi).
+3. **Vite MPA:** `vite.config.js` `rollupOptions.input` 6 entry (main, app, modules, pricing, about, contact). Build → `dist/index.html`=landing, `dist/app.html`=React PMS, diğer 4 statik. Landing inline `<script type="module">` Vite tarafından `assets/main-*.js`'e bundle'lanır (Firebase config + auth logic içinde, gstatic external korunur).
+4. **Lokal yedek:** `index.html.v1.3.bak` (`.gitignore`'da `*.bak`, diskte — Vite servis etmez).
+
+**Deploy zinciri:** GitHub `mmertefe21/hoteluter` `main` → Netlify auto-deploy → `hoteluter.com`. Build `npm run build`, publish `dist/`, Node 20. `netlify.toml` SPA catch-all `/* → /index.html 200` (gerçek dosyalar — `app.html` vb. — önce sunulur; bilinmeyen path → landing, pazarlama için doğru).
+
+**Bekleyen:** Mert'in tarayıcı testi geçti; "diğer eklemeler/düzeltmeler" listesi sıraya alınacak (sonraki oturum açıldığında).
+
 **Oturum 1 (11.05.2026) — Aktivite Log:**
 - **Faz 1 (Altyapı):** `src/helpers/aktiviteLog.js` yeni dosya (logAksiyon + logGiris, fire-and-forget, try/catch). `AKSIYON_TIPLERI` 14 tip `constants.js`'e. `aktivite` modülü `permissions.js`'e. `firestore.rules`'a `aktiviteLog` + `hasYetki()`.
 - **Faz 2 (Enjeksiyon):** 17 çağrı noktası: auth.giris/cikis + rezervasyon.olustur/duzenle/sil + tahsilat(C1-C3, 3 yer) + gider(C4-C6, 2 yer) + transfer(C7) + hesap.giris/cikis(C8-C9). SE-3 race condition fix (`confirmTahDel` capture pattern).
@@ -221,9 +246,12 @@ v1.0 production altyapısı v1.1'e olduğu gibi miras kaldı:
 - 08.05.2026 — v1.1 release (sahada ilk hafta düzeltmeleri)
 - 15.05.2026 15:34 — v1.2 + v1.3 release (commit `3f85421`, 34 dosya): Aktivite Log + Check-in/Out + Storage prod + Audit Trail + Çalışma Havuzu + POS Çözme + Duyuru sistemi
 
-### Sıradaki — v1.4+ Yol Haritası
+### Sıradaki — v1.8+ Yol Haritası
 
-- **v1.4 (planlı):** **Cloud Functions admin SDK kurulumu** — `deleteUser` callable. Bir bilinen sınırlamayı çözer: Firestore'dan silinen user'ın Auth kaydının manuel temizlenmesi (v1.1'de keşfedildi). Frankfurter API CORS proxy de aynı Functions kurulumuna entegre edilebilir. (Kullanıcı oluşturma oturum-değişimi v1.2 Oturum 3'te Secondary App ile çözüldü.)
+> ⚠️ **Sürüm numarası notu:** Eski roadmap "v1.4 (planlı) = Cloud Functions" diyordu. **v1.3–v1.7 pazarlama landing/login zinciri tarafından kullanıldı** (16.05.2026, canlı). Cloud Functions işi **v1.8'e kaydı**.
+
+- **v1.8 (sıradaki — Mert revizyon listesi):** Tarayıcı testi geçtikten sonra biriken "diğer eklemeler/düzeltmeler" — landing/PMS ufak revizyonlar (oturum açıldığında Mert listeyi verecek).
+- **v1.8+ (devralınan, PMS tarafı `app.html`):** **Cloud Functions admin SDK** — `deleteUser` callable. Firestore'dan silinen user'ın Auth kaydının manuel temizlenmesini çözer (v1.1'de keşfedildi). Frankfurter API CORS proxy de aynı Functions kurulumuna entegre edilebilir. (Kullanıcı oluşturma oturum-değişimi v1.2 Oturum 3'te Secondary App ile çözüldü.)
 - **v1.5+:** Aktivite Log detay navigasyonu (`hedefId` ile ilgili kayda atlama), log export, mobile drag-to-move (touch event handlers), code splitting (1.55MB → ~200KB initial), combobox klavye navigasyonu, TahsilatModal rez seçimi combobox'a çevirme.
 - **v2.0+:** Booking.com / Airbnb channel manager entegrasyonu, server-side incelikli yetki (modül bazlı r/w rules).
 
