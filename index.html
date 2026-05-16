@@ -2588,6 +2588,7 @@ footer {
 
 
 
+
 <!-- ── TOP STRIP ─────────────────────────────────────────────────── -->
 <div class="topstrip">
   <div class="container topstrip-inner">
@@ -2623,7 +2624,6 @@ footer {
     <nav class="mainnav">
       <a href="modules.html" class="has-arrow">Modüller</a>
       <a href="pricing.html">Fiyatlandırma</a>
-      <a href="customers.html">Müşteriler</a>
       <a href="about.html">Hakkımızda</a>
       <a href="contact.html">İletişim</a>
     </nav>
@@ -2633,6 +2633,7 @@ footer {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         Demo izle
       </a>
+      <a href="#login" class="btn">Giriş yap</a>
       <a href="#deneme" class="btn primary">14 gün ücretsiz dene
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
       </a>
@@ -2726,7 +2727,7 @@ footer {
 
         <button id="loginSubmit" class="btn primary" style="width:100%;" type="submit">
           <span id="loginBtnLabel">Panele giriş</span>
-          <svg id="loginBtnIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
         </button>
 
         <div class="login-divider">VEYA</div>
@@ -2744,7 +2745,7 @@ footer {
 
         <div class="login-foot">
           <span>Yeni misiniz? <a href="#deneme">Otelinizi ekleyin</a></span>
-          <span class="mono" style="font-size:11px; color:var(--ink-4); letter-spacing:0.1em;">v1.2</span>
+          <span class="mono" style="font-size:11px; color:var(--ink-4); letter-spacing:0.1em;">v1.3</span>
         </div>
       </form>
     </div>
@@ -4153,10 +4154,9 @@ footer {
         <h4>Şirket</h4>
         <ul>
           <li><a href="about.html">Hakkımızda</a></li>
-          <li><a href="customers.html">Müşteri hikayeleri</a></li>
+          <li><a href="contact.html">İletişim</a></li>
           <li><a href="#">Kariyer</a></li>
           <li><a href="#">Basında biz</a></li>
-          <li><a href="contact.html">İletişim</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -4417,8 +4417,7 @@ footer {
 
 <!-- ═══════════════════════════════════════════════════════════════
      FIREBASE AUTH — hero login form bağlantısı
-     CC NOTU: Aşağıdaki firebaseConfig'i C:\hoteluter\app.html
-     içindeki mevcut config ile değiştirin (aynı projeyi kullanıyoruz).
+     Config: src/lib/firebase.js (.env) ile aynı proje (hoteluter).
      ═══════════════════════════════════════════════════════════════ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -4434,7 +4433,6 @@ footer {
     onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  // Hoteluter Firebase config — src/lib/firebase.js (.env) ile aynı proje.
   const firebaseConfig = {
     apiKey: "AIzaSyC6jhIrmIUgFtIqwgONTe4XcLtAKEa3br8",
     authDomain: "hoteluter.firebaseapp.com",
@@ -4511,7 +4509,6 @@ footer {
     }
     setLoading(true);
     try {
-      // "Beni hatırla" işaretliyse local, değilse session persistence
       await setPersistence(auth, rememberEl.checked ? browserLocalPersistence : browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
       // onAuthStateChanged yönlendirmeyi yapacak
@@ -4559,7 +4556,6 @@ footer {
   // Oturum açıksa veya başarılı login sonrası → uygulamaya yönlendir
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // CC NOTU: app.html mevcut PMS uygulamasının yeni adı.
       window.location.replace("app.html");
     }
   });

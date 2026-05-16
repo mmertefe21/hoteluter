@@ -19,8 +19,12 @@ export default defineConfig({
     // app.html = React PMS (giriş noktası /src/main.jsx)
     rollupOptions: {
       input: {
-        main: resolve(root, 'index.html'),
-        app: resolve(root, 'app.html')
+        main:    resolve(root, 'index.html'),
+        app:     resolve(root, 'app.html'),
+        modules: resolve(root, 'modules.html'),
+        pricing: resolve(root, 'pricing.html'),
+        about:   resolve(root, 'about.html'),
+        contact: resolve(root, 'contact.html')
       }
     }
   }

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr"><head>
 <meta charset="UTF-8">
-<title>Hoteluter — Oteller için modern işletim sistemi</title>
+<title>Modüller — Hoteluter</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -415,26 +415,6 @@ a { color: inherit; text-decoration: none; }
 }
 .login-foot a { color: var(--amber); }
 .login-foot a:hover { color: var(--gold); }
-
-/* Login error/info message */
-.login-error {
-  margin-top: 10px;
-  padding: 10px 12px;
-  background: rgba(180, 50, 50, 0.06);
-  border: 1px solid rgba(180, 50, 50, 0.18);
-  border-radius: 8px;
-  color: #9c2a2a;
-  font-size: 13px;
-  line-height: 1.45;
-}
-.login-error.info {
-  background: rgba(168, 120, 66, 0.07);
-  border-color: rgba(168, 120, 66, 0.22);
-  color: var(--brass-deep);
-}
-.login-card.is-loading button[type="submit"] { opacity: 0.7; cursor: progress; }
-.login-card.is-loading input,
-.login-card.is-loading button { pointer-events: none; }
 
 /* HERO LOGO STRIP */
 .logos {
@@ -2583,12 +2563,292 @@ footer {
   .ledger { grid-template-columns: 70px 1fr 90px 90px 100px; font-size: 11px; }
 }
 </style>
+<style>
+  /* Page-specific: module showcase nav */
+  .modnav {
+    position: sticky; top: 106px; z-index: 10;
+    background: rgba(244,237,224,0.86);
+    backdrop-filter: blur(20px) saturate(140%);
+    border-bottom: 1px solid var(--hairline);
+    margin-top: -1px;
+  }
+  .modnav-inner {
+    display: flex; align-items: center; gap: 6px;
+    padding: 14px 0;
+    overflow-x: auto;
+  }
+  .modnav a {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px; color: var(--ink-2);
+    border: 1px solid transparent;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .modnav a:hover { color: var(--ink-0); background: rgba(168,120,66,0.06); }
+  .modnav a.active {
+    color: var(--forest);
+    background: rgba(168,120,66,0.08);
+    border-color: rgba(168,120,66,0.20);
+  }
+  .modnav a .num {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--brass);
+    letter-spacing: 0.1em;
+  }
+  .modnav .spacer { flex: 1; }
+  .modnav .help {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--ink-3); letter-spacing: 0.08em;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+
+  /* Anasayfa dashboard preview */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr 280px;
+    min-height: 580px;
+  }
+  .dash-side {
+    border-right: 1px solid var(--hairline);
+    background: linear-gradient(180deg, rgba(168,120,66,0.04), rgba(168,120,66,0.02));
+    padding: 18px 12px;
+  }
+  .dash-side-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    font-size: 13px; color: var(--ink-2);
+    cursor: pointer; margin-bottom: 2px;
+  }
+  .dash-side-item .ico {
+    width: 16px; height: 16px;
+    color: var(--ink-3);
+    flex-shrink: 0;
+  }
+  .dash-side-item:hover { background: rgba(168,120,66,0.06); color: var(--ink-0); }
+  .dash-side-item.active {
+    background: var(--forest);
+    color: #faf6ec;
+  }
+  .dash-side-item.active .ico { color: var(--brass-light); }
+  .dash-side-item .count {
+    margin-left: auto;
+    font-family: var(--font-mono); font-size: 10px;
+    padding: 2px 6px; border-radius: 99px;
+    background: rgba(168,120,66,0.10);
+    color: var(--brass);
+  }
+  .dash-side-item.active .count { background: rgba(200,153,104,0.20); color: var(--brass-light); }
+  .dash-side-divider {
+    height: 1px; background: var(--hairline);
+    margin: 12px 8px;
+  }
+  .dash-side-label {
+    font-family: var(--font-mono); font-size: 9.5px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-4); padding: 8px 12px 4px;
+  }
+
+  .dash-main {
+    padding: 22px 24px;
+    overflow: hidden;
+    background: var(--bg-1);
+  }
+  .dash-greet {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 22px;
+  }
+  .dash-greet h3 {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: 26px; line-height: 1.1;
+    letter-spacing: -0.014em; color: var(--forest);
+  }
+  .dash-greet h3 em {
+    font-style: italic;
+    background: linear-gradient(135deg, #c89968, #a87842);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dash-greet .day-tag {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--ink-3); letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .dash-greet .weather {
+    text-align: right;
+  }
+  .dash-greet .weather .temp { font-family: var(--font-display); font-size: 24px; color: var(--forest); }
+  .dash-greet .weather .desc { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.06em; }
+
+  .dash-kpi-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .dash-kpi {
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid var(--hairline);
+    position: relative;
+    overflow: hidden;
+  }
+  .dash-kpi.accent {
+    background: var(--forest);
+    border-color: var(--forest-deep);
+    color: #faf6ec;
+  }
+  .dash-kpi .l {
+    font-family: var(--font-mono); font-size: 9.5px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .dash-kpi.accent .l { color: rgba(250,246,236,0.7); }
+  .dash-kpi .v {
+    font-family: var(--font-display); font-size: 22px;
+    color: var(--forest); letter-spacing: -0.014em;
+    margin-top: 6px; line-height: 1;
+  }
+  .dash-kpi.accent .v { color: var(--brass-light); }
+  .dash-kpi .d {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--success); margin-top: 4px;
+  }
+  .dash-kpi.accent .d { color: var(--brass-soft); }
+  .dash-kpi .spark { position: absolute; right: 10px; bottom: 10px; opacity: 0.4; }
+
+  .dash-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .dash-card {
+    background: #ffffff;
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .dash-card-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .dash-card-title {
+    font-family: var(--font-display); font-size: 16px;
+    color: var(--forest); letter-spacing: -0.01em;
+  }
+  .dash-card-meta {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--ink-3); letter-spacing: 0.1em;
+  }
+  .dash-arrival {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--hairline);
+    font-size: 12.5px;
+  }
+  .dash-arrival:last-child { border-bottom: 0; }
+  .dash-arrival .time {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--brass); letter-spacing: 0.08em;
+    width: 50px; flex-shrink: 0;
+  }
+  .dash-arrival .av {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, #1f3a2e, #15291f);
+    color: var(--brass-light);
+    display: grid; place-items: center;
+    font-family: var(--font-display); font-size: 12px;
+  }
+  .dash-arrival .name { flex: 1; color: var(--ink-0); }
+  .dash-arrival .name .sub { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-top: 2px; letter-spacing: 0.04em; }
+  .dash-arrival .tag {
+    font-family: var(--font-mono); font-size: 9px;
+    padding: 2px 6px; border-radius: 4px;
+    background: rgba(168,120,66,0.10); color: var(--brass);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .dash-arrival .tag.vip { background: rgba(31,58,46,0.10); color: var(--forest); }
+
+  .dash-right {
+    padding: 22px 18px;
+    background: linear-gradient(180deg, rgba(31,58,46,0.04), rgba(31,58,46,0.01));
+    border-left: 1px solid var(--hairline);
+  }
+  .dash-right-title {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 12px;
+  }
+  .activity-feed { display: flex; flex-direction: column; gap: 10px; }
+  .activity-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid var(--hairline);
+    font-size: 12px;
+  }
+  .activity-item .ico {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(180deg, rgba(168,120,66,0.18), rgba(168,120,66,0.04));
+    border: 1px solid rgba(168,120,66,0.22);
+    color: var(--brass);
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .activity-item.green .ico {
+    background: linear-gradient(180deg, rgba(74,124,89,0.18), rgba(74,124,89,0.04));
+    border-color: rgba(74,124,89,0.22);
+    color: var(--success);
+  }
+  .activity-item.forest .ico {
+    background: linear-gradient(180deg, rgba(31,58,46,0.10), rgba(31,58,46,0.04));
+    border-color: rgba(31,58,46,0.22);
+    color: var(--forest);
+  }
+  .activity-item .body { min-width: 0; }
+  .activity-item .body .t { color: var(--ink-0); line-height: 1.35; }
+  .activity-item .body .when {
+    font-family: var(--font-mono); font-size: 9.5px;
+    color: var(--ink-3); margin-top: 4px; letter-spacing: 0.06em;
+  }
+  .quick-actions {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6px; margin-top: 16px;
+  }
+  .quick-action {
+    padding: 12px 10px;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1px solid var(--hairline);
+    text-align: center;
+    cursor: pointer;
+    font-size: 11.5px;
+    color: var(--ink-1);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    transition: all .15s;
+  }
+  .quick-action:hover { border-color: var(--brass); color: var(--forest); transform: translateY(-1px); }
+  .quick-action svg { color: var(--brass); }
+
+  @media (max-width: 1180px) {
+    .dash-grid { grid-template-columns: 1fr; }
+    .dash-side, .dash-right { display: none; }
+    .dash-kpi-row { grid-template-columns: 1fr 1fr; }
+    .dash-cards-grid { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
 <body>
 
 
 
-<!-- ── TOP STRIP ─────────────────────────────────────────────────── -->
+
+<!-- TOP STRIP -->
 <div class="topstrip">
   <div class="container topstrip-inner">
     <span class="mono" style="display:inline-flex;align-items:center;gap:8px;">
@@ -2599,398 +2859,69 @@ footer {
       +90 850 333 22 18
     </span>
     <div class="right">
-      <a href="#" style="display:inline-flex;align-items:center;gap:6px;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg>
-        Yardım merkezi
-      </a>
+      <a href="#" style="display:inline-flex;align-items:center;gap:6px;">Yardım merkezi</a>
       <a href="#">Geliştirici API</a>
-      <span class="lang">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg>
-        <strong>TR</strong> · EN · DE · AR
-      </span>
+      <span class="lang"><strong>TR</strong> · EN · DE · AR</span>
     </div>
   </div>
 </div>
 
-<!-- ── HEADER ────────────────────────────────────────────────────── -->
+<!-- HEADER -->
 <header class="header">
   <div class="container header-inner">
-    <a href="#" class="brand">
+    <a href="index.html" class="brand">
       <div class="brand-mark"><span>H</span></div>
       <div class="brand-name">Hoteluter<span class="brand-tld">.com</span></div>
     </a>
-
     <nav class="mainnav">
-      <a href="modules.html" class="has-arrow">Modüller</a>
+      <a href="modules.html" class="has-arrow active">Modüller</a>
       <a href="pricing.html">Fiyatlandırma</a>
-      <a href="customers.html">Müşteriler</a>
       <a href="about.html">Hakkımızda</a>
       <a href="contact.html">İletişim</a>
     </nav>
-
     <div class="header-actions">
-      <a href="#demo" class="demo-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        Demo izle
-      </a>
-      <a href="#deneme" class="btn primary">14 gün ücretsiz dene
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
+      <a href="index.html#loginForm" class="btn">Giriş yap</a>
+      <a href="contact.html" class="btn primary">14 gün ücretsiz dene
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
       </a>
     </div>
   </div>
 </header>
 
-<!-- ── HERO ──────────────────────────────────────────────────────── -->
-<section class="hero" id="urun" style="padding-top: 84px;">
-  <div class="container">
-    <div class="particles" aria-hidden="true">
-      <span></span><span></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span>
-    </div>
-    <div class="hero-grid">
-      <!-- LEFT: copy + CTAs -->
-      <div>
-        <span class="section-eyebrow rise">
-          <span class="pulse"></span> 2026 sürümü · AI destekli rezervasyon
-        </span>
-        <h1 class="hero-headline rise d1">
-          Otelinizin kalbi <br>
-          tek bir <em>panelde</em> atsın.
-        </h1>
-        <p class="hero-sub rise d2">
-          Rezervasyon, takvim, ön muhasebe ve raporlar — 412 oteldeki resepsiyon ekipleri Hoteluter ile günlük 14 dakika daha az ekran başında, üç kat daha az hata yapıyor..
-        </p>
-        <div class="hero-ctas rise d3">
-          <a href="#deneme" class="btn primary lg">
-            14 gün ücretsiz başla
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
-          </a>
-          <a href="#demo" class="btn lg">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
-            2 dakikalık ürün turu
-          </a>
-        </div>
-        <div class="hero-trust rise d4">
-          <div class="avs">
-            <div class="av">BP</div>
-            <div class="av">GH</div>
-            <div class="av">YY</div>
-            <div class="av">+9</div>
-          </div>
-          <span><strong>412 otel</strong> · <strong>6.842 oda</strong> · Türkiye, Kıbrıs, Karadağ</span>
-          <span style="margin-left:auto; display:inline-flex; align-items:center; gap:4px; color:var(--gold);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7.5.6-5.7 4.9 1.7 7.3L12 18l-6.5 3.8 1.7-7.3L1.5 9.6 9 9z"></path></svg>
-            <strong>4.9 / 5</strong>
-            <span style="color:var(--ink-3);">· Capterra</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- RIGHT: LOGIN CARD -->
-      <form class="login-card rise d2" id="loginForm" novalidate>
-        <div class="login-head">
-          <div class="login-title">Otelinize giriş</div>
-          <span class="login-tag"><span class="pulse"></span> Şifrelendi</span>
-        </div>
-
-        <div class="field">
-          <label for="loginEmail">E-posta</label>
-          <div class="field-wrap">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M2 7l10 7 10-7"></path></svg>
-            <input id="loginEmail" name="email" type="email" placeholder="ad.soyad@otel.com" autocomplete="email" required>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="loginPassword">Şifre</label>
-          <div class="field-wrap">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            <input id="loginPassword" name="password" type="password" placeholder="••••••••••" autocomplete="current-password" required minlength="6">
-            <button type="button" id="togglePw" aria-label="Şifreyi göster/gizle" style="color:var(--ink-3); padding:0;">
-              <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="login-row">
-          <label class="checkbox">
-            <input id="rememberMe" type="checkbox" checked>
-            <span class="box"></span>
-            Beni hatırla
-          </label>
-          <a href="#" id="forgotLink" class="forgot">Şifremi unuttum</a>
-        </div>
-
-        <!-- Hata / bilgi mesaj alanı -->
-        <div id="loginError" class="login-error" role="alert" aria-live="polite" hidden></div>
-
-        <button id="loginSubmit" class="btn primary" style="width:100%;" type="submit">
-          <span id="loginBtnLabel">Panele giriş</span>
-          <svg id="loginBtnIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
-        </button>
-
-        <div class="login-divider">VEYA</div>
-
-        <div class="sso-row">
-          <button type="button" id="googleLogin" class="sso-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 12.07c0-.7-.06-1.4-.18-2.07H12v3.92h5.62a4.8 4.8 0 0 1-2.08 3.16v2.62h3.37C20.86 17.93 22 15.24 22 12.07z"></path><path d="M12 22c2.83 0 5.2-.94 6.93-2.55l-3.37-2.62a6.04 6.04 0 0 1-3.56 1.04A6.02 6.02 0 0 1 6.36 13.7H2.9v2.7A10 10 0 0 0 12 22z"></path></svg>
-            Google
-          </button>
-          <button type="button" class="sso-btn" disabled title="Kurumsal SSO yakında" style="opacity:0.55; cursor:not-allowed;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2C6.5 2 2 6.5 2 12c0 4.4 2.9 8.2 7 9.5"></path><path d="M12 22c5.5 0 10-4.5 10-10 0-4.4-2.9-8.2-7-9.5"></path></svg>
-            SSO · Tek oturum
-          </button>
-        </div>
-
-        <div class="login-foot">
-          <span>Yeni misiniz? <a href="#deneme">Otelinizi ekleyin</a></span>
-          <span class="mono" style="font-size:11px; color:var(--ink-4); letter-spacing:0.1em;">v1.2</span>
-        </div>
-      </form>
-    </div>
-
-    <!-- Logo strip -->
-    <div class="logos">
-      <div class="logos-label">Türkiye'de 412 otel Hoteluter ile yönetiliyor</div>
-      <div class="logos-row">
-        <div class="logo-name">Bosphorus Palace<span class="sub">Beşiktaş · 218 oda</span></div>
-        <div class="logo-name">Garden House<span class="sub">Beyoğlu · 124 oda</span></div>
-        <div class="logo-name">Golden Horn Suites<span class="sub">Fatih · 86 oda</span></div>
-        <div class="logo-name">Yeniköy Yalı<span class="sub">Sarıyer · 22 oda</span></div>
-        <div class="logo-name">Cihangir Atelier<span class="sub">Cihangir · 38 oda</span></div>
-        <div class="logo-name">Taksim Loft<span class="sub">Beyoğlu · 64 oda</span></div>
-      </div>
-    </div>
+<!-- PAGE HERO -->
+<section class="page-hero">
+  <div class="page-hero-inner">
+    <div class="breadcrumb"><a href="index.html">Ana sayfa</a><span class="sep">/</span> Modüller</div>
+    <span class="section-eyebrow"><span class="pulse"></span>Dört modül · tek bir panel</span>
+    <h1>Otelinizin <em>tüm</em> operasyonu,<br>tek bir beyin.</h1>
+    <p class="lead">Anasayfadan rezervasyona, ön muhasebeden raporlara — Hoteluter'ın dört modülü aynı veritabanını paylaşır. Bir yere veri girin, her yerden okuyun.</p>
   </div>
 </section>
 
-<!-- ── PRODUCT PREVIEW: RESERVATION CALENDAR ─────────────────────── -->
-<section style="padding-top: 0;">
-  <div class="container">
-    <div class="product-preview">
-      <div class="preview-frame">
-        <div class="preview-chrome">
-          <div class="preview-lights"><span></span><span></span><span></span></div>
-          <div class="preview-url">
-            <span class="lock"></span>
-            bosphoruspalace.<span style="color:var(--gold);">hoteluter</span>.com / takvim
-          </div>
-          <div style="font-family:var(--font-mono); font-size:11px; color:var(--ink-3);">14 Mayıs 2026</div>
-        </div>
-
-        <div class="preview-body">
-          <!-- Sidebar -->
-          <aside class="pms-side">
-            <div class="pms-side-section">
-              <div class="pms-side-label">İşletme</div>
-              <div class="pms-side-item">
-                <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 13h7V3H3zM14 21h7V11h-7zM3 21h7v-5H3zM14 8h7V3h-7z"></path></svg></span>
-                Panel
-              </div>
-              <div class="pms-side-item active">
-                <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span>
-                Rezervasyon Takvimi
-                <span class="count">218</span>
-              </div>
-              <div class="pms-side-item">
-                <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span>
-                Misafirler
-                <span class="count">1.4k</span>
-              </div>
-              <div class="pms-side-item">
-                <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></span>
-                Resepsiyon
-              </div>
-              <div class="pms-side-item">
-                <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l2-2 4 4 8-8 4 4"></path></svg></span>
-                Housekeeping
-                <span class="count">12</span>
-              </div>
-            </div>
-            <div class="pms-side-section">
-              <div class="pms-side-label">Finans</div>
-              <div class="pms-side-item">
-                <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="13" rx="2"></rect><path d="M2 11h20"></path></svg></span>
-                Ön Muhasebe
-              </div>
-              <div class="pms-side-item">
-                <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"></path><path d="M7 14l4-4 4 4 5-7"></path></svg></span>
-                Raporlar
-              </div>
-            </div>
-            <div class="pms-side-section">
-              <div class="pms-side-label">Sistem</div>
-              <div class="pms-side-item">
-                <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5"></path></svg></span>
-                Ayarlar
-              </div>
-            </div>
-          </aside>
-
-          <!-- Main: Calendar -->
-          <div class="pms-main">
-            <div class="pms-toolbar">
-              <div class="pms-title">Rezervasyon Takvimi</div>
-              <div class="pms-date-pill">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
-                14 – 27 Mayıs 2026
-              </div>
-              <div class="pms-pager">
-                <button>‹</button>
-                <button>›</button>
-              </div>
-              <div class="pms-mini-tabs">
-                <button>Gün</button>
-                <button class="active">14 Gün</button>
-                <button>Ay</button>
-              </div>
-              <div class="pms-search">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
-                <input placeholder="Misafir / oda ara…">
-              </div>
-            </div>
-
-            <div class="calendar" id="calendar"></div>
-          </div>
-        </div>
-
-        <!-- Floating reservation detail card -->
-        <div class="cal-floating">
-          <div class="hdr">
-            <div>
-              <div class="gname">Mehmet &amp; Selin Aksoy</div>
-              <div class="mono" style="font-size:10.5px; color:var(--ink-3); letter-spacing:.06em; margin-top:2px;">DELUX SUITE · 4 GECE</div>
-            </div>
-            <span class="src-pill">BOOKING</span>
-          </div>
-          <div class="stat-row"><span class="l">Giriş</span><span class="v">17 May · 14:00</span></div>
-          <div class="stat-row"><span class="l">Çıkış</span><span class="v">21 May · 12:00</span></div>
-          <div class="stat-row"><span class="l">Misafir</span><span class="v">2 yetişkin · 1 çocuk</span></div>
-          <div class="stat-row"><span class="l">Toplam</span><span class="v" style="color:var(--gold)">₺ 24.860</span></div>
-          <div class="stat-row"><span class="l">Bakiye</span><span class="v" style="color:var(--success)">₺ 0 · Ödendi</span></div>
-          <div class="actions">
-            <button class="btn">Detay</button>
-            <button class="btn primary" style="font-family:var(--font-mono);">Check-in</button>
-          </div>
-        </div>
-      </div>
-    </div>
+<!-- MODULE NAV -->
+<div class="modnav">
+  <div class="container modnav-inner">
+    <a href="#anasayfa" class="active"><span class="num">01</span> Anasayfa</a>
+    <a href="#takvim"><span class="num">02</span> Rezervasyon Takvimi</a>
+    <a href="#muhasebe"><span class="num">03</span> Ön Muhasebe</a>
+    <a href="#raporlar"><span class="num">04</span> Raporlar</a>
+    <div class="spacer"></div>
+    <span class="help">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M12 17h.01"></path><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"></path></svg>
+      Modülleri keşfedin · ↓
+    </span>
   </div>
-</section>
+</div>
 
-<!-- ── STATS STRIP ───────────────────────────────────────────────── -->
-<section class="tight">
-  <div class="container">
-    <div class="stats-strip">
-      <div class="stat">
-        <div class="lbl">Aktif Otel</div>
-        <div class="val tnum"><span class="grad">412</span></div>
-        <div class="desc">Türkiye, Kıbrıs ve Karadağ</div>
-      </div>
-      <div class="stat">
-        <div class="lbl">Yönetilen Oda</div>
-        <div class="val tnum">6.842</div>
-        <div class="desc">Stüdyo'dan presidential süite'ye</div>
-      </div>
-      <div class="stat">
-        <div class="lbl">Yıllık İşlem</div>
-        <div class="val tnum">₺ 2.4<span style="font-size:32px; color:var(--ink-2);">M+</span></div>
-        <div class="desc">Hoteluter ön muhasebesinden geçen</div>
-      </div>
-      <div class="stat">
-        <div class="lbl">Resepsiyona Kazanç</div>
-        <div class="val tnum">14<span style="font-size:24px; color:var(--ink-2);"> dk/gün</span></div>
-        <div class="desc">Otomasyonla kazanılan ekran süresi</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── MODULES ───────────────────────────────────────────────────── -->
-<section id="modul">
-  <div class="container">
-    <div class="section-head">
-      <span class="section-eyebrow">Modüller</span>
-      <h2>Otelinizin <em>her odası</em> için<br>düşünülmüş bir PMS.</h2>
-      <p class="lead">Rezervasyondan housekeeping'e, ön muhasebeden vergi raporuna kadar günlük operasyonun tamamı tek panel üzerinden, ücretsiz desteklenen Türkçe arayüzle.</p>
-    </div>
-
-    <div class="modules">
-      <div class="module">
-        <div class="module-ico">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
-        </div>
-        <h3>Rezervasyon Takvimi</h3>
-        <p>Sürükle-bırak'la oda değiştir, çoklu seçim ile blok güncelle, no-show'u tek tıkla işle. 14 günlük, 30 günlük ve yıllık görünüm.</p>
-        <ul>
-          <li>Sürükle-bırak oda değişimi</li>
-          <li>Çakışma uyarısı · gerçek zamanlı</li>
-          <li>Renk kodlu durum (giriş bekleniyor / inhouse / çıkış)</li>
-        </ul>
-      </div>
-
-      <div class="module">
-        <div class="module-ico">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="13" rx="2"></rect><path d="M2 11h20M6 16h3"></path></svg>
-        </div>
-        <h3>Ön Muhasebe</h3>
-        <p>Folio, fatura, e-Arşiv, tahsilat, cari hesap takibi. Mali müşavirinizin saatlerce kapanmadığı tek modül.</p>
-        <ul>
-          <li>GİB e-Arşiv &amp; e-Fatura entegrasyonu</li>
-          <li>Cari hesap &amp; ekstre takibi</li>
-          <li>POS, banka &amp; online tahsilat eşleştirme</li>
-        </ul>
-      </div>
-
-      <div class="module">
-        <div class="module-ico">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3v18h18"></path><path d="M7 14l4-4 4 4 5-7"></path></svg>
-        </div>
-        <h3>Raporlar &amp; Analitik</h3>
-        <p>ADR, RevPAR, doluluk, segment dağılımı, kanal komisyonu — 60'tan fazla hazır rapor, gece 02:00'de e-postanızda.</p>
-        <ul>
-          <li>Otomatik gece kapanışı (night audit)</li>
-          <li>Karşılaştırmalı doluluk · yıl/yıl</li>
-          <li>Excel, PDF, Google Sheets dışa aktarım</li>
-        </ul>
-      </div>
-
-      <div class="module">
-        <div class="module-ico">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"></path></svg>
-        </div>
-        <h3>Misafir CRM</h3>
-        <p>Geçmiş, tercih, alerji, oda tipi, doğum günü — her ziyarette ısmarlanmış bir karşılama. Tekrar misafir oranınız %38 artsın.</p>
-        <ul>
-          <li>Tek kayıt · tüm kanallardan</li>
-          <li>Otomatik segmentasyon &amp; e-posta</li>
-          <li>KVKK uyumlu, açık rıza yönetimi</li>
-        </ul>
-      </div>
-
-      <div class="module">
-        <div class="module-ico">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"></path><circle cx="12" cy="12" r="5"></circle></svg>
-        </div>
-        <h3>Hoteluter AI</h3>
-        <p>Doluluk tahmini, dinamik fiyat önerisi, no-show riski. AI önerilerini onaylayın, sistem geri kalanını halletsin.</p>
-        <ul>
-          <li>14 günlük doluluk tahmini</li>
-          <li>Sezon &amp; etkinlik bazlı yield</li>
-          <li>"Neden bu fiyat?" şeffaf gerekçe</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── PREVIEW: FOLIO / ÖN MUHASEBE ─────────────────────────────── -->
-<section class="tight" style="padding-top: 0;">
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- MODULE 01 · ANASAYFA -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section id="anasayfa" class="tight" style="padding-top: 56px;">
   <div class="container">
     <div class="section-mini-head">
-      <span class="section-eyebrow">Ön muhasebe</span>
-      <h3>Her folio, her tahsilat,<br><em>otomatik eşleşmiş</em>.</h3>
-      <p class="sub">Oda, restoran, spa harcamaları tek folio'da birikiyor. e-Arşiv ve e-Fatura GİB onaylı entegratör üzerinden 30 saniyede kesiliyor.</p>
+      <span class="section-eyebrow">01 · Anasayfa</span>
+      <h3>Sabah panel açıldığında,<br><em>günün resmi</em> orada.</h3>
+      <p class="sub">Gece kaç giriş yapılmış, bugün kim geliyor, doluluk ne durumda, ne kadar tahsilat var — hepsi tek ekranda. Resepsiyonun günlük kontrol kulesi.</p>
     </div>
 
     <div class="preview-frame compact">
@@ -2998,159 +2929,264 @@ footer {
         <div class="preview-lights"><span></span><span></span><span></span></div>
         <div class="preview-url">
           <span class="lock"></span>
-          bosphoruspalace.<span style="color:var(--gold);">hoteluter</span>.com / muhasebe / folio / 82-441
+          bosphoruspalace.<span style="color:var(--brass);">hoteluter</span>.com / anasayfa
         </div>
-        <div style="font-family:var(--font-mono); font-size:11px; color:var(--ink-3);">F-1208</div>
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--ink-3);">14 May 2026</div>
       </div>
 
-      <!-- Submodule tabs -->
-      <div class="preview-tabs">
-        <div class="preview-tab active">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
-          Folio
-          <span class="badge">F-1208</span>
-        </div>
-        <div class="preview-tab">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"></path></svg>
-          Cari Hesaplar
-          <span class="badge">1.428</span>
-        </div>
-        <div class="preview-tab">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="13" rx="2"></rect><path d="M2 11h20M6 16h3"></path></svg>
-          Kasa &amp; Banka
-        </div>
-        <div class="preview-tab">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h6"></path></svg>
-          Faturalar
-          <span class="badge">e-Arşiv</span>
-        </div>
-        <div class="preview-tab">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="12" y1="2" x2="12" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-          Tahsilat
-        </div>
-        <div class="preview-tab" style="margin-left:auto;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"></path></svg>
-          Yeni
-        </div>
-      </div>
+      <div class="dash-grid">
+        <!-- Side -->
+        <aside class="dash-side">
+          <div class="dash-side-label">İşletme</div>
+          <div class="dash-side-item active">
+            <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>
+            Anasayfa
+          </div>
+          <div class="dash-side-item">
+            <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span>
+            Rezervasyon
+            <span class="count">218</span>
+          </div>
+          <div class="dash-side-item">
+            <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span>
+            Misafirler
+          </div>
+          <div class="dash-side-item">
+            <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></span>
+            Resepsiyon
+            <span class="count">7</span>
+          </div>
+          <div class="dash-side-item">
+            <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l2-2 4 4 8-8 4 4"></path></svg></span>
+            Housekeeping
+            <span class="count">12</span>
+          </div>
+          <div class="dash-side-divider"></div>
+          <div class="dash-side-label">Finans</div>
+          <div class="dash-side-item">
+            <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="13" rx="2"></rect><path d="M2 11h20"></path></svg></span>
+            Ön Muhasebe
+          </div>
+          <div class="dash-side-item">
+            <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"></path><path d="M7 14l4-4 4 4 5-7"></path></svg></span>
+            Raporlar
+          </div>
+          <div class="dash-side-divider"></div>
+          <div class="dash-side-label">Sistem</div>
+          <div class="dash-side-item">
+            <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"></circle><path d="M19 12a7 7 0 0 1-.4 2.3M12 19c-3.9 0-7-3.1-7-7"></path></svg></span>
+            Ayarlar
+          </div>
+        </aside>
 
-      <div class="folio-grid">
-        <div class="folio-main">
-          <div class="folio-head">
+        <!-- Main -->
+        <div class="dash-main">
+          <div class="dash-greet">
             <div>
-              <div class="folio-num">FOLIO #82-441 · ODA 1208</div>
-              <div class="folio-title">Mehmet &amp; Selin Aksoy</div>
-              <div class="folio-meta">SUITE · 4 GECE · 17 – 21 MAY 2026</div>
+              <h3>İyi sabahlar, <em>Ayşe</em>.</h3>
+              <div class="day-tag">14 Mayıs 2026 · Çarşamba · 09:24</div>
             </div>
-            <span class="folio-status paid"><span class="pulse green" style="width:6px;height:6px;"></span>Ödendi · ₺ 0 bakiye</span>
+            <div class="weather">
+              <div class="temp">22°</div>
+              <div class="desc">Açık · İstanbul</div>
+            </div>
           </div>
 
-          <div class="folio-table">
-            <div class="head">No</div>
-            <div class="head">Açıklama</div>
-            <div class="head">Tarih</div>
-            <div class="head">Adet</div>
-            <div class="head" style="text-align:right;">Tutar</div>
-
-            <div class="cell mono">001</div>
-            <div class="cell tag"><span class="room">ODA</span>&nbsp;Suite konaklama · ₺5.215 / gece</div>
-            <div class="cell mono">17 May</div>
-            <div class="cell mono">4 gece</div>
-            <div class="cell r">₺ 20.860,00</div>
-
-            <div class="cell mono">002</div>
-            <div class="cell tag"><span class="fb">F&amp;B</span>&nbsp;Sultan Grill · oda servisi (3 hesap)</div>
-            <div class="cell mono">18 May</div>
-            <div class="cell mono">3</div>
-            <div class="cell r">₺ 3.420,00</div>
-
-            <div class="cell mono">003</div>
-            <div class="cell tag"><span class="spa">SPA</span>&nbsp;Aromaterapi masaj 60 dk × 2</div>
-            <div class="cell mono">19 May</div>
-            <div class="cell mono">2</div>
-            <div class="cell r">₺ 1.380,00</div>
-
-            <div class="cell mono">004</div>
-            <div class="cell tag"><span class="mini">MİNİBAR</span>&nbsp;Mini bar tüketimi · 3 ürün</div>
-            <div class="cell mono">19 May</div>
-            <div class="cell mono">3</div>
-            <div class="cell r">₺ 412,00</div>
-
-            <div class="cell mono">005</div>
-            <div class="cell tag"><span class="room">ODA</span>&nbsp;Geç çıkış (+ 4 saat)</div>
-            <div class="cell mono">21 May</div>
-            <div class="cell mono">1</div>
-            <div class="cell r">₺ 1.040,00</div>
-
-            <div class="cell mono">006</div>
-            <div class="cell tag" style="color:var(--ink-3);">KDV %8 · konaklama vergisi dahil</div>
-            <div class="cell mono">—</div>
-            <div class="cell mono">—</div>
-            <div class="cell r" style="color: var(--ink-3);">₺ 2.052,00</div>
-
-            <div class="cell mono">P-1</div>
-            <div class="cell tag"><span class="pay">TAHS</span>&nbsp;Kredi kartı (Garanti) · POS #M-8412</div>
-            <div class="cell mono">21 May</div>
-            <div class="cell mono">1</div>
-            <div class="cell r" style="color: var(--success);">−₺ 27.112,00</div>
+          <div class="dash-kpi-row">
+            <div class="dash-kpi accent">
+              <div class="l">Bugün gelir</div>
+              <div class="v">₺ 142.840</div>
+              <div class="d">↑ %18,4 · y/y</div>
+            </div>
+            <div class="dash-kpi">
+              <div class="l">Doluluk</div>
+              <div class="v">%86,4</div>
+              <div class="d">188 / 218 oda</div>
+            </div>
+            <div class="dash-kpi">
+              <div class="l">Bugün giriş</div>
+              <div class="v">24</div>
+              <div class="d">8'i geldi · 16'sı bekliyor</div>
+            </div>
+            <div class="dash-kpi">
+              <div class="l">Bugün çıkış</div>
+              <div class="v">18</div>
+              <div class="d">12'si tamamlandı</div>
+            </div>
           </div>
 
-          <div class="folio-totals">
-            <div>
-              <div class="l">Brüt · KDV dahil · Bakiye</div>
-              <div style="display:flex; gap:12px; align-items:baseline; margin-top:4px;">
-                <span style="font-family:var(--font-display); color:var(--ink-0); font-size:18px;">₺ 27.112</span>
-                <span style="font-family:var(--font-mono); font-size:12px; color:var(--ink-3);">·</span>
-                <span style="font-family:var(--font-display); color:var(--success); font-size:18px;">₺ 0</span>
+          <div class="dash-cards-grid">
+            <div class="dash-card">
+              <div class="dash-card-head">
+                <div class="dash-card-title">Bugünkü girişler</div>
+                <div class="dash-card-meta">16 BEKLENİYOR · 14:00 SONRASI</div>
+              </div>
+              <div class="dash-arrival">
+                <div class="time">14:00</div>
+                <div class="av">MA</div>
+                <div class="name">Mehmet &amp; Selin Aksoy<div class="sub">SUITE 1208 · 4 GECE · BOOKING</div></div>
+                <div class="tag vip">VIP</div>
+              </div>
+              <div class="dash-arrival">
+                <div class="time">15:30</div>
+                <div class="av">CB</div>
+                <div class="name">Carl Bauer<div class="sub">DELUXE 305 · 2 GECE · EXPEDIA</div></div>
+              </div>
+              <div class="dash-arrival">
+                <div class="time">16:00</div>
+                <div class="av">AT</div>
+                <div class="name">Aslan Group (8 kişi)<div class="sub">2 SUITE · 1 BLOK · KONFERANS</div></div>
+                <div class="tag">B2B</div>
+              </div>
+              <div class="dash-arrival">
+                <div class="time">17:45</div>
+                <div class="av">AP</div>
+                <div class="name">Anna Pavlova<div class="sub">STD 102 · 5 GECE · AGODA</div></div>
+              </div>
+              <div class="dash-arrival">
+                <div class="time">19:20</div>
+                <div class="av">SH</div>
+                <div class="name">Sheikh Al-Faraj<div class="sub">PRESIDENTIAL 2104 · 5 GECE · DIRECT</div></div>
+                <div class="tag vip">VIP</div>
               </div>
             </div>
-            <div style="text-align: right;">
-              <div class="l" style="text-align:right;">Toplam</div>
-              <div class="v">₺ 27.112,00</div>
+
+            <div class="dash-card">
+              <div class="dash-card-head">
+                <div class="dash-card-title">Bekleyen işler</div>
+                <div class="dash-card-meta">7 GÖREV</div>
+              </div>
+              <div class="dash-arrival">
+                <div class="time" style="color: var(--danger);">!</div>
+                <div class="name">Oda 1502 — POS slipi eşleşmiyor<div class="sub">₺ 412 mini bar tüketimi · folio'da yok</div></div>
+                <div class="tag" style="color: var(--danger); background: rgba(179,58,58,0.08);">ACELE</div>
+              </div>
+              <div class="dash-arrival">
+                <div class="time">10:30</div>
+                <div class="name">Etstur ekstre onayı bekliyor<div class="sub">Nisan ayı · ₺ 184.420 alacak</div></div>
+              </div>
+              <div class="dash-arrival">
+                <div class="time">11:00</div>
+                <div class="name">Mali müşavir randevusu<div class="sub">Online · Zoom · K. Demir</div></div>
+              </div>
+              <div class="dash-arrival">
+                <div class="time">12:00</div>
+                <div class="name">Tedarikçi ödemesi · Pera Meyve<div class="sub">₺ 12.840 · NET-30 doluyor</div></div>
+              </div>
+              <div class="dash-arrival">
+                <div class="time">14:00</div>
+                <div class="name">Aşçı vardiyası başlangıç<div class="sub">8 kişi · Sultan Grill</div></div>
+              </div>
             </div>
           </div>
         </div>
 
-        <aside class="folio-aside">
-          <div class="lbl">Misafir</div>
-          <div class="guest-card">
-            <div class="gv">MA</div>
-            <div>
-              <div class="gn">Mehmet Aksoy</div>
-              <div class="gm">VIP · 5. ZİYARET</div>
+        <!-- Right activity -->
+        <aside class="dash-right">
+          <div class="dash-right-title">Hızlı işlemler</div>
+          <div class="quick-actions">
+            <div class="quick-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"></path></svg>
+              Yeni rezervasyon
+            </div>
+            <div class="quick-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg>
+              Misafir kaydı
+            </div>
+            <div class="quick-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="13" rx="2"></rect><path d="M2 11h20"></path></svg>
+              Tahsilat al
+            </div>
+            <div class="quick-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+              e-Arşiv kes
             </div>
           </div>
 
-          <div class="lbl">Rezervasyon</div>
-          <div class="stat-line"><span class="l">Kaynak</span><span class="v">Booking.com</span></div>
-          <div class="stat-line"><span class="l">Acente</span><span class="v">—</span></div>
-          <div class="stat-line"><span class="l">Onay no</span><span class="v">8421-204-71</span></div>
-          <div class="stat-line"><span class="l">Komisyon</span><span class="v">₺ 3.665</span></div>
-          <div class="stat-line"><span class="l">Net hasılat</span><span class="v" style="color:var(--gold);">₺ 23.447</span></div>
-
-          <div class="lbl" style="margin-top: 18px;">Tahsilat</div>
-          <div class="stat-line"><span class="l">Yöntem</span><span class="v">Kredi kartı · Garanti</span></div>
-          <div class="stat-line"><span class="l">İşlem</span><span class="v">21/05 14:08</span></div>
-          <div class="stat-line"><span class="l">POS slipi</span><span class="v" style="color:var(--success);">✓ Eşleşti</span></div>
-
-          <div class="actions">
-            <button class="btn">PDF yazdır</button>
-            <button class="btn">e-Arşiv kes</button>
-            <button class="btn primary">Folio'yu kapat</button>
+          <div class="dash-right-title" style="margin-top: 22px;">Canlı akış</div>
+          <div class="activity-feed">
+            <div class="activity-item green">
+              <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              <div class="body">
+                <div class="t">M. Aksoy giriş yaptı · Oda 1208</div>
+                <div class="when">3 DAKİKA ÖNCE</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="13" rx="2"></rect><path d="M2 11h20"></path></svg></div>
+              <div class="body">
+                <div class="t">₺ 24.860 kredi kartı tahsilatı</div>
+                <div class="when">12 DAKİKA ÖNCE · POS</div>
+              </div>
+            </div>
+            <div class="activity-item forest">
+              <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3"></path></svg></div>
+              <div class="body">
+                <div class="t">AI: Cuma akşamı suite fiyatı piyasanın altında</div>
+                <div class="when">28 DAKİKA ÖNCE</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+              <div class="body">
+                <div class="t">e-Arşiv F-1208 başarıyla kesildi</div>
+                <div class="when">35 DAKİKA ÖNCE · GİB</div>
+              </div>
+            </div>
+            <div class="activity-item green">
+              <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              <div class="body">
+                <div class="t">Housekeeping: 12 oda temizlendi</div>
+                <div class="when">1 SAAT ÖNCE</div>
+              </div>
+            </div>
           </div>
         </aside>
       </div>
     </div>
+
+    <!-- Features list -->
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 32px;">
+      <div class="feat-art" style="padding: 22px; min-height: auto;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 10px;">
+          <div style="width:32px; height:32px; border-radius:9px; background: linear-gradient(180deg, rgba(168,120,66,0.18), rgba(168,120,66,0.04)); border: 1px solid rgba(168,120,66,0.22); display:grid; place-items:center; color: var(--brass);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+          </div>
+          <strong style="color: var(--forest); font-family: var(--font-display); font-size: 17px;">Gün özeti</strong>
+        </div>
+        <p style="color: var(--ink-2); font-size: 13px; line-height: 1.5;">Bugün kim geliyor, kim çıkıyor, ne kadar tahsilat var — hepsi tek bir bakışta.</p>
+      </div>
+      <div class="feat-art" style="padding: 22px; min-height: auto;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 10px;">
+          <div style="width:32px; height:32px; border-radius:9px; background: linear-gradient(180deg, rgba(168,120,66,0.18), rgba(168,120,66,0.04)); border: 1px solid rgba(168,120,66,0.22); display:grid; place-items:center; color: var(--brass);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"></path></svg>
+          </div>
+          <strong style="color: var(--forest); font-family: var(--font-display); font-size: 17px;">Hızlı işlemler</strong>
+        </div>
+        <p style="color: var(--ink-2); font-size: 13px; line-height: 1.5;">Yeni rezervasyon, misafir kaydı, tahsilat ve e-Arşiv — tek tıkla.</p>
+      </div>
+      <div class="feat-art" style="padding: 22px; min-height: auto;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 10px;">
+          <div style="width:32px; height:32px; border-radius:9px; background: linear-gradient(180deg, rgba(168,120,66,0.18), rgba(168,120,66,0.04)); border: 1px solid rgba(168,120,66,0.22); display:grid; place-items:center; color: var(--brass);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3"></path></svg>
+          </div>
+          <strong style="color: var(--forest); font-family: var(--font-display); font-size: 17px;">AI içgörüleri</strong>
+        </div>
+        <p style="color: var(--ink-2); font-size: 13px; line-height: 1.5;">Doluluk ve fiyat sinyalleri canlı akışta — kararı siz verirsiniz.</p>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- ── PREVIEW: HESAPLAR / CARİ HESAP ────────────────────────────── -->
-<section class="tight" style="padding-top: 0;">
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- MODULE 02 · TAKVİM (link to landing's existing preview) -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section id="takvim" class="tight">
   <div class="container">
     <div class="section-mini-head">
-      <span class="section-eyebrow">Hesaplar</span>
-      <h3>Acente, kurumsal müşteri, tedarikçi —<br><em>tek bir cari hesap</em> ekranı.</h3>
-      <p class="sub">Her acentenin, her tedarikçinin alacak / borç hareketleri zaman çizelgesi gibi sıralı. POS slipinden e-Faturaya kadar her işlem eşleşmiş ve mizandan tek tıkla görünüyor.</p>
+      <span class="section-eyebrow">02 · Rezervasyon Takvimi</span>
+      <h3>Tüm rezervasyonlar,<br><em>tek bir takvim</em> görünümünde.</h3>
+      <p class="sub">14 günlük, 30 günlük ve yıllık görünüm. Sürükle-bırak ile oda transferi, çakışma uyarısı, renk kodlu durum — Booking'den direkt'e kadar her kanal işaretli.</p>
     </div>
 
     <div class="preview-frame compact">
@@ -3158,19 +3194,101 @@ footer {
         <div class="preview-lights"><span></span><span></span><span></span></div>
         <div class="preview-url">
           <span class="lock"></span>
-          bosphoruspalace.<span style="color:var(--gold);">hoteluter</span>.com / muhasebe / cari / etstur
+          bosphoruspalace.<span style="color:var(--brass);">hoteluter</span>.com / takvim
+        </div>
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--ink-3);">14 May 2026</div>
+      </div>
+      <div class="preview-body">
+        <aside class="pms-side">
+          <div class="pms-side-section">
+            <div class="pms-side-label">İşletme</div>
+            <div class="pms-side-item">
+              <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>
+              Anasayfa
+            </div>
+            <div class="pms-side-item active">
+              <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span>
+              Rezervasyon Takvimi
+              <span class="count">218</span>
+            </div>
+            <div class="pms-side-item">
+              <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span>
+              Misafirler
+            </div>
+            <div class="pms-side-item">
+              <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></span>
+              Resepsiyon
+            </div>
+          </div>
+          <div class="pms-side-section">
+            <div class="pms-side-label">Finans</div>
+            <div class="pms-side-item">
+              <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="13" rx="2"></rect><path d="M2 11h20"></path></svg></span>
+              Ön Muhasebe
+            </div>
+            <div class="pms-side-item">
+              <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"></path><path d="M7 14l4-4 4 4 5-7"></path></svg></span>
+              Raporlar
+            </div>
+          </div>
+        </aside>
+
+        <div class="pms-main">
+          <div class="pms-toolbar">
+            <div class="pms-title">Rezervasyon Takvimi</div>
+            <div class="pms-date-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+              14 – 27 Mayıs 2026
+            </div>
+            <div class="pms-pager">
+              <button>‹</button>
+              <button>›</button>
+            </div>
+            <div class="pms-mini-tabs">
+              <button>Gün</button>
+              <button class="active">14 Gün</button>
+              <button>Ay</button>
+            </div>
+            <div class="pms-search">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+              <input placeholder="Misafir / oda ara…">
+            </div>
+          </div>
+          <div class="calendar" id="calendar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- MODULE 03 · ÖN MUHASEBE -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section id="muhasebe" class="tight">
+  <div class="container">
+    <div class="section-mini-head">
+      <span class="section-eyebrow">03 · Ön Muhasebe</span>
+      <h3>Folio, cari hesap, kasa-banka<br><em>tek bir</em> muhasebe modülünde.</h3>
+      <p class="sub">Folio'dan e-Arşiv'e, POS slipinden cari hesap takibine — tek modül, beş sekme. Mali müşavirinizin "şimdiye kadar gördüğüm en temiz veri" diyeceği yapı.</p>
+    </div>
+
+    <div class="preview-frame compact">
+      <div class="preview-chrome">
+        <div class="preview-lights"><span></span><span></span><span></span></div>
+        <div class="preview-url">
+          <span class="lock"></span>
+          bosphoruspalace.<span style="color:var(--brass);">hoteluter</span>.com / muhasebe / cari / etstur
         </div>
         <div style="font-family:var(--font-mono); font-size:11px; color:var(--ink-3);">62 kayıt</div>
       </div>
 
-      <!-- Submodule tabs (Cari Hesaplar active) -->
       <div class="preview-tabs">
         <div class="preview-tab">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line></svg>
           Folio
         </div>
         <div class="preview-tab active">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"></path></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
           Cari Hesaplar
           <span class="badge">1.428</span>
         </div>
@@ -3189,7 +3307,6 @@ footer {
       </div>
 
       <div class="hesap-grid">
-        <!-- Left: account list with category filter -->
         <aside class="hesap-side">
           <div class="hesap-filter-row">
             <button class="active">Tümü</button>
@@ -3220,16 +3337,6 @@ footer {
             <div class="bal alacak">+ ₺ 124k</div>
           </div>
           <div class="hesap-row">
-            <div class="av">MA</div>
-            <div><div class="n">Mehmet Aksoy</div><div class="t">MİSAFİR · VIP</div></div>
-            <div class="bal" style="color: var(--ink-3);">₺ 0</div>
-          </div>
-          <div class="hesap-row">
-            <div class="av">CY</div>
-            <div><div class="n">Çağdaş Yıldırım</div><div class="t">MİSAFİR</div></div>
-            <div class="bal borc">– ₺ 4,2k</div>
-          </div>
-          <div class="hesap-row">
             <div class="av">UN</div>
             <div><div class="n">Ünlü Tekstil A.Ş.</div><div class="t">TEDARİKÇİ · ÇAMAŞIR</div></div>
             <div class="bal borc">– ₺ 38k</div>
@@ -3241,11 +3348,10 @@ footer {
           </div>
           <div class="hesap-row">
             <div class="av">+</div>
-            <div><div class="n">1.420 hesap daha</div><div class="t">TÜMÜNÜ GÖR →</div></div>
+            <div><div class="n">1.422 hesap daha</div><div class="t">TÜMÜNÜ GÖR →</div></div>
           </div>
         </aside>
 
-        <!-- Right: Etstur ledger detail -->
         <div class="hesap-main">
           <div class="hesap-head">
             <div>
@@ -3276,7 +3382,7 @@ footer {
             <div class="h" style="justify-content:flex-end;">Bakiye (₺)</div>
 
             <div class="c mono">14 May 2026</div>
-            <div class="c"><span class="pill inv">e-FAT</span> e-Fatura · 14 günlük konaklama paketi (Bosphorus Suite × 4)</div>
+            <div class="c"><span class="pill inv">e-FAT</span> e-Fatura · 14 günlük konaklama paketi</div>
             <div class="c r borc">86.420,00</div>
             <div class="c r mono" style="color:var(--ink-4);">—</div>
             <div class="c r bakiye">184.420,00</div>
@@ -3288,28 +3394,22 @@ footer {
             <div class="c r bakiye">98.000,00</div>
 
             <div class="c mono">04 May 2026</div>
-            <div class="c"><span class="pill inv">e-ARŞ</span> e-Arşiv · Mart komisyon faturası (acente komisyon iadesi)</div>
+            <div class="c"><span class="pill inv">e-ARŞ</span> e-Arşiv · Mart komisyon iadesi</div>
             <div class="c r mono" style="color:var(--ink-4);">—</div>
             <div class="c r alacak">12.420,00</div>
             <div class="c r bakiye">160.000,00</div>
 
             <div class="c mono">28 Nis 2026</div>
-            <div class="c"><span class="pill inv">e-FAT</span> e-Fatura · Grup rezervasyon (8 oda · 3 gece) · Cihangir blok</div>
+            <div class="c"><span class="pill inv">e-FAT</span> e-Fatura · Grup rezervasyon (8 oda)</div>
             <div class="c r borc">142.840,00</div>
             <div class="c r mono" style="color:var(--ink-4);">—</div>
             <div class="c r bakiye">172.420,00</div>
 
             <div class="c mono">22 Nis 2026</div>
-            <div class="c"><span class="pill in">TAHS</span> Banka havalesi · İş Bankası TR42 · NET-30 vade</div>
+            <div class="c"><span class="pill in">TAHS</span> Banka havalesi · İş Bankası TR42 · NET-30</div>
             <div class="c r mono" style="color:var(--ink-4);">—</div>
             <div class="c r alacak">154.000,00</div>
             <div class="c r bakiye">29.580,00</div>
-
-            <div class="c mono">15 Nis 2026</div>
-            <div class="c"><span class="pill dep">DEP</span> Depozito · Yaz sezon allotment garantisi</div>
-            <div class="c r mono" style="color:var(--ink-4);">—</div>
-            <div class="c r alacak" style="color:var(--gold);">0,00</div>
-            <div class="c r mono" style="color:var(--ink-3);">183.580,00</div>
 
             <div class="c mono">10 Nis 2026</div>
             <div class="c"><span class="pill inv">e-FAT</span> e-Fatura · Nisan baz konaklama paketi</div>
@@ -3326,21 +3426,42 @@ footer {
             <button class="btn" style="font-size:12px; padding:8px 12px;">e-Fatura kes</button>
             <button class="btn" style="font-size:12px; padding:8px 12px;">Tahsilat gir</button>
             <button class="btn primary" style="font-size:12px; padding:8px 12px;">Ekstre gönder</button>
-            <span class="meta"><span class="pulse green" style="width:6px; height:6px;"></span>GİB ile senkronize · Son güncelleme 02:14</span>
+            <span class="meta"><span class="pulse green" style="width:6px; height:6px;"></span>GİB ile senkron · Son güncelleme 02:14</span>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 32px;">
+      <div class="feat-art" style="padding: 22px; min-height: auto;">
+        <strong style="color: var(--forest); font-family: var(--font-display); font-size: 17px; display:block; margin-bottom: 8px;">Folio</strong>
+        <p style="color: var(--ink-2); font-size: 13px; line-height: 1.5;">Oda, F&amp;B, spa, minibar tüm harcamalar tek folio'da.</p>
+      </div>
+      <div class="feat-art" style="padding: 22px; min-height: auto;">
+        <strong style="color: var(--forest); font-family: var(--font-display); font-size: 17px; display:block; margin-bottom: 8px;">Cari Hesaplar</strong>
+        <p style="color: var(--ink-2); font-size: 13px; line-height: 1.5;">Acente, misafir, tedarikçi — borç/alacak takibi.</p>
+      </div>
+      <div class="feat-art" style="padding: 22px; min-height: auto;">
+        <strong style="color: var(--forest); font-family: var(--font-display); font-size: 17px; display:block; margin-bottom: 8px;">e-Arşiv &amp; e-Fatura</strong>
+        <p style="color: var(--ink-2); font-size: 13px; line-height: 1.5;">GİB onaylı entegratörle 30 saniyede fatura.</p>
+      </div>
+      <div class="feat-art" style="padding: 22px; min-height: auto;">
+        <strong style="color: var(--forest); font-family: var(--font-display); font-size: 17px; display:block; margin-bottom: 8px;">POS Eşleştirme</strong>
+        <p style="color: var(--ink-2); font-size: 13px; line-height: 1.5;">Slip → folio → banka — otomatik karşılaştırma.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── PREVIEW: NIGHT AUDIT / RAPORLAR ──────────────────────────── -->
-<section class="tight" style="padding-top: 0;">
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- MODULE 04 · RAPORLAR -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section id="raporlar" class="tight">
   <div class="container">
     <div class="section-mini-head">
-      <span class="section-eyebrow">Gece raporu</span>
-      <h3>Sabah 09:00'da masanızdaki<br><em>yönetici özeti</em>.</h3>
-      <p class="sub">Night audit gece 02:00'de otomatik koşar. ADR, RevPAR, doluluk, segment dağılımı ve kanal komisyonu sabah açtığınızda hazırdır.</p>
+      <span class="section-eyebrow">04 · Raporlar</span>
+      <h3>Sabah açılır açılmaz,<br><em>dünün özeti</em> hazırdır.</h3>
+      <p class="sub">Night audit gece 02:00'de otomatik koşar. ADR, RevPAR, doluluk, segment dağılımı ve kanal komisyonu — sabah masanızdaki ilk şey.</p>
     </div>
 
     <div class="preview-frame compact">
@@ -3348,7 +3469,7 @@ footer {
         <div class="preview-lights"><span></span><span></span><span></span></div>
         <div class="preview-url">
           <span class="lock"></span>
-          bosphoruspalace.<span style="color:var(--gold);">hoteluter</span>.com / raporlar / gece-raporu
+          bosphoruspalace.<span style="color:var(--brass);">hoteluter</span>.com / raporlar / gece-raporu
         </div>
         <div style="font-family:var(--font-mono); font-size:11px; color:var(--ink-3);">14 May · 02:14</div>
       </div>
@@ -3360,7 +3481,7 @@ footer {
         </div>
         <div style="display:flex; gap:8px;">
           <span class="folio-status paid"><span class="pulse green" style="width:6px;height:6px;"></span>Hazır · 02:14</span>
-          <button class="btn" style="padding:7px 12px; font-size:11.5px; font-family:var(--font-mono); letter-spacing:0.06em;">PDF · Excel</button>
+          <button class="btn" style="padding:7px 12px; font-size:11.5px;">PDF · Excel</button>
         </div>
       </div>
 
@@ -3371,7 +3492,7 @@ footer {
           <div class="delta up">↑ %14,2 · y/y</div>
         </div>
         <div class="report-card">
-          <div class="lbl">RevPAR · satılabilir oda geliri</div>
+          <div class="lbl">RevPAR</div>
           <div class="v tnum">₺ 3.642</div>
           <div class="delta up">↑ %18,6 · y/y</div>
         </div>
@@ -3386,7 +3507,7 @@ footer {
           <div class="delta up">↑ %24,1 · y/y</div>
         </div>
         <div class="report-card">
-          <div class="lbl">GOPPAR · oda başı brüt kar</div>
+          <div class="lbl">GOPPAR</div>
           <div class="v tnum">₺ 2.184</div>
           <div class="delta up">↑ %12,4 · y/y</div>
         </div>
@@ -3401,35 +3522,32 @@ footer {
         <div class="reports-chart-head">
           <div>
             <div class="folio-num">Saatlik gelir akışı · son 24 saat</div>
-            <div style="font-family: var(--font-display); font-size: 18px; color: var(--ink-0); margin-top: 4px;">Tepe: 21:00 — 22:00 · ₺ 142.840</div>
+            <div style="font-family: var(--font-display); font-size: 18px; color: var(--forest); margin-top: 4px;">Tepe: 21:00 — 22:00 · ₺ 142.840</div>
           </div>
           <div style="display:flex; gap:14px;">
             <div style="display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:10.5px; color:var(--ink-2);">
-              <span style="width:10px;height:10px;border-radius:3px;background:linear-gradient(135deg,#c89968,#1f3a2e);"></span> 14 May
+              <span style="width:10px;height:10px;border-radius:3px;background:#a87842;"></span> 14 May
             </div>
             <div style="display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:10.5px; color:var(--ink-2);">
-              <span style="width:10px;height:10px;border-radius:3px;background:rgba(168,120,66,0.20);"></span> 7 May
+              <span style="width:10px;height:10px;border-radius:3px;background:rgba(31,58,46,0.30);"></span> 7 May
             </div>
           </div>
         </div>
         <svg class="reports-bars-svg" viewBox="0 0 700 200" preserveAspectRatio="none">
           <defs>
-            <linearGradient id="grBarA" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c89968"></stop><stop offset="100%" stop-color="#1f3a2e"></stop></linearGradient>
-            <linearGradient id="grLineA" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#a87842" stop-opacity="0.35"></stop><stop offset="100%" stop-color="#a87842" stop-opacity="0"></stop></linearGradient>
+            <linearGradient id="grBarB" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c89968"></stop>
+              <stop offset="100%" stop-color="#a87842"></stop>
+            </linearGradient>
           </defs>
-          <!-- horizontal gridlines -->
-          <g stroke="rgba(168,120,66,0.06)" stroke-dasharray="2 4">
+          <g stroke="rgba(168,120,66,0.10)" stroke-dasharray="2 4">
             <line x1="0" y1="40" x2="700" y2="40"></line>
             <line x1="0" y1="80" x2="700" y2="80"></line>
             <line x1="0" y1="120" x2="700" y2="120"></line>
             <line x1="0" y1="160" x2="700" y2="160"></line>
           </g>
-          <!-- bars (24 hours of revenue, scaled) -->
-          <g id="nrBars"></g>
-          <!-- prev week line -->
-          <path id="nrPrev" fill="none" stroke="rgba(168,120,66,0.30)" stroke-width="1.6" stroke-dasharray="4 4"></path>
-          <!-- area -->
-          <path id="nrArea" fill="url(#grLineA)"></path>
+          <g id="nrBars2"></g>
+          <path id="nrPrev2" fill="none" stroke="#1f3a2e" stroke-opacity="0.45" stroke-width="1.6" stroke-dasharray="4 4"></path>
         </svg>
         <div style="display:flex; justify-content:space-between; margin-top: 6px; font-family: var(--font-mono); font-size: 9.5px; color: var(--ink-4); letter-spacing: 0.08em;">
           <span>00:00</span><span>04:00</span><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span><span>23:59</span>
@@ -3440,723 +3558,86 @@ footer {
         <div class="seg-card">
           <div class="folio-num" style="margin-bottom: 8px;">Kanal dağılımı · 14 May</div>
           <div class="seg-row"><div class="name"><span class="dot" style="background:#a87842"></span>Direkt rezervasyon</div><div><span class="val">₺ 384.620</span><span class="pct">%43,0</span></div></div>
-          <div class="seg-row"><div class="name"><span class="dot" style="background:#003580"></span>Booking.com</div><div><span class="val">₺ 268.040</span><span class="pct">%30,0</span></div></div>
-          <div class="seg-row"><div class="name"><span class="dot" style="background:#ffce00"></span>Expedia Group</div><div><span class="val">₺ 142.180</span><span class="pct">%15,9</span></div></div>
-          <div class="seg-row"><div class="name"><span class="dot" style="background:#1ec693"></span>B2B · acenteler</div><div><span class="val">₺ 99.370</span><span class="pct">%11,1</span></div></div>
+          <div class="seg-row"><div class="name"><span class="dot" style="background:#1f3a2e"></span>Booking.com</div><div><span class="val">₺ 268.040</span><span class="pct">%30,0</span></div></div>
+          <div class="seg-row"><div class="name"><span class="dot" style="background:#c89968"></span>Expedia Group</div><div><span class="val">₺ 142.180</span><span class="pct">%15,9</span></div></div>
+          <div class="seg-row"><div class="name"><span class="dot" style="background:#4a7c59"></span>B2B · acenteler</div><div><span class="val">₺ 99.370</span><span class="pct">%11,1</span></div></div>
         </div>
         <div class="seg-card">
           <div class="folio-num" style="margin-bottom: 8px;">Departman geliri · 14 May</div>
-          <div class="seg-row"><div class="name"><span class="dot" style="background:#c89968"></span>Oda satışı</div><div><span class="val">₺ 642.840</span><span class="pct">%71,9</span></div></div>
-          <div class="seg-row"><div class="name"><span class="dot" style="background:#8a5f33"></span>Yiyecek &amp; içecek (F&amp;B)</div><div><span class="val">₺ 168.420</span><span class="pct">%18,8</span></div></div>
+          <div class="seg-row"><div class="name"><span class="dot" style="background:#1f3a2e"></span>Oda satışı</div><div><span class="val">₺ 642.840</span><span class="pct">%71,9</span></div></div>
+          <div class="seg-row"><div class="name"><span class="dot" style="background:#a87842"></span>Yiyecek &amp; içecek (F&amp;B)</div><div><span class="val">₺ 168.420</span><span class="pct">%18,8</span></div></div>
           <div class="seg-row"><div class="name"><span class="dot" style="background:#4a6b85"></span>Spa &amp; wellness</div><div><span class="val">₺ 56.180</span><span class="pct">%6,3</span></div></div>
           <div class="seg-row"><div class="name"><span class="dot" style="background:#4a7c59"></span>Diğer (minibar, çamaşır)</div><div><span class="val">₺ 26.770</span><span class="pct">%3,0</span></div></div>
         </div>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- ── PREVIEW: MİSAFİR CRM ─────────────────────────────────────── -->
-<section class="tight" style="padding-top: 0;">
-  <div class="container">
-    <div class="section-mini-head">
-      <span class="section-eyebrow">Misafir CRM</span>
-      <h3>Misafir geri döndüğünde,<br><em>her şey hatırlanmış</em>.</h3>
-      <p class="sub">Tüm kanallardan gelen kayıtlar tek profilde birleşir. Geçmiş konaklama, tercih, alerji ve yıldönümü bilgileri — resepsiyon ekibinizin önünde.</p>
-    </div>
-
-    <div class="preview-frame compact">
-      <div class="preview-chrome">
-        <div class="preview-lights"><span></span><span></span><span></span></div>
-        <div class="preview-url">
-          <span class="lock"></span>
-          bosphoruspalace.<span style="color:var(--gold);">hoteluter</span>.com / misafirler / 28-441
-        </div>
-        <div style="font-family:var(--font-mono); font-size:11px; color:var(--ink-3);">1.428 kayıt</div>
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 32px;">
+      <div class="feat-art" style="padding: 22px; min-height: auto;">
+        <strong style="color: var(--forest); font-family: var(--font-display); font-size: 17px; display:block; margin-bottom: 8px;">60+ hazır rapor</strong>
+        <p style="color: var(--ink-2); font-size: 13px; line-height: 1.5;">ADR, RevPAR, doluluk, segment, kanal komisyonu, departman geliri.</p>
       </div>
-
-      <div class="crm-grid">
-        <!-- List -->
-        <aside class="crm-list">
-          <div class="crm-search">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
-            <input placeholder="Ad, telefon, e-posta…">
-          </div>
-          <div style="font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-4); padding: 8px 10px;">YAKIN ZİYARETLER</div>
-
-          <div class="crm-list-item active">
-            <div class="av">MA</div>
-            <div><div class="n">Mehmet Aksoy</div><div class="m">5 KONAKLAMA · ₺ 186K</div></div>
-            <span class="tag">VIP</span>
-          </div>
-          <div class="crm-list-item">
-            <div class="av">SY</div>
-            <div><div class="n">Selma Yıldız</div><div class="m">3 KONAKLAMA · ₺ 94K</div></div>
-          </div>
-          <div class="crm-list-item">
-            <div class="av">CB</div>
-            <div><div class="n">Carl Bauer</div><div class="m">2 KONAKLAMA · ₺ 62K</div></div>
-          </div>
-          <div class="crm-list-item">
-            <div class="av">AP</div>
-            <div><div class="n">Anna Pavlova</div><div class="m">1 KONAKLAMA · ₺ 18K</div></div>
-          </div>
-          <div class="crm-list-item">
-            <div class="av">DY</div>
-            <div><div class="n">Demir Yılmaz</div><div class="m">4 KONAKLAMA · ₺ 142K</div></div>
-            <span class="tag" style="color:var(--success); background:rgba(74,124,89,0.08); border-color:rgba(74,124,89,0.22);">REP</span>
-          </div>
-          <div class="crm-list-item">
-            <div class="av">KS</div>
-            <div><div class="n">K. Stanford</div><div class="m">1 KONAKLAMA · ₺ 24K</div></div>
-          </div>
-          <div class="crm-list-item">
-            <div class="av">LF</div>
-            <div><div class="n">Al-Faraj Ailesi</div><div class="m">2 KONAKLAMA · ₺ 218K</div></div>
-            <span class="tag">VIP</span>
-          </div>
-        </aside>
-
-        <!-- Detail -->
-        <div class="crm-detail">
-          <div class="crm-profile">
-            <div class="big-av">MA</div>
-            <div style="flex:1;">
-              <div class="name">Mehmet Aksoy</div>
-              <div class="meta">mehmet@aksoy.com.tr · +90 532 411 88 02 · İstanbul</div>
-              <div class="tags">
-                <span>VIP · 5. ZİYARET</span>
-                <span style="color:var(--success); background:rgba(74,124,89,0.08); border-color:rgba(74,124,89,0.22);">REPEAT</span>
-                <span style="color:var(--info); background:rgba(74,107,133,0.08); border-color:rgba(74,107,133,0.22);">PRESS · MEDYA</span>
-              </div>
-            </div>
-            <button class="btn primary" style="padding:9px 14px; font-size:12px;">Rezervasyon oluştur</button>
-          </div>
-
-          <div class="crm-stats">
-            <div class="crm-stat">
-              <div class="l">Toplam konaklama</div>
-              <div class="v">5 kez</div>
-            </div>
-            <div class="crm-stat">
-              <div class="l">Yaşam boyu harcama</div>
-              <div class="v gold">₺ 186.420</div>
-            </div>
-            <div class="crm-stat">
-              <div class="l">Son ziyaret</div>
-              <div class="v">21 May 2026</div>
-            </div>
-          </div>
-
-          <div class="crm-prefs">
-            <div class="pref-card">
-              <div class="l">Tercih · oda</div>
-              <div class="v">Yüksek kat · Boğaz manzarası · Suite</div>
-            </div>
-            <div class="pref-card alert">
-              <div class="l">Alerji / kısıtlama</div>
-              <div class="v">⚠ Fıstık · Glüten YOK</div>
-            </div>
-            <div class="pref-card">
-              <div class="l">Karşılama isteği</div>
-              <div class="v">Yeşil çay, şekersiz · şarap istemiyor</div>
-            </div>
-            <div class="pref-card">
-              <div class="l">Önemli tarihler</div>
-              <div class="v">Doğum günü: 12 Ağu · Evlilik: 04 Şub</div>
-            </div>
-          </div>
-
-          <div class="crm-timeline">
-            <div class="crm-timeline-head">SON ETKİLEŞİMLER</div>
-            <div class="crm-event">
-              <span class="dot amber"></span>
-              <span>Yıldönümü hatırlatma e-postası açıldı · "Mayıs için suite teklif"</span>
-              <span class="when">2 saat önce</span>
-            </div>
-            <div class="crm-event">
-              <span class="dot green"></span>
-              <span>Konaklama tamamlandı · ★★★★★ 5/5 yorum bıraktı</span>
-              <span class="when">12 May · 11:24</span>
-            </div>
-            <div class="crm-event">
-              <span class="dot gray"></span>
-              <span>Spa rezervasyonu · 60 dk aromaterapi masaj × 2</span>
-              <span class="when">11 May · 16:08</span>
-            </div>
-            <div class="crm-event">
-              <span class="dot gray"></span>
-              <span>Booking.com üzerinden 4 gece rezervasyon · 17 May girişli</span>
-              <span class="when">28 Nis · 22:46</span>
-            </div>
-          </div>
-        </div>
+      <div class="feat-art" style="padding: 22px; min-height: auto;">
+        <strong style="color: var(--forest); font-family: var(--font-display); font-size: 17px; display:block; margin-bottom: 8px;">Otomatik gönderim</strong>
+        <p style="color: var(--ink-2); font-size: 13px; line-height: 1.5;">Gece 02:00'de otomatik mail. Excel, PDF, Google Sheets.</p>
+      </div>
+      <div class="feat-art" style="padding: 22px; min-height: auto;">
+        <strong style="color: var(--forest); font-family: var(--font-display); font-size: 17px; display:block; margin-bottom: 8px;">Karşılaştırmalı</strong>
+        <p style="color: var(--ink-2); font-size: 13px; line-height: 1.5;">Gün/gün, hafta/hafta, yıl/yıl — istediğiniz dilim.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── AI HERO · Hoteluter Intelligence ─────────────────────────── -->
-<section class="ai-hero-section" id="ai">
-  <div class="container ai-hero-inner">
-    <div class="ai-headline">
-      <span class="section-eyebrow"><span class="pulse"></span>Hoteluter Intelligence</span>
-      <h2>Yapay zeka,<br><em>ne yapacağınızı</em> size söyler.</h2>
-      <p>Hoteluter AI günde 1.428 sinyali tarar — geçen yılın aynı haftası, hava durumu, etkinlik takvimi, kanal komisyonu, no-show riski. Sabah ekran açtığınızda <strong style="color:var(--gold)">7-12 somut içgörü</strong> bekliyor. AI veriyi gösterir, kararı siz verirsiniz.</p>
-    </div>
-
-    <div class="ai-cc">
-      <!-- LEFT: Recommendation feed mockup -->
-      <div class="ai-cc-main">
-        <div class="ai-cc-head">
-          <div>
-            <div class="ai-cc-title">AI Komuta Merkezi</div>
-            <div class="ai-cc-sub">
-              <span class="pulse"></span>
-              CANLI · 14 Mayıs Çarşamba · 09:42
-            </div>
-          </div>
-          <div class="legend">
-            <button class="btn" style="padding:7px 11px; font-size:11.5px;">Sebep göster</button>
-          </div>
-        </div>
-
-        <!-- Aggregate impact -->
-        <div class="ai-cc-stats">
-          <div class="ai-stat-mini">
-            <div class="l">Bu hafta AI etkisi</div>
-            <div class="v grad">+ ₺ 248.420</div>
-            <div class="d">↑ %18,4 · ek hasılat</div>
-          </div>
-          <div class="ai-stat-mini">
-            <div class="l">Bekleyen tavsiye</div>
-            <div class="v">12</div>
-            <div class="d">7 yüksek öncelik</div>
-          </div>
-          <div class="ai-stat-mini">
-            <div class="l">Model doğruluğu</div>
-            <div class="v">%94,2</div>
-            <div class="d">14 günlük tahmin</div>
-          </div>
-        </div>
-
-        <div class="ai-feed-head">
-          <div class="l">Tavsiyeler · gelir önceliğine göre</div>
-          <div class="filter">
-            <button class="active">Tümü</button>
-            <button>Fiyat</button>
-            <button>Kampanya</button>
-            <button>Risk</button>
-          </div>
-        </div>
-
-        <div class="ai-feed">
-          <!-- Pricing insight (advisory only) -->
-          <div class="ai-card">
-            <div class="ico">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M23 6l-9.5 9.5-5-5L1 18"></path><path d="M17 6h6v6"></path></svg>
-            </div>
-            <div class="body">
-              <div class="tag-row">
-                <span class="tag">FİYAT İÇGÖRÜSÜ</span>
-                <span class="tag gold">Olası + ₺ 86k fırsat</span>
-                <span class="when">2 dakika önce · güven %96</span>
-              </div>
-              <div class="text">
-                <strong>Hafta sonu suite fiyatınız piyasanın altında.</strong>
-                Son 8 cuma %94 doluluk; rakip ortalaması ₺4.840, sizinki ₺4.218. Bölgenizde fiyatları yaklaşık %14 yukarı çekmek hafta sonu hasılatına tahmini <span class="grad">₺ 86.420</span> ekleyebilir.
-              </div>
-            </div>
-            <div class="actions">
-              <button class="ic-btn" title="Yoksay">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
-              </button>
-              <button class="ic-btn primary" title="Detayı gör">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Upsell campaign -->
-          <div class="ai-card">
-            <div class="ico">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l3 7 7.5.6-5.7 4.9 1.7 7.3L12 18l-6.5 3.8 1.7-7.3L1.5 9.6 9 9z"></path></svg>
-            </div>
-            <div class="body">
-              <div class="tag-row">
-                <span class="tag violet">UPSELL · KAMPANYA</span>
-                <span class="tag gold">+ ₺ 64k tahmini</span>
-                <span class="when">12 dk önce · 184 misafire özel</span>
-              </div>
-              <div class="text">
-                <strong>Spa paketi öner</strong> — gelecek 14 günde giriş yapacak 184 çiftin <strong>%62'si</strong> önceki konaklamada spa kullanmadı. Karşılama mailine "60 dk masaj ₺790" eklemek tahmini <span class="grad">₺ 64.180</span> getirir.
-              </div>
-            </div>
-            <div class="actions">
-              <button class="ic-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
-              <button class="ic-btn primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
-            </div>
-          </div>
-
-          <!-- APPLIED: Re-engagement -->
-          <div class="ai-card applied">
-            <div class="ico">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            </div>
-            <div class="body">
-              <div class="tag-row">
-                <span class="tag green">UYGULANDI · 06:48</span>
-                <span class="tag">CRM · YENİDEN KAZANIM</span>
-                <span class="when">42 misafire e-posta gönderildi</span>
-              </div>
-              <div class="text">
-                Geçen yıl mayısta konaklayan <strong>42 misafir</strong> bu sene henüz dönmedi. Otomatik yıldönümü maili kuponla beraber tetiklendi — şimdiden <strong style="color:var(--success)">8 rezervasyon</strong> geldi, <span class="grad">₺ 38.420</span> hasılat.
-              </div>
-            </div>
-            <div class="actions">
-              <button class="ic-btn applied"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
-            </div>
-          </div>
-
-          <!-- No-show risk -->
-          <div class="ai-card">
-            <div class="ico" style="background: linear-gradient(180deg, rgba(31,58,46,0.18), rgba(31,58,46,0.04)); border-color: rgba(31,58,46,0.30); color: var(--ember);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            </div>
-            <div class="body">
-              <div class="tag-row">
-                <span class="tag" style="color:var(--ember); background: rgba(31,58,46,0.08); border-color: rgba(31,58,46,0.22);">NO-SHOW RİSKİ</span>
-                <span class="tag">17 MAY · 3 REZERVASYON</span>
-                <span class="when">Risk skoru %78</span>
-              </div>
-              <div class="text">
-                Üç rezervasyon için <strong>no-show olasılığı %78</strong> — kredi kartı doğrulaması yok, telefon bağlantı kurmadı. <strong>₺ 8.420 depozito</strong> istemek bu odaları sezona açar.
-              </div>
-            </div>
-            <div class="actions">
-              <button class="ic-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
-              <button class="ic-btn primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
-            </div>
-          </div>
-
-          <!-- Channel rebalance -->
-          <div class="ai-card">
-            <div class="ico">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
-            </div>
-            <div class="body">
-              <div class="tag-row">
-                <span class="tag blue">KANAL OPTİMİZASYON</span>
-                <span class="tag gold">+ ₺ 24k komisyon tasarruf</span>
-                <span class="when">14 günlük analiz</span>
-              </div>
-              <div class="text">
-                Direkt rezervasyonlar son 30 günde <strong>%14 düştü</strong>. SEO ve Instagram reklam bütçesini <strong>₺ 12.000</strong>'e çekmek 18 günde <span class="grad">₺ 24.420</span> komisyon tasarrufu yapar.
-              </div>
-            </div>
-            <div class="actions">
-              <button class="ic-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
-              <button class="ic-btn primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
-            </div>
-          </div>
-
-          <!-- Demand spike alert -->
-          <div class="ai-card">
-            <div class="ico">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
-            </div>
-            <div class="body">
-              <div class="tag-row">
-                <span class="tag">TALEP UYARISI</span>
-                <span class="tag gold">Olası + ₺ 38k fırsat</span>
-                <span class="when">3 hafta önceden bildirim</span>
-              </div>
-              <div class="text">
-                <strong>04–07 Haziran</strong> haftasında bölgede arama hacmi geçen yıla göre <strong>%64 yüksek</strong> — büyük bir kongre etkinliği var. Suite fiyatları ve minimum konaklama kuralınızı şimdiden gözden geçirmek isteyebilirsiniz.
-              </div>
-            </div>
-            <div class="actions">
-              <button class="ic-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
-              <button class="ic-btn primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT: ROI + insight summary -->
-      <div class="ai-side">
-        <div class="ai-side-card feature">
-          <div class="l">412 otel ortalaması · 30 günlük etki</div>
-          <h4>AI içgörülerini takip eden oteller<br><em>daha doğru</em> karar veriyor.</h4>
-          <div class="ai-roi">
-            <span class="num">+%24,1</span>
-            <span class="unit">RevPAR</span>
-          </div>
-          <div class="ai-roi-meta">y/y — verisiz karar veren otellere kıyasla</div>
-          <ul class="ai-tip-list">
-            <li>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <span>Sabah özeti — günün 7-12 önemli içgörüsü maille gelir</span>
-            </li>
-            <li>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <span>"<strong>Neden bu içgörü?</strong>" — her tavsiye için şeffaf gerekçe</span>
-            </li>
-            <li>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <span>Karar yine sizde — AI veriyi gösterir, uygulamayı siz seçersiniz</span>
-            </li>
-            <li>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <span>Konaklama vergisi, KDV ve komisyon dahil net hesap</span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="ai-side-card">
-          <div class="l">Bu hafta sayılarla</div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px;">
-            <div>
-              <div style="font-family: var(--font-display); font-size: 30px; color: var(--gold); letter-spacing: -0.018em;">38</div>
-              <div style="font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px;">Onaylanan öneri</div>
-            </div>
-            <div>
-              <div style="font-family: var(--font-display); font-size: 30px; color: var(--ink-0); letter-spacing: -0.018em;">14</div>
-              <div style="font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px;">Otomatik kampanya</div>
-            </div>
-            <div>
-              <div style="font-family: var(--font-display); font-size: 30px; color: var(--ink-0); letter-spacing: -0.018em;">6</div>
-              <div style="font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px;">Önlenen no-show</div>
-            </div>
-            <div>
-              <div style="font-family: var(--font-display); font-size: 30px; color: var(--ink-0); letter-spacing: -0.018em;">02:14</div>
-              <div style="font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px;">Son model koşusu</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="ai-side-card" style="display:flex; flex-direction: column; gap: 10px;">
-          <div class="l">Sıradaki tahmin</div>
-          <div style="font-family: var(--font-display); font-size: 20px; color: var(--ink-0); letter-spacing: -0.012em; line-height: 1.3;">
-            <em style="font-style: italic; background: var(--grad-amber); -webkit-background-clip: text; background-clip: text; color: transparent;">Cumartesi 21:00</em> — 218 odadan 214'ü dolu olacak. Suite kategorisi <strong style="color: var(--gold)">%100</strong>, son-dakika premium fiyat aktif edilebilir.
-          </div>
-          <div style="display:flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-3); letter-spacing: 0.06em; margin-top: 6px;">
-            <span class="pulse"></span>
-            Güven %96 · 14 gün öncesinden
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- AI Capability cards -->
-    <div class="ai-caps">
-      <div class="ai-cap">
-        <div class="ai-cap-ico">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M23 6l-9.5 9.5-5-5L1 18"></path><path d="M17 6h6v6"></path></svg>
-        </div>
-        <h5>Fiyat içgörüsü</h5>
-        <p>Geçmiş doluluk, etkinlik takvimi ve rakip ortalamasını izleyerek fiyatınızın piyasaya göre nerede olduğunu söyler. Kararı yine siz verirsiniz.</p>
-        <div class="roi">Günde 4× piyasa karşılaştırması</div>
-      </div>
-      <div class="ai-cap">
-        <div class="ai-cap-ico">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
-        </div>
-        <h5>14 günlük doluluk tahmini</h5>
-        <p>Pazartesi öğleden sonra önümüzdeki 14 günü %94 doğrulukla görür, fiyat ve kadronuzu önceden ayarlarsınız.</p>
-        <div class="roi">% 94,2 model doğruluğu</div>
-      </div>
-      <div class="ai-cap">
-        <div class="ai-cap-ico">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        </div>
-        <h5>Yeniden kazanım kampanyaları</h5>
-        <p>Geçen yıl gelip bu yıl gelmemiş misafirleri segmentler, kişiselleştirilmiş kupon mailini doğru zamanda yollar.</p>
-        <div class="roi">Tekrar misafir +%38</div>
-      </div>
-      <div class="ai-cap">
-        <div class="ai-cap-ico">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        </div>
-        <h5>No-show &amp; risk yönetimi</h5>
-        <p>Kredi kartı doğrulaması, telefon ulaşımı, geçmiş davranış — riskli rezervasyonlara depozito ister.</p>
-        <div class="roi">No-show oranı –%62</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── REPORTS SECTION ───────────────────────────────────────────── -->
-<section id="raporlar" class="tight">
-  <div class="container">
-    <div class="section-head">
-      <span class="section-eyebrow">Raporlar &amp; ön muhasebe</span>
-      <h2>Cuma akşamı saat 19:00'da<br><em>kapanış</em> hazır.</h2>
-      <p class="lead">Hoteluter'ın gece denetimi (night audit), tüm folio'ları, kanal komisyonlarını ve POS tahsilatlarını otomatik eşleştirir. Sabah açılan ekranda doluluğunuz, gelir ve KPI'ınız hazırdır.</p>
-    </div>
-
-    <div class="report-row">
-      <div class="report-panel">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 22px;">
-          <div>
-            <div style="font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-3);">Aylık Gelir · 2026</div>
-            <div class="display" style="font-size:30px; margin-top:6px;">₺ 4.842.180</div>
-            <div style="font-family:var(--font-mono); font-size:11.5px; color:var(--success); margin-top:4px;">↑ +%24.1 geçen yıla göre</div>
-          </div>
-          <div style="display:flex; gap:14px;">
-            <div style="display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:10.5px; color:var(--ink-2);">
-              <span style="width:10px; height:10px; border-radius:3px; background: linear-gradient(135deg,#c89968,#1f3a2e);"></span> 2026
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:10.5px; color:var(--ink-2);">
-              <span style="width:10px; height:10px; border-radius:3px; background:rgba(168,120,66,0.18);"></span> 2025
-            </div>
-          </div>
-        </div>
-        <div class="report-bars" id="reportBars"></div>
-        <div style="display:grid; grid-template-columns:repeat(12,1fr); gap:8px; margin-top:32px; padding-top:16px; border-top:1px solid var(--hairline);">
-          <div></div>
-          <div></div>
-        </div>
-      </div>
-
-      <div class="kpis-stack">
-        <div class="kpi-row">
-          <div>
-            <div class="l">ADR (Ortalama Günlük Oran)</div>
-            <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
-              <span class="v">₺ 4.218</span>
-              <span class="delta">↑ %14.2</span>
-            </div>
-          </div>
-          <svg width="80" height="36" viewBox="0 0 80 36" fill="none">
-            <path d="M2 28 L12 24 L22 22 L32 18 L42 14 L52 16 L62 10 L72 6" stroke="#a87842" stroke-width="1.8" stroke-linecap="round"></path>
-            <circle cx="72" cy="6" r="2.5" fill="#a87842"></circle>
-          </svg>
-        </div>
-        <div class="kpi-row">
-          <div>
-            <div class="l">RevPAR (Satılabilir Oda Geliri)</div>
-            <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
-              <span class="v">₺ 3.642</span>
-              <span class="delta">↑ %18.6</span>
-            </div>
-          </div>
-          <svg width="80" height="36" viewBox="0 0 80 36" fill="none">
-            <path d="M2 30 L12 26 L22 24 L32 20 L42 12 L52 14 L62 8 L72 4" stroke="#c89968" stroke-width="1.8" stroke-linecap="round"></path>
-            <circle cx="72" cy="4" r="2.5" fill="#c89968"></circle>
-          </svg>
-        </div>
-        <div class="kpi-row">
-          <div>
-            <div class="l">Doluluk Oranı</div>
-            <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
-              <span class="v">%86.4</span>
-              <span class="delta">↑ %4.2 puan</span>
-            </div>
-          </div>
-          <svg width="80" height="36" viewBox="0 0 80 36" fill="none">
-            <path d="M2 24 L12 26 L22 22 L32 24 L42 18 L52 14 L62 12 L72 8" stroke="#c89968" stroke-width="1.8" stroke-linecap="round"></path>
-            <circle cx="72" cy="8" r="2.5" fill="#c89968"></circle>
-          </svg>
-        </div>
-        <div class="kpi-row">
-          <div>
-            <div class="l">Tekrar Misafir</div>
-            <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
-              <span class="v">%38.2</span>
-              <span class="delta">↑ %8.4 puan</span>
-            </div>
-          </div>
-          <svg width="80" height="36" viewBox="0 0 80 36" fill="none">
-            <path d="M2 28 L12 24 L22 26 L32 22 L42 20 L52 16 L62 14 L72 10" stroke="#4a7c59" stroke-width="1.8" stroke-linecap="round"></path>
-            <circle cx="72" cy="10" r="2.5" fill="#4a7c59"></circle>
-          </svg>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── TESTIMONIAL ───────────────────────────────────────────────── -->
-<section id="referans" class="tight">
-  <div class="container">
-    <div class="section-head">
-      <span class="section-eyebrow">Müşterilerimiz ne diyor</span>
-      <h2>Resepsiyon ekiplerinin <em>tavsiye ettiği</em><br>tek PMS.</h2>
-    </div>
-    <div class="tmsl-grid">
-      <div class="tmsl-main">
-        <div class="quote-mark">"</div>
-        <div class="quote">
-          Üç yıl önce 4 farklı yazılım kullanıyorduk: rezervasyon ayrı, muhasebe ayrı, kanal yöneticisi ayrı. Hoteluter'a geçtikten sonra ilk ayda gelirimiz %22 arttı, ekibimiz akşam 18:00'da gerçekten işten çıkabiliyor.
-        </div>
-        <div class="who">
-          <div class="who-av">EA</div>
-          <div>
-            <div class="name">Emre Akın</div>
-            <div class="role">GENEL MÜDÜR · BOSPHORUS PALACE · 218 ODA</div>
-          </div>
-        </div>
-      </div>
-      <div class="tmsl-side">
-        <div class="tmsl-card">
-          <div class="quote">"Mali müşavirim 'siz hangi yazılımı kullanıyorsunuz, çok temiz veri geliyor' diye sordu. Cevap: Hoteluter."</div>
-          <div class="who">
-            <div class="who-av">SY</div>
-            <div>
-              <div class="name">Seda Yıldız</div>
-              <div class="role">SAHİP · GARDEN HOUSE</div>
-            </div>
-          </div>
-        </div>
-        <div class="tmsl-card">
-          <div class="quote">"Booking ile aramızdaki senkron sorunları tamamen bitti. Bu para verdiğimiz her PMS'in başaramadığı şeydi."</div>
-          <div class="who">
-            <div class="who-av">MK</div>
-            <div>
-              <div class="name">Murat Kaya</div>
-              <div class="role">REVENUE MANAGER · GOLDEN HORN SUITES</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── PRICING ───────────────────────────────────────────────────── -->
-<section id="fiyat" class="tight">
-  <div class="container">
-    <div class="section-head">
-      <span class="section-eyebrow">Fiyatlandırma</span>
-      <h2>Oda başına, ay başına.<br><em>Tek</em> fiyat — gizli kalem yok.</h2>
-      <p class="lead">Setup bedeli, eğitim ve veri taşıma hep dahil. İlk 14 gün ücretsiz, kredi kartı istemiyoruz. İstediğinizde tek tıkla iptal.</p>
-    </div>
-
-    <div class="pricing-grid">
-      <div class="price-card">
-        <span class="tag">Butik</span>
-        <div class="pname">Pansiyon</div>
-        <div class="pdesc">Tekil otel · 30 odaya kadar</div>
-        <div class="price-row">
-          <div class="price"><span class="cur">₺</span>18<span style="font-size:32px;color:var(--ink-3);font-family:var(--font-sans);font-weight:500;"> / oda / ay</span></div>
-        </div>
-        <ul>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Rezervasyon takvimi &amp; resepsiyon</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 3 kanal entegrasyonu</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Temel raporlar &amp; e-Arşiv</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> E-posta destek · 09:00–18:00</li>
-        </ul>
-        <div class="pcta"><a href="#" class="btn">Başla</a></div>
-      </div>
-
-      <div class="price-card featured">
-        <span class="tag"><span class="pulse" style="width:6px;height:6px"></span>En popüler</span>
-        <div class="pname">Profesyonel</div>
-        <div class="pdesc">Otel · 31 – 200 oda · çok şubeli</div>
-        <div class="price-row">
-          <div class="price"><span class="cur">₺</span>32<span style="font-size:32px;color:var(--ink-3);font-family:var(--font-sans);font-weight:500;"> / oda / ay</span></div>
-        </div>
-        <ul>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Pansiyon planındaki her şey</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> <strong style="color:var(--ink-0)">40+ kanal sınırsız senkron</strong></li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Tam ön muhasebe · e-Fatura</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Misafir CRM &amp; otomasyon</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Hoteluter AI · doluluk tahmini</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 7/24 öncelikli destek + onboarding</li>
-        </ul>
-        <div class="pcta"><a href="#" class="btn primary">14 gün ücretsiz başla</a></div>
-      </div>
-
-      <div class="price-card">
-        <span class="tag">Zincir</span>
-        <div class="pname">Kurumsal</div>
-        <div class="pdesc">200+ oda · çoklu marka · özel SLA</div>
-        <div class="price-row">
-          <div class="price" style="font-size:46px;">Görüşelim</div>
-        </div>
-        <ul>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Profesyonel'deki her şey</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Özelleştirilmiş tema &amp; domain</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Tek oturum (SSO) &amp; SCIM</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Atanmış müşteri yöneticisi</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 99.99 SLA · veri ihracı garanti</li>
-        </ul>
-        <div class="pcta"><a href="#" class="btn">Satışla görüş</a></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── CTA ───────────────────────────────────────────────────────── -->
-<section id="deneme" class="tight">
+<!-- CTA -->
+<section class="tight">
   <div class="container">
     <div class="cta">
-      <h2>Bu hafta sonu<br>yeni PMS'inize <em>doğmuş</em> olun.</h2>
+      <h2>Dört modül,<br><em>tek</em> giriş.</h2>
       <div class="cta-right">
-        <p style="color: var(--ink-2); font-size: 15px;">Verilerinizi mevcut sisteminizden ücretsiz taşıyoruz. Eğitim dahil. Karşılığında kredi kartı istemiyoruz.</p>
+        <p style="color: var(--ink-2); font-size: 15px;">14 gün ücretsiz dene, mevcut verilerinizi ücretsiz taşıyalım. Kredi kartı istemiyoruz.</p>
         <div class="cta-actions">
-          <a href="#" class="btn primary lg">14 gün ücretsiz başla
+          <a href="contact.html" class="btn primary lg">14 gün ücretsiz başla
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
           </a>
-          <a href="#" class="btn lg">Demo planla</a>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;">
-          <span class="cta-bullet">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Kurulum &amp; eğitim ücretsiz
-          </span>
-          <span class="cta-bullet">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Kredi kartı gerektirmez
-          </span>
-          <span class="cta-bullet">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Mevcut veri ücretsiz taşınır
-          </span>
-          <span class="cta-bullet">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            İstediğiniz an iptal
-          </span>
+          <a href="pricing.html" class="btn lg">Fiyatları gör</a>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── FOOTER ────────────────────────────────────────────────────── -->
-<footer id="destek">
+<!-- FOOTER -->
+<footer>
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <a href="#" class="brand">
+        <a href="index.html" class="brand">
           <div class="brand-mark"><span>H</span></div>
           <div class="brand-name">Hoteluter<span class="brand-tld">.com</span></div>
         </a>
-        <p>Türkiye'de tasarlanıp dünyaya yayılan oteller için modern işletim sistemi. Resepsiyondan finansa, kanaldan misafir CRM'ine kadar tek panel.</p>
+        <p>Türkiye'de tasarlanıp dünyaya yayılan oteller için modern işletim sistemi.</p>
         <div style="margin-top:18px; display:inline-flex; align-items:center; gap:8px; color: var(--success); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em;">
-          <span class="pulse green"></span> Tüm sistemler çalışıyor — status.hoteluter.com
+          <span class="pulse green"></span> Tüm sistemler çalışıyor
         </div>
       </div>
       <div class="footer-col">
         <h4>Ürün</h4>
         <ul>
-          <li><a href="modules.html">Tüm modüller</a></li>
-          <li><a href="modules.html#rezervasyon">Rezervasyon Takvimi</a></li>
+          <li><a href="modules.html#anasayfa">Anasayfa</a></li>
+          <li><a href="modules.html#takvim">Rezervasyon</a></li>
           <li><a href="modules.html#muhasebe">Ön Muhasebe</a></li>
           <li><a href="modules.html#raporlar">Raporlar</a></li>
-          <li><a href="modules.html#crm">Misafir CRM</a></li>
-          <li><a href="modules.html#ai">Hoteluter AI</a></li>
+          <li><a href="pricing.html">Fiyatlandırma</a></li>
         </ul>
       </div>
       <div class="footer-col">
         <h4>Şirket</h4>
         <ul>
           <li><a href="about.html">Hakkımızda</a></li>
-          <li><a href="customers.html">Müşteri hikayeleri</a></li>
+          <li><a href="contact.html">İletişim</a></li>
           <li><a href="#">Kariyer</a></li>
           <li><a href="#">Basında biz</a></li>
-          <li><a href="contact.html">İletişim</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -4164,9 +3645,7 @@ footer {
         <ul>
           <li><a href="#">Yardım merkezi</a></li>
           <li><a href="#">Geliştirici API</a></li>
-          <li><a href="#">Webinarlar</a></li>
           <li><a href="#">Blog</a></li>
-          <li><a href="#">Otelcilik sözlüğü</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -4175,37 +3654,27 @@ footer {
           <li><a href="#">Kullanım Koşulları</a></li>
           <li><a href="#">Gizlilik Politikası</a></li>
           <li><a href="#">KVKK Aydınlatma</a></li>
-          <li><a href="#">Çerez Politikası</a></li>
-          <li><a href="#">Bilgi Güvenliği</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-foot">
-      <div>© 2026 Hoteluter Yazılım A.Ş. — Beyoğlu, İstanbul · Mersis 0123456789012345</div>
-      <div class="legal">
-        <a href="#">Türkçe</a>
-        <a href="#">English</a>
-        <a href="#">Deutsch</a>
-        <a href="#">العربية</a>
-      </div>
+      <div>© 2026 Hoteluter Yazılım A.Ş. — Beyoğlu, İstanbul</div>
       <div class="socials">
         <a href="#" aria-label="X"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 3h3l-7.5 8.6L22 21h-6.7l-5.3-6.5L4 21H1l8-9.2L1.5 3H8.4l4.8 5.9zM16.3 19h1.7L7.7 5H6z"></path></svg></a>
         <a href="#" aria-label="LinkedIn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2zM4 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path></svg></a>
-        <a href="#" aria-label="Instagram"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="18" cy="6" r="1" fill="currentColor"></circle></svg></a>
       </div>
     </div>
   </div>
 </footer>
 
-<!-- ── SCRIPTS: Build calendar grid + report bars ────────────────── -->
 <script>
+// Build calendar
 (function buildCalendar(){
   const days = 14;
-  const today = 14; // Today is May 14
+  const today = 14;
   const startDay = 14;
   const dayLabels = ["Çar","Per","Cum","Cmt","Paz","Pzt","Sal","Çar","Per","Cum","Cmt","Paz","Pzt","Sal"];
   const dnums = Array.from({length: days}, (_, i) => 14 + i);
-
   const rooms = [
     { num: "101", type: "Standart", badge: null },
     { num: "102", type: "Standart", badge: null },
@@ -4215,69 +3684,51 @@ footer {
     { num: "1502", type: "Suite", badge: "suite" },
     { num: "2104", type: "Penthouse", badge: "suite" },
   ];
-
-  // Bookings: room index, start day offset (0..13), span days, name, source, color
   const bookings = [
     { row: 0, start: 0, span: 4, name: "Tunç Ailesi · 4 kişi", src: "DIRECT", color: "amber" },
     { row: 0, start: 5, span: 3, name: "Walk-in", src: "REC", color: "gray" },
     { row: 0, start: 9, span: 5, name: "Demir Aydın", src: "BOOKING", color: "blue" },
-
     { row: 1, start: 1, span: 5, name: "Yılmaz Çifti · honeymoon", src: "DIRECT", color: "gold" },
     { row: 1, start: 7, span: 2, name: "Block · Bakım", src: "—", color: "gray" },
     { row: 1, start: 10, span: 4, name: "C. Bauer", src: "EXPEDIA", color: "violet" },
-
     { row: 2, start: 0, span: 3, name: "Anna Pavlova", src: "AGODA", color: "teal" },
     { row: 2, start: 4, span: 6, name: "Karaca Ailesi", src: "BOOKING", color: "blue" },
     { row: 2, start: 11, span: 3, name: "M. Sakarya", src: "DIRECT", color: "amber" },
-
     { row: 3, start: 2, span: 4, name: "Lopez party · 6", src: "AIRBNB", color: "violet" },
     { row: 3, start: 7, span: 4, name: "Yıldırım", src: "DIRECT", color: "amber" },
-
     { row: 4, start: 3, span: 4, name: "★ M. & S. Aksoy", src: "BOOKING", color: "gold" },
     { row: 4, start: 9, span: 5, name: "Sheikh Al-Faraj", src: "DIRECT", color: "amber" },
-
     { row: 5, start: 0, span: 5, name: "Konferans · BlockGrup", src: "B2B", color: "teal" },
     { row: 5, start: 6, span: 3, name: "Demir Aile", src: "DIRECT", color: "amber" },
     { row: 5, start: 10, span: 4, name: "K. Stanford", src: "EXPEDIA", color: "violet" },
-
     { row: 6, start: 1, span: 6, name: "Aslan Group · Presidential", src: "DIRECT", color: "gold" },
     { row: 6, start: 8, span: 6, name: "Bolat · uzun konaklama", src: "DIRECT", color: "amber" },
   ];
 
   const cal = document.getElementById("calendar");
+  if (!cal) return;
   let html = "";
-
-  // Header row
-  html += `<div class="cal-cell cal-head" style="background:rgba(31,26,18,0.06);"><div class="day" style="text-align:left;">Oda</div></div>`;
+  html += `<div class="cal-cell cal-head" style="background:rgba(168,120,66,0.10);"><div class="day" style="text-align:left;">Oda</div></div>`;
   for (let i = 0; i < days; i++) {
     const isToday = (startDay + i) === today;
     const dayName = dayLabels[i];
     const isWeekend = dayName === "Cmt" || dayName === "Paz";
     html += `<div class="cal-cell cal-head ${isToday ? "today" : ""} ${isWeekend ? "weekend" : ""}">
-      <div class="day">${dayName}</div>
-      <div class="dnum">${dnums[i]}</div>
+      <div class="day">${dayName}</div><div class="dnum">${dnums[i]}</div>
     </div>`;
   }
-
-  // Room rows
   rooms.forEach((r, ri) => {
     html += `<div class="cal-cell cal-room"><span class="num">${r.num}</span>${r.badge ? `<span class="badge ${r.badge}">${r.badge === "suite" ? "SUITE" : "DLX"}</span>` : `<span class="badge">STD</span>`}</div>`;
-    // The 14 day cells for the row
     for (let i = 0; i < days; i++) {
       html += `<div class="cal-cell" data-row="${ri}" data-day="${i}"></div>`;
     }
   });
-
   cal.innerHTML = html;
-
-  // Position bookings using CSS grid absolute positioning by injecting overlays
-  // Simpler: place inside row, computed left/width as a % of (days)
   bookings.forEach(b => {
     const rowCells = cal.querySelectorAll(`[data-row="${b.row}"]`);
     if (!rowCells.length) return;
     const firstCell = rowCells[b.start];
     if (!firstCell) return;
-    // Make first cell host (relative)
     firstCell.style.position = "relative";
     firstCell.style.overflow = "visible";
     const pill = document.createElement("div");
@@ -4289,26 +3740,14 @@ footer {
   });
 })();
 
-(function buildReportBars(){
-  const months = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
-  const heights = [42, 48, 56, 64, 74, 88, 100, 96, 78, 68, 58, 70];
-  const bars = document.getElementById("reportBars");
-  if (!bars) return;
-  bars.innerHTML = months.map((m, i) => `
-    <div class="report-bar ${i < 4 ? "muted" : ""}" style="height: ${heights[i]}%;">
-      <span class="report-bar-label">${m}</span>
-    </div>
-  `).join("");
-})();
-
-(function buildNightAuditChart(){
-  // 24 hourly revenue values (relative)
+// Night audit chart
+(function buildNightChart(){
   const today = [4,3,2,2,3,5,9,14,22,28,32,36,42,48,38,32,36,44,58,72,84,92,68,28];
   const prev  = [4,3,2,2,4,5,8,12,18,24,28,30,38,44,34,28,32,40,52,62,72,78,58,22];
   const W = 700, H = 200;
   const max = Math.max(...today, ...prev) * 1.1;
   const barW = (W / today.length) - 4;
-  const barsHost = document.getElementById("nrBars");
+  const barsHost = document.getElementById("nrBars2");
   if (!barsHost) return;
   const peakIdx = today.indexOf(Math.max(...today));
   let barsSVG = "";
@@ -4317,252 +3756,35 @@ footer {
     const x = i * (W / today.length) + 2;
     const y = H - h - 4;
     const isPeak = i === peakIdx;
-    barsSVG += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="2" fill="${isPeak ? "#c89968" : "#a87842"}" opacity="${isPeak ? 1 : 0.85}" ${isPeak ? 'style="filter: drop-shadow(0 0 6px rgba(200,153,104,0.5));"' : ""} />`;
+    barsSVG += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="2" fill="${isPeak ? "#c89968" : "url(#grBarB)"}" ${isPeak ? 'style="filter: drop-shadow(0 0 6px rgba(200,153,104,0.5));"' : ""} />`;
   });
   barsHost.innerHTML = barsSVG;
-
-  // previous-week line + area
   const lineD = prev.map((v, i) => {
     const x = i * (W / prev.length) + (W / prev.length) / 2;
     const y = H - (v / max) * (H - 12) - 4;
     return `${i === 0 ? "M" : "L"} ${x} ${y}`;
   }).join(" ");
-  document.getElementById("nrPrev").setAttribute("d", lineD);
-  document.getElementById("nrPrev").setAttribute("stroke", "#1f3a2e");
-  document.getElementById("nrPrev").setAttribute("stroke-opacity", "0.45");
-
-  const areaD = lineD + ` L ${W} ${H} L 0 ${H} Z`;
-  document.getElementById("nrArea").setAttribute("d", areaD);
-  document.getElementById("nrArea").setAttribute("fill", "rgba(31,58,46,0.05)");
+  document.getElementById("nrPrev2").setAttribute("d", lineD);
 })();
 
-/* ────────────────────────────────────────────────────────── */
-/*  Scroll reveal — fade up on intersect                       */
-/* ────────────────────────────────────────────────────────── */
-(function setupReveal() {
-  const targets = document.querySelectorAll(
-    ".module, .kpi-card, .case-card, .price-card, .ai-cap, .ai-card, .qr-card, .channel-chip, .tmsl-card, .hero-stat, .stat, .seg-card, .crm-list-item, .report-card, .ai-stat-mini, .hesap-row, .ai-side-card"
-  );
-  targets.forEach(el => el.classList.add("reveal"));
-  if (!("IntersectionObserver" in window)) {
-    targets.forEach(el => el.classList.add("in"));
-    return;
-  }
+// Sticky modnav active state on scroll
+(function modnavScroll(){
+  const links = Array.from(document.querySelectorAll(".modnav a"));
+  const sections = links.map(l => document.querySelector(l.getAttribute("href")));
+  if (!("IntersectionObserver" in window)) return;
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
-        e.target.classList.add("in");
-        io.unobserve(e.target);
+        const idx = sections.indexOf(e.target);
+        links.forEach(l => l.classList.remove("active"));
+        if (idx >= 0) links[idx].classList.add("active");
       }
     });
-  }, { threshold: 0.12 });
-  targets.forEach(el => io.observe(el));
-})();
-
-/* ────────────────────────────────────────────────────────── */
-/*  Number ticker animation — animate from 0 to data-target    */
-/* ────────────────────────────────────────────────────────── */
-(function tickerCount() {
-  const numberTargets = [];
-  // Find elements with class .tnum containing a number — replicate as data-target so we can animate.
-  document.querySelectorAll('.hero-stat .val.tnum, .ai-stat-mini .v, .crm-stat .v').forEach(el => {
-    const txt = el.textContent.trim();
-    // Parse only if it has a number we can recover
-    const m = txt.match(/^([₺$€]?\s?)([\d.,]+)([^\d]*)$/);
-    if (!m) return;
-    const prefix = m[1];
-    const numericStr = m[2];
-    const suffix = m[3] || "";
-    // Extract digits, find separator format
-    const digits = numericStr.replace(/[^\d]/g, "");
-    if (!digits || digits.length > 10) return;
-    const target = parseInt(digits, 10);
-    if (isNaN(target) || target < 10) return;
-    numberTargets.push({ el, prefix, suffix, target, original: txt, hasDot: numericStr.includes("."), hasComma: numericStr.includes(",") });
-    el.textContent = formatNum(prefix, 0, suffix);
-  });
-
-  function formatNum(prefix, n, suffix) {
-    return prefix + n.toLocaleString("tr-TR") + suffix;
-  }
-  function animate({ el, prefix, suffix, target, original }) {
-    const dur = 1400;
-    const start = performance.now();
-    function step(now) {
-      const t = Math.min(1, (now - start) / dur);
-      const eased = 1 - Math.pow(1 - t, 3);
-      const cur = Math.floor(target * eased);
-      el.textContent = formatNum(prefix, cur, suffix);
-      if (t < 1) requestAnimationFrame(step);
-      else el.textContent = original;
-    }
-    requestAnimationFrame(step);
-  }
-  if (!("IntersectionObserver" in window)) {
-    numberTargets.forEach(animate);
-    return;
-  }
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        const target = numberTargets.find(t => t.el === e.target);
-        if (target) animate(target);
-        io.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.4 });
-  numberTargets.forEach(t => io.observe(t.el));
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => s && io.observe(s));
 })();
 </script>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     FIREBASE AUTH — hero login form bağlantısı
-     CC NOTU: Aşağıdaki firebaseConfig'i C:\hoteluter\app.html
-     içindeki mevcut config ile değiştirin (aynı projeyi kullanıyoruz).
-     ═══════════════════════════════════════════════════════════════ -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getAuth,
-    setPersistence,
-    browserLocalPersistence,
-    browserSessionPersistence,
-    signInWithEmailAndPassword,
-    signInWithPopup,
-    GoogleAuthProvider,
-    sendPasswordResetEmail,
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  // ⚠️ CC: Bu config bloğunu C:\hoteluter\app.html içindeki gerçek config ile değiştir.
-  const firebaseConfig = {
-    apiKey: "REPLACE_ME",
-    authDomain: "REPLACE_ME",
-    projectId: "REPLACE_ME",
-    storageBucket: "REPLACE_ME",
-    messagingSenderId: "REPLACE_ME",
-    appId: "REPLACE_ME"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  // Yardımcılar
-  const $ = (id) => document.getElementById(id);
-  const form = $("loginForm");
-  const emailEl = $("loginEmail");
-  const pwEl = $("loginPassword");
-  const errEl = $("loginError");
-  const submitBtn = $("loginSubmit");
-  const btnLabel = $("loginBtnLabel");
-  const rememberEl = $("rememberMe");
-  const togglePwBtn = $("togglePw");
-  const forgotLink = $("forgotLink");
-  const googleBtn = $("googleLogin");
-
-  function showError(msg, type = "error") {
-    errEl.textContent = msg;
-    errEl.hidden = false;
-    errEl.classList.toggle("info", type === "info");
-  }
-  function clearError() {
-    errEl.hidden = true;
-    errEl.textContent = "";
-    errEl.classList.remove("info");
-  }
-  function setLoading(on, label = "Panele giriş") {
-    form.classList.toggle("is-loading", on);
-    submitBtn.disabled = on;
-    btnLabel.textContent = on ? "Giriş yapılıyor…" : label;
-  }
-
-  // Firebase hata kodlarını Türkçeleştir
-  function trError(code) {
-    const map = {
-      "auth/invalid-email": "Geçerli bir e-posta adresi girin.",
-      "auth/invalid-credential": "E-posta veya şifre hatalı.",
-      "auth/wrong-password": "Şifre hatalı.",
-      "auth/user-not-found": "Bu e-posta ile kayıtlı bir hesap bulunamadı.",
-      "auth/user-disabled": "Hesabınız devre dışı bırakılmış. Yöneticinizle görüşün.",
-      "auth/too-many-requests": "Çok fazla deneme yapıldı. Birkaç dakika sonra tekrar deneyin.",
-      "auth/network-request-failed": "İnternet bağlantısı sorunu. Lütfen tekrar deneyin.",
-      "auth/popup-closed-by-user": "Google girişi iptal edildi.",
-      "auth/popup-blocked": "Pop-up engellendi. Tarayıcı ayarlarını kontrol edin."
-    };
-    return map[code] || "Giriş yapılamadı. Lütfen tekrar deneyin.";
-  }
-
-  // Şifre göster/gizle
-  togglePwBtn?.addEventListener("click", () => {
-    const isPw = pwEl.type === "password";
-    pwEl.type = isPw ? "text" : "password";
-    togglePwBtn.style.color = isPw ? "var(--brass-deep)" : "var(--ink-3)";
-  });
-
-  // E-posta/şifre ile giriş
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    clearError();
-    const email = emailEl.value.trim();
-    const password = pwEl.value;
-    if (!email || !password) {
-      showError("E-posta ve şifre alanları zorunludur.");
-      return;
-    }
-    setLoading(true);
-    try {
-      // "Beni hatırla" işaretliyse local, değilse session persistence
-      await setPersistence(auth, rememberEl.checked ? browserLocalPersistence : browserSessionPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
-      // onAuthStateChanged yönlendirmeyi yapacak
-    } catch (err) {
-      console.error("[login]", err);
-      showError(trError(err.code));
-      setLoading(false);
-    }
-  });
-
-  // Google ile giriş
-  googleBtn?.addEventListener("click", async () => {
-    clearError();
-    setLoading(true, "Google ile giriş");
-    try {
-      await setPersistence(auth, rememberEl.checked ? browserLocalPersistence : browserSessionPersistence);
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      console.error("[google-login]", err);
-      showError(trError(err.code));
-      setLoading(false);
-    }
-  });
-
-  // Şifremi unuttum
-  forgotLink?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    clearError();
-    const email = emailEl.value.trim();
-    if (!email) {
-      showError("Şifre sıfırlama bağlantısı için önce e-posta adresinizi yazın.", "info");
-      emailEl.focus();
-      return;
-    }
-    try {
-      await sendPasswordResetEmail(auth, email);
-      showError(`${email} adresine sıfırlama bağlantısı gönderildi. Gelen kutunuzu kontrol edin.`, "info");
-    } catch (err) {
-      console.error("[reset]", err);
-      showError(trError(err.code));
-    }
-  });
-
-  // Oturum açıksa veya başarılı login sonrası → uygulamaya yönlendir
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // CC NOTU: app.html mevcut PMS uygulamasının yeni adı.
-      window.location.replace("app.html");
-    }
-  });
-</script>
 
 </body></html>
